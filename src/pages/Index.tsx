@@ -1,12 +1,31 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Header } from "@/components/homestay/Header";
+import { Hero } from "@/components/homestay/Hero";
+import { About } from "@/components/homestay/About";
+import { Rooms } from "@/components/homestay/Rooms";
+import { Amenities } from "@/components/homestay/Amenities";
+import { Gallery } from "@/components/homestay/Gallery";
+import { Reviews } from "@/components/homestay/Reviews";
+import { Host } from "@/components/homestay/Host";
+import { Location } from "@/components/homestay/Location";
+import { Booking } from "@/components/homestay/Booking";
+import { HouseRules } from "@/components/homestay/HouseRules";
+import { Footer } from "@/components/homestay/Footer";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <Hero />
+      <About />
+      <Rooms />
+      <Amenities />
+      <Gallery />
+      <Reviews />
+      <Host />
+      <Location />
+      <Booking />
+      <HouseRules />
+      <Footer />
     </div>
   );
 };
