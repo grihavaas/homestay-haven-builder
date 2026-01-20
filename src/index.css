@@ -5,105 +5,323 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 @layer base {
-  :root {
-    --background: 35 30% 97%;
-    --foreground: 25 20% 15%;
+  /* ========================================
+     BEACH THEME - Light, airy, ocean-inspired
+     ======================================== */
+  :root,
+  [data-theme="beach"] {
+    --background: 200 30% 98%;
+    --foreground: 210 25% 15%;
 
-    --card: 35 25% 95%;
-    --card-foreground: 25 20% 15%;
+    --card: 200 25% 96%;
+    --card-foreground: 210 25% 15%;
 
-    --popover: 35 30% 97%;
-    --popover-foreground: 25 20% 15%;
+    --popover: 200 30% 98%;
+    --popover-foreground: 210 25% 15%;
 
-    --primary: 20 60% 45%;
-    --primary-foreground: 35 30% 97%;
+    --primary: 195 70% 45%;
+    --primary-foreground: 200 30% 98%;
 
-    --secondary: 145 25% 45%;
-    --secondary-foreground: 35 30% 97%;
+    --secondary: 35 55% 60%;
+    --secondary-foreground: 210 25% 15%;
 
-    --muted: 35 20% 90%;
-    --muted-foreground: 25 15% 45%;
+    --muted: 200 20% 92%;
+    --muted-foreground: 210 15% 45%;
 
-    --accent: 145 25% 45%;
-    --accent-foreground: 35 30% 97%;
+    --accent: 35 55% 60%;
+    --accent-foreground: 210 25% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 35 20% 85%;
-    --input: 35 20% 85%;
-    --ring: 20 60% 45%;
+    --border: 200 20% 88%;
+    --input: 200 20% 88%;
+    --ring: 195 70% 45%;
+
+    --radius: 1rem;
+
+    /* Theme-specific tokens */
+    --theme-primary: 195 70% 45%;
+    --theme-primary-light: 195 60% 55%;
+    --theme-secondary: 35 55% 60%;
+    --theme-accent: 180 50% 40%;
+    --theme-highlight: 45 80% 65%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(195 70% 45% / 0.85), hsl(200 60% 35% / 0.9));
+    --gradient-warm: linear-gradient(180deg, hsl(200 30% 98%), hsl(200 25% 94%));
+    --gradient-accent: linear-gradient(135deg, hsl(35 55% 60%), hsl(35 50% 50%));
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(200 30% 20% / 0.08);
+    --shadow-card: 0 8px 30px -8px hsl(200 30% 20% / 0.1);
+    --shadow-elevated: 0 20px 50px -15px hsl(200 30% 20% / 0.15);
+
+    --sidebar-background: 200 25% 96%;
+    --sidebar-foreground: 210 25% 15%;
+    --sidebar-primary: 195 70% 45%;
+    --sidebar-primary-foreground: 200 30% 98%;
+    --sidebar-accent: 35 55% 60%;
+    --sidebar-accent-foreground: 210 25% 15%;
+    --sidebar-border: 200 20% 88%;
+    --sidebar-ring: 195 70% 45%;
+  }
+
+  /* ========================================
+     MOUNTAIN THEME - Bold, dramatic, earth tones
+     ======================================== */
+  [data-theme="mountain"] {
+    --background: 220 15% 12%;
+    --foreground: 220 10% 95%;
+
+    --card: 220 15% 16%;
+    --card-foreground: 220 10% 95%;
+
+    --popover: 220 15% 14%;
+    --popover-foreground: 220 10% 95%;
+
+    --primary: 30 60% 50%;
+    --primary-foreground: 220 15% 10%;
+
+    --secondary: 200 15% 35%;
+    --secondary-foreground: 220 10% 95%;
+
+    --muted: 220 12% 22%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 30 60% 50%;
+    --accent-foreground: 220 15% 10%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 220 10% 95%;
+
+    --border: 220 12% 25%;
+    --input: 220 12% 25%;
+    --ring: 30 60% 50%;
+
+    --radius: 0.5rem;
+
+    /* Theme-specific tokens */
+    --theme-primary: 30 60% 50%;
+    --theme-primary-light: 30 55% 60%;
+    --theme-secondary: 200 15% 35%;
+    --theme-accent: 15 70% 45%;
+    --theme-highlight: 45 70% 55%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(180deg, hsl(220 15% 8% / 0.7), hsl(220 20% 5% / 0.9));
+    --gradient-warm: linear-gradient(180deg, hsl(220 15% 12%), hsl(220 12% 16%));
+    --gradient-accent: linear-gradient(135deg, hsl(30 60% 50%), hsl(15 70% 40%));
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 8px 30px -8px hsl(0 0% 0% / 0.4);
+    --shadow-elevated: 0 20px 50px -15px hsl(0 0% 0% / 0.5);
+
+    --sidebar-background: 220 15% 14%;
+    --sidebar-foreground: 220 10% 95%;
+    --sidebar-primary: 30 60% 50%;
+    --sidebar-primary-foreground: 220 15% 10%;
+    --sidebar-accent: 220 12% 22%;
+    --sidebar-accent-foreground: 220 10% 95%;
+    --sidebar-border: 220 12% 25%;
+    --sidebar-ring: 30 60% 50%;
+  }
+
+  /* ========================================
+     FOREST THEME - Organic, lush, earthy
+     ======================================== */
+  [data-theme="forest"] {
+    --background: 80 20% 96%;
+    --foreground: 90 30% 12%;
+
+    --card: 80 18% 93%;
+    --card-foreground: 90 30% 12%;
+
+    --popover: 80 20% 96%;
+    --popover-foreground: 90 30% 12%;
+
+    --primary: 100 45% 35%;
+    --primary-foreground: 80 20% 98%;
+
+    --secondary: 35 40% 45%;
+    --secondary-foreground: 80 20% 98%;
+
+    --muted: 80 15% 88%;
+    --muted-foreground: 90 20% 40%;
+
+    --accent: 35 40% 45%;
+    --accent-foreground: 80 20% 98%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 80 20% 98%;
+
+    --border: 80 15% 82%;
+    --input: 80 15% 82%;
+    --ring: 100 45% 35%;
 
     --radius: 0.75rem;
 
-    /* Custom homestay tokens */
-    --terracotta: 20 60% 45%;
-    --terracotta-light: 20 55% 55%;
-    --sage: 145 25% 45%;
-    --sage-light: 145 20% 55%;
-    --cream: 35 30% 97%;
-    --cream-dark: 35 25% 92%;
-    --charcoal: 25 20% 15%;
-    --warm-gray: 25 15% 45%;
-    --gold: 45 80% 50%;
+    /* Theme-specific tokens */
+    --theme-primary: 100 45% 35%;
+    --theme-primary-light: 100 40% 45%;
+    --theme-secondary: 35 40% 45%;
+    --theme-accent: 80 50% 30%;
+    --theme-highlight: 50 60% 50%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(20 60% 45% / 0.9), hsl(25 50% 35% / 0.85));
-    --gradient-warm: linear-gradient(180deg, hsl(35 30% 97%), hsl(35 25% 92%));
-    --gradient-sage: linear-gradient(135deg, hsl(145 25% 45%), hsl(145 30% 35%));
+    --gradient-hero: linear-gradient(135deg, hsl(100 45% 25% / 0.85), hsl(90 40% 20% / 0.9));
+    --gradient-warm: linear-gradient(180deg, hsl(80 20% 96%), hsl(80 18% 90%));
+    --gradient-accent: linear-gradient(135deg, hsl(35 40% 45%), hsl(35 45% 35%));
 
     /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(25 20% 15% / 0.1);
-    --shadow-card: 0 8px 30px -8px hsl(25 20% 15% / 0.12);
-    --shadow-elevated: 0 20px 50px -15px hsl(25 20% 15% / 0.2);
+    --shadow-soft: 0 4px 20px -4px hsl(90 30% 15% / 0.1);
+    --shadow-card: 0 8px 30px -8px hsl(90 30% 15% / 0.12);
+    --shadow-elevated: 0 20px 50px -15px hsl(90 30% 15% / 0.18);
 
-    --sidebar-background: 35 25% 95%;
-    --sidebar-foreground: 25 20% 15%;
-    --sidebar-primary: 20 60% 45%;
-    --sidebar-primary-foreground: 35 30% 97%;
-    --sidebar-accent: 145 25% 45%;
-    --sidebar-accent-foreground: 35 30% 97%;
-    --sidebar-border: 35 20% 85%;
-    --sidebar-ring: 20 60% 45%;
+    --sidebar-background: 80 18% 93%;
+    --sidebar-foreground: 90 30% 12%;
+    --sidebar-primary: 100 45% 35%;
+    --sidebar-primary-foreground: 80 20% 98%;
+    --sidebar-accent: 35 40% 45%;
+    --sidebar-accent-foreground: 80 20% 98%;
+    --sidebar-border: 80 15% 82%;
+    --sidebar-ring: 100 45% 35%;
   }
 
-  .dark {
-    --background: 25 25% 10%;
-    --foreground: 35 25% 95%;
+  /* ========================================
+     BACKWATER THEME - Serene, flowing, teal
+     ======================================== */
+  [data-theme="backwater"] {
+    --background: 180 20% 97%;
+    --foreground: 190 30% 12%;
 
-    --card: 25 20% 14%;
-    --card-foreground: 35 25% 95%;
+    --card: 180 18% 94%;
+    --card-foreground: 190 30% 12%;
 
-    --popover: 25 25% 10%;
-    --popover-foreground: 35 25% 95%;
+    --popover: 180 20% 97%;
+    --popover-foreground: 190 30% 12%;
 
-    --primary: 20 55% 55%;
-    --primary-foreground: 25 20% 10%;
+    --primary: 175 50% 35%;
+    --primary-foreground: 180 20% 98%;
 
-    --secondary: 145 20% 40%;
-    --secondary-foreground: 35 25% 95%;
+    --secondary: 25 45% 50%;
+    --secondary-foreground: 180 20% 98%;
 
-    --muted: 25 20% 18%;
-    --muted-foreground: 35 15% 60%;
+    --muted: 180 15% 90%;
+    --muted-foreground: 190 20% 40%;
 
-    --accent: 145 20% 40%;
-    --accent-foreground: 35 25% 95%;
+    --accent: 25 45% 50%;
+    --accent-foreground: 180 20% 98%;
 
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 180 20% 98%;
 
-    --border: 25 20% 20%;
-    --input: 25 20% 20%;
-    --ring: 20 55% 55%;
+    --border: 180 15% 85%;
+    --input: 180 15% 85%;
+    --ring: 175 50% 35%;
 
-    --sidebar-background: 25 20% 12%;
-    --sidebar-foreground: 35 25% 95%;
-    --sidebar-primary: 20 55% 55%;
-    --sidebar-primary-foreground: 25 20% 10%;
-    --sidebar-accent: 25 20% 18%;
-    --sidebar-accent-foreground: 35 25% 95%;
-    --sidebar-border: 25 20% 20%;
-    --sidebar-ring: 20 55% 55%;
+    --radius: 1.5rem;
+
+    /* Theme-specific tokens */
+    --theme-primary: 175 50% 35%;
+    --theme-primary-light: 175 45% 45%;
+    --theme-secondary: 25 45% 50%;
+    --theme-accent: 190 40% 30%;
+    --theme-highlight: 45 55% 55%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(175 50% 30% / 0.85), hsl(190 45% 25% / 0.9));
+    --gradient-warm: linear-gradient(180deg, hsl(180 20% 97%), hsl(180 18% 92%));
+    --gradient-accent: linear-gradient(135deg, hsl(25 45% 50%), hsl(25 50% 40%));
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(190 30% 15% / 0.08);
+    --shadow-card: 0 8px 30px -8px hsl(190 30% 15% / 0.1);
+    --shadow-elevated: 0 20px 50px -15px hsl(190 30% 15% / 0.15);
+
+    --sidebar-background: 180 18% 94%;
+    --sidebar-foreground: 190 30% 12%;
+    --sidebar-primary: 175 50% 35%;
+    --sidebar-primary-foreground: 180 20% 98%;
+    --sidebar-accent: 25 45% 50%;
+    --sidebar-accent-foreground: 180 20% 98%;
+    --sidebar-border: 180 15% 85%;
+    --sidebar-ring: 175 50% 35%;
+  }
+
+  /* ========================================
+     ADVENTURE THEME - Dynamic, energetic, bold
+     ======================================== */
+  [data-theme="adventure"] {
+    --background: 25 15% 8%;
+    --foreground: 30 20% 95%;
+
+    --card: 25 15% 12%;
+    --card-foreground: 30 20% 95%;
+
+    --popover: 25 15% 10%;
+    --popover-foreground: 30 20% 95%;
+
+    --primary: 25 85% 55%;
+    --primary-foreground: 25 15% 8%;
+
+    --secondary: 0 70% 50%;
+    --secondary-foreground: 30 20% 95%;
+
+    --muted: 25 12% 18%;
+    --muted-foreground: 30 15% 60%;
+
+    --accent: 0 70% 50%;
+    --accent-foreground: 30 20% 95%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 30 20% 95%;
+
+    --border: 25 12% 22%;
+    --input: 25 12% 22%;
+    --ring: 25 85% 55%;
+
+    --radius: 0.25rem;
+
+    /* Theme-specific tokens */
+    --theme-primary: 25 85% 55%;
+    --theme-primary-light: 25 80% 65%;
+    --theme-secondary: 0 70% 50%;
+    --theme-accent: 45 90% 50%;
+    --theme-highlight: 50 100% 50%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(25 85% 40% / 0.9), hsl(0 70% 35% / 0.85));
+    --gradient-warm: linear-gradient(180deg, hsl(25 15% 8%), hsl(25 12% 12%));
+    --gradient-accent: linear-gradient(135deg, hsl(25 85% 55%), hsl(0 70% 50%));
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 8px 30px -8px hsl(0 0% 0% / 0.4);
+    --shadow-elevated: 0 20px 50px -15px hsl(25 85% 55% / 0.2);
+
+    --sidebar-background: 25 15% 10%;
+    --sidebar-foreground: 30 20% 95%;
+    --sidebar-primary: 25 85% 55%;
+    --sidebar-primary-foreground: 25 15% 8%;
+    --sidebar-accent: 25 12% 18%;
+    --sidebar-accent-foreground: 30 20% 95%;
+    --sidebar-border: 25 12% 22%;
+    --sidebar-ring: 25 85% 55%;
+  }
+
+  /* Legacy tokens for backward compatibility */
+  :root {
+    --terracotta: var(--theme-primary);
+    --terracotta-light: var(--theme-primary-light);
+    --sage: var(--theme-secondary);
+    --sage-light: var(--theme-secondary);
+    --cream: var(--background);
+    --cream-dark: var(--card);
+    --charcoal: var(--foreground);
+    --warm-gray: var(--muted-foreground);
+    --gold: var(--theme-highlight);
   }
 }
 
