@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { propertyData } from "@/lib/propertyData";
+import { useProperty } from "@/contexts/PropertyContext";
 
 const navLinks = [
   { name: "Home", href: "#hero" },
@@ -14,8 +14,13 @@ const navLinks = [
 ];
 
 export function Header() {
+  const { property, loading } = useProperty();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  if (loading || !property) {
+    return null; // Or a loading skeleton
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,14 +62,14 @@ export function Header() {
                   isScrolled ? "text-foreground" : "text-primary-foreground"
                 }`}
               >
-                {propertyData.name}
+                {property.name}
               </span>
               <span
                 className={`text-xs tracking-wider uppercase transition-colors ${
                   isScrolled ? "text-muted-foreground" : "text-primary-foreground/80"
                 }`}
               >
-                {propertyData.tagline}
+                {property.tagline || ""}
               </span>
             </motion.div>
 
@@ -88,15 +93,17 @@ export function Header() {
 
             {/* Desktop CTA */}
             <div className="hidden lg:flex items-center gap-4">
-              <a
-                href={`tel:${propertyData.contact.phone}`}
-                className={`flex items-center gap-2 text-sm transition-colors ${
-                  isScrolled ? "text-muted-foreground" : "text-primary-foreground/80"
-                }`}
-              >
-                <Phone className="w-4 h-4" />
-                <span className="hidden xl:inline">{propertyData.contact.phone}</span>
-              </a>
+              {property.phone && (
+                <a
+                  href={`tel:${property.phone}`}
+                  className={`flex items-center gap-2 text-sm transition-colors ${
+                    isScrolled ? "text-muted-foreground" : "text-primary-foreground/80"
+                  }`}
+                >
+                  <Phone className="w-4 h-4" />
+                  <span className="hidden xl:inline">{property.phone}</span>
+                </a>
+              )}
               <Button
                 variant={isScrolled ? "warm" : "heroOutline"}
                 size="sm"
@@ -142,20 +149,24 @@ export function Header() {
                   </button>
                 ))}
                 <div className="mt-6 flex flex-col gap-4">
-                  <a
-                    href={`tel:${propertyData.contact.phone}`}
-                    className="flex items-center gap-2 text-muted-foreground"
-                  >
-                    <Phone className="w-5 h-5" />
-                    {propertyData.contact.phone}
-                  </a>
-                  <a
-                    href={`mailto:${propertyData.contact.email}`}
-                    className="flex items-center gap-2 text-muted-foreground"
-                  >
-                    <Mail className="w-5 h-5" />
-                    {propertyData.contact.email}
-                  </a>
+                  {property.phone && (
+                    <a
+                      href={`tel:${property.phone}`}
+                      className="flex items-center gap-2 text-muted-foreground"
+                    >
+                      <Phone className="w-5 h-5" />
+                      {property.phone}
+                    </a>
+                  )}
+                  {property.email && (
+                    <a
+                      href={`mailto:${property.email}`}
+                      className="flex items-center gap-2 text-muted-foreground"
+                    >
+                      <Mail className="w-5 h-5" />
+                      {property.email}
+                    </a>
+                  )}
                   <Button
                     variant="warm"
                     size="lg"

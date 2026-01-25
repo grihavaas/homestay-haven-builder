@@ -1,27 +1,34 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { X } from "lucide-react";
+import { useProperty } from "@/contexts/PropertyContext";
 
 import heroImage from "@/assets/hero-homestay.jpg";
-import roomDeluxe from "@/assets/room-deluxe.jpg";
-import roomSuite from "@/assets/room-suite.jpg";
-import roomCottage from "@/assets/room-cottage.jpg";
-import galleryDining from "@/assets/gallery-dining.jpg";
-import galleryPool from "@/assets/gallery-pool.jpg";
-
-const galleryImages = [
-  { src: heroImage, alt: "Property Exterior", category: "Exterior" },
-  { src: galleryPool, alt: "Infinity Pool", category: "Pool" },
-  { src: galleryDining, alt: "Outdoor Dining", category: "Dining" },
-  { src: roomDeluxe, alt: "Deluxe Room", category: "Rooms" },
-  { src: roomSuite, alt: "Family Suite", category: "Rooms" },
-  { src: roomCottage, alt: "Garden Cottage", category: "Rooms" },
-];
 
 export function Gallery() {
+  const { property, loading } = useProperty();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  
+  if (loading || !property) {
+    return null;
+  }
+  
+  // Get gallery images from media
+  // Schema: media_type is primary (hero, gallery, room_image, video, host_image)
+  // category is optional (exterior, common_area, surrounding, seasonal, etc.)
+  const galleryImages = property.media?.filter((m: any) => 
+    m.media_type === 'gallery' && !m.room_id // Only property-level gallery images, not room images
+  ).map((m: any) => ({
+    src: m.s3_url,
+    alt: m.alt_text || m.title || "Gallery image",
+    category: m.category || "Gallery"
+  })) || [];
+  
+  if (galleryImages.length === 0) {
+    return null; // Don't show gallery if no images
+  }
 
   return (
     <>

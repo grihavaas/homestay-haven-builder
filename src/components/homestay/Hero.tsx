@@ -1,10 +1,26 @@
 import { motion } from "framer-motion";
-import { Star, MapPin, Award } from "lucide-react";
+import { Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { propertyData } from "@/lib/propertyData";
+import { useProperty } from "@/contexts/PropertyContext";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function Hero() {
+  const { property, loading } = useProperty();
+  
+  if (loading || !property) {
+    return null;
+  }
+  
+  // Get hero image from property media or fallback
+  // Schema: media has s3_url and media_type (hero, gallery, room_image, video, host_image)
+  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+  
+  // Calculate average rating from reviews
+  const avgRating = property.review_sources?.length > 0
+    ? property.review_sources.reduce((sum: number, r: any) => sum + (r.stars || 0), 0) / property.review_sources.length
+    : 0;
+  // Sum total_reviews from all review sources, not just count of sources
+  const totalReviews = property.review_sources?.reduce((sum: number, r: any) => sum + (r.total_reviews || 0), 0) || 0;
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
@@ -17,8 +33,8 @@ export function Hero() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img
-          src={heroImage}
-          alt={propertyData.name}
+          src={heroMedia}
+          alt={property.name}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-charcoal/80 via-charcoal/50 to-transparent" />
@@ -29,21 +45,19 @@ export function Hero() {
       <div className="container mx-auto px-4 relative z-10 pt-20">
         <div className="max-w-3xl">
           {/* Badges */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap items-center gap-3 mb-6"
-          >
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground text-sm">
-              <Award className="w-4 h-4" />
-              {propertyData.classification}
-            </span>
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gold/20 backdrop-blur-sm text-gold text-sm">
-              <Star className="w-4 h-4 fill-current" />
-              {propertyData.ratings.overall} ({propertyData.ratings.totalReviews} reviews)
-            </span>
-          </motion.div>
+          {avgRating > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-wrap items-center gap-3 mb-6"
+            >
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gold/20 backdrop-blur-sm text-gold text-sm">
+                <Star className="w-4 h-4 fill-current" />
+                {avgRating.toFixed(1)} ({totalReviews} reviews)
+              </span>
+            </motion.div>
+          )}
 
           {/* Main Heading */}
           <motion.h1
@@ -52,29 +66,33 @@ export function Hero() {
             transition={{ delay: 0.3 }}
             className="text-4xl md:text-6xl lg:text-7xl font-serif font-semibold text-primary-foreground mb-4 leading-tight"
           >
-            {propertyData.name}
+            {property.name}
           </motion.h1>
 
           {/* Tagline */}
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-xl md:text-2xl text-primary-foreground/90 font-light mb-4"
-          >
-            {propertyData.tagline}
-          </motion.p>
+          {property.tagline && (
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl md:text-2xl text-primary-foreground/90 font-light mb-4"
+            >
+              {property.tagline}
+            </motion.p>
+          )}
 
           {/* Location */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-center gap-2 text-primary-foreground/80 mb-8"
-          >
-            <MapPin className="w-5 h-5" />
-            <span>{propertyData.location.city}, {propertyData.location.state}</span>
-          </motion.div>
+          {(property.city || property.state) && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center gap-2 text-primary-foreground/80 mb-8"
+            >
+              <MapPin className="w-5 h-5" />
+              <span>{[property.city, property.state].filter(Boolean).join(", ")}</span>
+            </motion.div>
+          )}
 
           {/* CTAs */}
           <motion.div
@@ -106,7 +124,7 @@ export function Hero() {
             transition={{ delay: 0.8 }}
             className="flex flex-wrap gap-2 mt-10"
           >
-            {propertyData.tags.slice(0, 4).map((tag) => (
+            {property.property_tags && property.property_tags.length > 0 && property.property_tags.slice(0, 4).map((tag: string) => (
               <span
                 key={tag}
                 className="px-3 py-1 text-xs text-primary-foreground/70 border border-primary-foreground/30 rounded-full"

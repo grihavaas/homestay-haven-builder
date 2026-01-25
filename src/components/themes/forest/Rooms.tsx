@@ -1,22 +1,20 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Users, Maximize, Bed, Leaf, ArrowRight } from "lucide-react";
+import { Users, Maximize, Leaf, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { propertyData } from "@/lib/propertyData";
+import { useProperty } from "@/contexts/PropertyContext";
+import { RoomFeaturesSection } from "@/components/homestay/RoomFeaturesSection";
 
 import roomDeluxe from "@/assets/room-deluxe.jpg";
-import roomSuite from "@/assets/room-suite.jpg";
-import roomCottage from "@/assets/room-cottage.jpg";
-
-const roomImages: Record<string, string> = {
-  "deluxe-room": roomDeluxe,
-  "family-suite": roomSuite,
-  "garden-cottage": roomCottage,
-};
 
 export function ForestRooms() {
+  const { property, loading } = useProperty();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  if (loading || !property || !property.rooms || property.rooms.length === 0) {
+    return null;
+  }
 
   const scrollToBooking = () => {
     const element = document.querySelector("#booking");
@@ -41,26 +39,42 @@ export function ForestRooms() {
                 Accommodations
               </span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-semibold text-foreground leading-tight">
-              Nestled in Nature's Embrace
-            </h2>
+            {property.room_section_header && (
+              <h2 className="text-4xl md:text-5xl font-serif font-semibold text-foreground leading-tight">
+                {property.room_section_header}
+              </h2>
+            )}
+            {property.room_section_tagline && (
+              <p className="text-lg text-muted-foreground mt-2">
+                {property.room_section_tagline}
+              </p>
+            )}
           </motion.div>
+          {/* Empty second column for layout balance - can be removed if not needed */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: 0.2 }}
             className="flex items-end"
           >
-            <p className="text-lg text-muted-foreground">
-              Each dwelling is designed to harmonize with the forest surroundings, 
-              offering an immersive connection to the natural world.
-            </p>
+            {/* Optional: Add additional content here if needed */}
           </motion.div>
         </div>
 
         {/* Asymmetric masonry grid - Forest editorial style */}
         <div className="grid md:grid-cols-2 gap-8">
-          {propertyData.rooms.map((room, index) => (
+          {property.rooms.map((room: any, index: number) => {
+            const roomImage = property.media?.find((m: any) => m.room_id === room.id && m.media_type === 'room_image')?.s3_url || roomDeluxe;
+            const currentPricing = room.pricing?.find((p: any) => {
+              const today = new Date();
+              const validFrom = p.valid_from ? new Date(p.valid_from) : null;
+              const validTo = p.valid_to ? new Date(p.valid_to) : null;
+              return (!validFrom || today >= validFrom) && (!validTo || today <= validTo);
+            }) || room.pricing?.[0];
+            const price = currentPricing?.discounted_rate || currentPricing?.base_rate || room.base_rate;
+            const originalPrice = currentPricing?.original_price || currentPricing?.base_rate;
+            
+            return (
             <motion.div
               key={room.id}
               initial={{ opacity: 0, y: 50 }}
@@ -72,7 +86,7 @@ export function ForestRooms() {
                 {/* Image with organic border */}
                 <div className={`relative ${index === 0 ? 'aspect-[3/4]' : 'aspect-[4/3]'}`}>
                   <img
-                    src={roomImages[room.id]}
+                    src={roomImage}
                     alt={room.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
@@ -82,59 +96,95 @@ export function ForestRooms() {
                 {/* Content overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
                   {/* View tag */}
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/20 backdrop-blur-sm text-primary-foreground text-xs rounded-full mb-4">
-                    <Leaf className="w-3 h-3" />
-                    {room.view}
-                  </span>
+                  {room.view_type && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/20 backdrop-blur-sm text-primary-foreground text-xs rounded-full mb-4">
+                      <Leaf className="w-3 h-3" />
+                      {room.view_type}
+                    </span>
+                  )}
 
                   <h3 className="text-2xl md:text-3xl font-serif font-semibold text-primary-foreground mb-2">
                     {room.name}
                   </h3>
 
-                  <p className="text-primary-foreground/80 text-sm mb-4 line-clamp-2">
-                    {room.description}
-                  </p>
+                  {/* Description with Room Features/USP integrated */}
+                  {(room.description || room.room_features) && (
+                    <div className="mb-4">
+                      {room.description && (
+                        <p className="text-primary-foreground/80 text-sm mb-2 line-clamp-2">
+                          {room.description}
+                        </p>
+                      )}
+                      {room.room_features && (
+                        <p className="text-xs text-primary-foreground/70">
+                          <span className="font-medium text-primary-foreground/90">Features: </span>
+                          {room.room_features}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Stats */}
                   <div className="flex gap-4 text-primary-foreground/70 text-sm mb-4">
-                    <span className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {room.capacity.maxGuests} guests
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Maximize className="w-4 h-4" />
-                      {room.size}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Bed className="w-4 h-4" />
-                      {room.beds[0].type}
-                    </span>
+                    {room.max_guests && (
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        {room.adults_capacity && room.children_capacity && 
+                         (room.adults_capacity + room.children_capacity <= room.max_guests) ? (
+                          <>{room.max_guests} guests ({room.adults_capacity}A, {room.children_capacity}C)</>
+                        ) : (
+                          <>{room.max_guests} guests</>
+                        )}
+                      </span>
+                    )}
+                    {room.room_size_sqft && (
+                      <span className="flex items-center gap-1">
+                        <Maximize className="w-4 h-4" />
+                        {room.room_size_sqft} sq ft
+                      </span>
+                    )}
                   </div>
 
-                  {/* Price and CTA */}
-                  <div className="flex items-center justify-between pt-4 border-t border-primary-foreground/20">
-                    <div>
-                      <span className="text-xs text-primary-foreground/60 line-through">
-                        ₹{room.basePrice.toLocaleString()}
-                      </span>
-                      <div className="text-xl font-serif font-semibold text-primary-foreground">
-                        ₹{room.discountedPrice.toLocaleString()}
-                        <span className="text-xs font-normal opacity-70">/night</span>
-                      </div>
+                  {/* Room Amenities - Separate section */}
+                  {room.room_amenities && room.room_amenities.length > 0 && (
+                    <div className="mb-4">
+                      <RoomFeaturesSection 
+                        roomFeatures={null}
+                        roomAmenities={room.room_amenities}
+                        variant="compact"
+                      />
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
-                      onClick={scrollToBooking}
-                    >
-                      Book <ArrowRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </div>
+                  )}
+
+                  {/* Price and CTA */}
+                  {price && (
+                    <div className="flex items-center justify-between pt-4 border-t border-primary-foreground/20">
+                      <div>
+                        {originalPrice && originalPrice > price && (
+                          <span className="text-xs text-primary-foreground/60 line-through">
+                            ₹{Number(originalPrice).toLocaleString()}
+                          </span>
+                        )}
+                        <div className="text-xl font-serif font-semibold text-primary-foreground">
+                          ₹{Number(price).toLocaleString()}
+                          <span className="text-xs font-normal opacity-70">/night</span>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                        onClick={scrollToBooking}
+                      >
+                        Book <ArrowRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

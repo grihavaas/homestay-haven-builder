@@ -9,7 +9,7 @@ import {
   PartyPopper,
   CreditCard,
 } from "lucide-react";
-import { propertyData } from "@/lib/propertyData";
+import { useProperty } from "@/contexts/PropertyContext";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Clock,
@@ -22,8 +22,32 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function HouseRules() {
+  const { property, loading } = useProperty();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  if (loading || !property || !property.rules_and_policies || property.rules_and_policies.length === 0) {
+    return null;
+  }
+  
+  // Filter for house_rules only
+  const houseRules = property.rules_and_policies.filter((rule: any) => rule.rule_type === 'house_rules');
+  
+  if (houseRules.length === 0) {
+    return null;
+  }
+  
+  const getIcon = (ruleType: string) => {
+    // Map rule types to icons
+    const iconMapByType: Record<string, React.ComponentType<{ className?: string }>> = {
+      house_rules: Clock,
+      check_in_requirements: Clock,
+      cancellation: Ban,
+      terms: CreditCard,
+      privacy: Users,
+    };
+    return iconMapByType[ruleType] || Clock;
+  };
 
   return (
     <section id="rules" className="py-20 md:py-32 bg-background">
@@ -47,11 +71,11 @@ export function HouseRules() {
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            {propertyData.rules.map((rule, index) => {
-              const Icon = iconMap[rule.icon] || Clock;
+            {houseRules.map((rule: any, index: number) => {
+              const Icon = getIcon(rule.rule_type);
               return (
                 <motion.div
-                  key={index}
+                  key={rule.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: index * 0.1 }}
@@ -60,7 +84,7 @@ export function HouseRules() {
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <span className="text-foreground">{rule.rule}</span>
+                  <span className="text-foreground">{rule.rule_text}</span>
                 </motion.div>
               );
             })}

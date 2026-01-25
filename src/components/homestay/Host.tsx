@@ -2,99 +2,231 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { MessageCircle, Clock, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { propertyData } from "@/lib/propertyData";
-import hostPortrait from "@/assets/host-portrait.jpg";
+import { useProperty } from "@/contexts/PropertyContext";
 
 export function Host() {
+  const { property, loading } = useProperty();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  if (loading || !property || !property.hosts || property.hosts.length === 0) {
+    return null;
+  }
+  
+  // Helper function to get host image - returns null if no image found
+  const getHostImage = (host: any) => {
+    return property.media?.find((m: any) => 
+      m.media_type === 'host_image' && m.host_id === host.id
+    )?.s3_url || property.media?.find((m: any) => 
+      m.media_type === 'host_image' && !m.host_id && !m.room_id
+    )?.s3_url || null;
+  };
 
   return (
     <section id="host" className="py-20 md:py-32 bg-cream-dark">
       <div className="container mx-auto px-4">
-        <div ref={ref} className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-          {/* Image */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
-            className="relative"
-          >
-            <div className="relative rounded-2xl overflow-hidden shadow-elevated">
-              <img
-                src={hostPortrait}
-                alt={propertyData.host.name}
-                className="w-full aspect-square object-cover"
-              />
-            </div>
-            {/* Decorative Element */}
-            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-primary/10 rounded-2xl -z-10" />
-            <div className="absolute -top-6 -left-6 w-24 h-24 bg-sage/10 rounded-2xl -z-10" />
-          </motion.div>
+        <motion.div
+          ref={ref}
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          className="max-w-6xl mx-auto"
+        >
+          <span className="text-sm uppercase tracking-wider text-primary font-medium">
+            Meet Your Hosts
+          </span>
+          <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mt-3 mb-12">
+            {property.hosts.length === 1 ? 'Your Host' : 'Your Hosts'}
+          </h2>
 
-          {/* Content */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ delay: 0.2 }}
-          >
-            <span className="text-sm uppercase tracking-wider text-primary font-medium">
-              Meet Your Hosts
-            </span>
-            <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mt-3 mb-2">
-              {propertyData.host.name}
-            </h2>
-            <p className="text-muted-foreground italic mb-6">
-              {propertyData.host.title}
-            </p>
+          {/* Hosts Display - Single host takes full width, multiple hosts in grid */}
+          {property.hosts.length === 1 ? (
+            // Single host - full width layout
+            property.hosts.map((host: any) => {
+              const hostImage = getHostImage(host);
+              return (
+                <motion.div
+                  key={host.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  className="bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-card transition-shadow"
+                >
+                  <div className="grid md:grid-cols-2 gap-0">
+                    {/* Host Image - Only show if image exists */}
+                    {hostImage && (
+                      <div className="relative w-full aspect-square md:aspect-auto md:h-full overflow-hidden">
+                        <img
+                          src={hostImage}
+                          alt={host.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
 
-            <div className="prose text-muted-foreground mb-6">
-              <p className="leading-relaxed">{propertyData.host.bio}</p>
-              <p className="leading-relaxed mt-4">{propertyData.host.writeUp}</p>
-            </div>
+                    {/* Host Content */}
+                    <div className="p-6 md:p-8">
+                      <h3 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-2">
+                        {host.name}
+                      </h3>
+                      {host.title && (
+                        <p className="text-base text-muted-foreground italic mb-6">
+                          {host.title}
+                        </p>
+                      )}
 
-            {/* Quick Info */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Response Time</div>
-                  <div className="text-sm font-medium text-foreground">
-                    {propertyData.host.responseTime}
+                      {/* Bio/Writeup */}
+                      {(host.bio || host.writeup) && (
+                        <div className="prose prose-base text-muted-foreground mb-6">
+                          {host.bio && <p className="text-base leading-relaxed">{host.bio}</p>}
+                          {host.writeup && !host.bio && <p className="text-base leading-relaxed">{host.writeup}</p>}
+                        </div>
+                      )}
+
+                      {/* Quick Info */}
+                      <div className="space-y-4 mb-6">
+                        {host.response_time && (
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+                            <div>
+                              <div className="text-xs text-muted-foreground">Response Time</div>
+                              <div className="text-base font-medium text-foreground">
+                                {host.response_time}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {host.languages && host.languages.length > 0 && (
+                          <div className="flex items-start gap-3">
+                            <Languages className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                            <div>
+                              <div className="text-xs text-muted-foreground">Languages</div>
+                              <div className="text-base font-medium text-foreground">
+                                {host.languages.join(", ")}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* WhatsApp Button */}
+                      {host.whatsapp && (
+                        <Button
+                          variant="warm"
+                          size="lg"
+                          className="w-full md:w-auto"
+                          asChild
+                        >
+                          <a
+                            href={`https://wa.me/${host.whatsapp.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2"
+                          >
+                            <MessageCircle className="w-5 h-5" />
+                            Message Host
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Languages className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Languages</div>
-                  <div className="text-sm font-medium text-foreground">
-                    {propertyData.host.languages.slice(0, 2).join(", ")}
-                  </div>
-                </div>
-              </div>
-            </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            // Multiple hosts - grid layout
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {property.hosts.map((host: any, index: number) => {
+                const hostImage = getHostImage(host);
+                return (
+                  <motion.div
+                    key={host.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-card transition-shadow"
+                  >
+                    {/* Host Image - Only show if image exists */}
+                    {hostImage && (
+                      <div className="relative w-full aspect-square overflow-hidden">
+                        <img
+                          src={hostImage}
+                          alt={host.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
 
-            <Button
-              variant="warm"
-              size="lg"
-              asChild
-            >
-              <a
-                href={`https://wa.me/${propertyData.host.contact.whatsapp.replace(/\D/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Message the Hosts
-              </a>
-            </Button>
-          </motion.div>
-        </div>
+                    {/* Host Content */}
+                    <div className="p-6">
+                      <h3 className="text-xl font-serif font-semibold text-foreground mb-1">
+                        {host.name}
+                      </h3>
+                      {host.title && (
+                        <p className="text-sm text-muted-foreground italic mb-4">
+                          {host.title}
+                        </p>
+                      )}
+
+                      {/* Bio/Writeup */}
+                      {(host.bio || host.writeup) && (
+                        <div className="prose prose-sm text-muted-foreground mb-4">
+                          {host.bio && <p className="text-sm leading-relaxed line-clamp-3">{host.bio}</p>}
+                          {host.writeup && !host.bio && <p className="text-sm leading-relaxed line-clamp-3">{host.writeup}</p>}
+                        </div>
+                      )}
+
+                      {/* Quick Info */}
+                      <div className="space-y-3 mb-4">
+                        {host.response_time && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-primary flex-shrink-0" />
+                            <div>
+                              <div className="text-xs text-muted-foreground">Response Time</div>
+                              <div className="text-sm font-medium text-foreground">
+                                {host.response_time}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {host.languages && host.languages.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <Languages className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                            <div>
+                              <div className="text-xs text-muted-foreground">Languages</div>
+                              <div className="text-sm font-medium text-foreground">
+                                {host.languages.slice(0, 2).join(", ")}
+                                {host.languages.length > 2 && ` +${host.languages.length - 2} more`}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* WhatsApp Button */}
+                      {host.whatsapp && (
+                        <Button
+                          variant="warm"
+                          size="sm"
+                          className="w-full"
+                          asChild
+                        >
+                          <a
+                            href={`https://wa.me/${host.whatsapp.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Message Host
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </motion.div>
       </div>
     </section>
   );
