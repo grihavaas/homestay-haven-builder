@@ -1,10 +1,22 @@
 import { motion } from "framer-motion";
 import { Star, MapPin, Anchor } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { propertyData } from "@/lib/propertyData";
+import { useProperty } from "@/contexts/PropertyContext";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function BackwaterHero() {
+  const { property, loading } = useProperty();
+  
+  if (loading || !property) {
+    return null;
+  }
+  
+  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+  const avgRating = property.review_sources?.length > 0
+    ? property.review_sources.reduce((sum: number, r: any) => sum + (r.stars || 0), 0) / property.review_sources.length
+    : 0;
+  const totalReviews = property.review_sources?.reduce((sum: number, r: any) => sum + (r.total_reviews || 0), 0) || 0;
+  
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
@@ -17,8 +29,8 @@ export function BackwaterHero() {
       {/* Layered, flowing background - Backwater minimal style */}
       <div className="absolute inset-0">
         <img
-          src={heroImage}
-          alt={propertyData.name}
+          src={heroMedia}
+          alt={property.name}
           className="w-full h-full object-cover"
         />
         {/* Soft, reflective gradient */}
@@ -37,16 +49,6 @@ export function BackwaterHero() {
           <Anchor className="w-8 h-8 text-primary/60" />
         </motion.div>
 
-        {/* Classification - minimal */}
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-6"
-        >
-          {propertyData.classification}
-        </motion.span>
-
         {/* Main title - elegant, spacious */}
         <motion.h1
           initial={{ opacity: 0 }}
@@ -54,44 +56,52 @@ export function BackwaterHero() {
           transition={{ delay: 0.5 }}
           className="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-foreground mb-6 tracking-tight"
         >
-          {propertyData.name}
+          {property.name}
         </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-lg md:text-xl text-muted-foreground font-light mb-4"
-        >
-          {propertyData.tagline}
-        </motion.p>
+        {property.tagline && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-lg md:text-xl text-muted-foreground font-light mb-4"
+          >
+            {property.tagline}
+          </motion.p>
+        )}
 
         {/* Location - subtle */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="flex items-center gap-2 text-muted-foreground mb-12"
-        >
-          <MapPin className="w-4 h-4" />
-          <span className="text-sm">{propertyData.location.city}, {propertyData.location.state}</span>
-        </motion.div>
+        {(property.city || property.state) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="flex items-center gap-2 text-muted-foreground mb-12"
+          >
+            <MapPin className="w-4 h-4" />
+            <span className="text-sm">{[property.city, property.state].filter(Boolean).join(", ")}</span>
+          </motion.div>
+        )}
 
         {/* Rating - horizontal line style */}
-        <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ delay: 0.8 }}
-          className="flex items-center gap-4 mb-16"
-        >
-          <div className="w-12 h-px bg-border" />
-          <div className="flex items-center gap-2">
-            <Star className="w-4 h-4 text-primary fill-current" />
-            <span className="text-sm font-medium">{propertyData.ratings.overall}</span>
-            <span className="text-sm text-muted-foreground">· {propertyData.ratings.totalReviews} reviews</span>
-          </div>
-          <div className="w-12 h-px bg-border" />
-        </motion.div>
+        {avgRating > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            transition={{ delay: 0.8 }}
+            className="flex items-center gap-4 mb-16"
+          >
+            <div className="w-12 h-px bg-border" />
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-primary fill-current" />
+              <span className="text-sm font-medium">{avgRating.toFixed(1)}</span>
+              {totalReviews > 0 && (
+                <span className="text-sm text-muted-foreground">· {totalReviews} reviews</span>
+              )}
+            </div>
+            <div className="w-12 h-px bg-border" />
+          </motion.div>
+        )}
 
         {/* CTAs - minimal, rounded */}
         <motion.div

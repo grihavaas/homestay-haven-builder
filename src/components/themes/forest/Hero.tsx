@@ -1,10 +1,22 @@
 import { motion } from "framer-motion";
 import { Star, MapPin, TreePine, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { propertyData } from "@/lib/propertyData";
+import { useProperty } from "@/contexts/PropertyContext";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function ForestHero() {
+  const { property, loading } = useProperty();
+  
+  if (loading || !property) {
+    return null;
+  }
+  
+  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+  const avgRating = property.review_sources?.length > 0
+    ? property.review_sources.reduce((sum: number, r: any) => sum + (r.stars || 0), 0) / property.review_sources.length
+    : 0;
+  const totalReviews = property.review_sources?.reduce((sum: number, r: any) => sum + (r.total_reviews || 0), 0) || 0;
+  
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
@@ -23,72 +35,64 @@ export function ForestHero() {
           <div className="absolute bottom-40 right-10 w-48 h-48 bg-secondary/10 rounded-full blur-3xl" />
           
           <div className="container px-8 lg:px-16 py-20 relative z-10">
-            {/* Leaf accent */}
-            <motion.div
-              initial={{ opacity: 0, rotate: -45 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center gap-3 mb-8"
-            >
-              <Leaf className="w-6 h-6 text-primary" />
-              <div className="h-px w-16 bg-primary" />
-              <span className="text-sm font-medium text-primary uppercase tracking-wider">
-                {propertyData.type}
-              </span>
-            </motion.div>
-
             <motion.h1
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
               className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-foreground mb-6 leading-tight"
             >
-              {propertyData.name}
+              {property.name}
             </motion.h1>
 
-            <motion.p
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-xl text-muted-foreground mb-6 max-w-md"
-            >
-              {propertyData.tagline}
-            </motion.p>
+            {property.tagline && (
+              <motion.p
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-xl text-muted-foreground mb-6 max-w-md"
+              >
+                {property.tagline}
+              </motion.p>
+            )}
 
             {/* Location with organic border */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed border-primary/30 rounded-full mb-8"
-            >
-              <MapPin className="w-4 h-4 text-primary" />
-              <span className="text-sm">{propertyData.location.city}, {propertyData.location.state}</span>
-            </motion.div>
+            {(property.city || property.state) && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed border-primary/30 rounded-full mb-8"
+              >
+                <MapPin className="w-4 h-4 text-primary" />
+                <span className="text-sm">{[property.city, property.state].filter(Boolean).join(", ")}</span>
+              </motion.div>
+            )}
 
             {/* Rating */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center gap-4 mb-10"
-            >
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-4 h-4 ${
-                      i < Math.floor(propertyData.ratings.overall)
-                        ? "text-secondary fill-current"
-                        : "text-muted"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {propertyData.ratings.overall} · {propertyData.ratings.totalReviews} reviews
-              </span>
-            </motion.div>
+            {avgRating > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="flex items-center gap-4 mb-10"
+              >
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${
+                        i < Math.floor(avgRating)
+                          ? "text-secondary fill-current"
+                          : "text-muted"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {avgRating.toFixed(1)} {totalReviews > 0 && `· ${totalReviews} reviews`}
+                </span>
+              </motion.div>
+            )}
 
             {/* CTAs */}
             <motion.div
@@ -117,23 +121,13 @@ export function ForestHero() {
             className="absolute inset-0"
           >
             <img
-              src={heroImage}
-              alt={propertyData.name}
+              src={heroMedia}
+              alt={property.name}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-background/20" />
           </motion.div>
 
-          {/* Floating classification badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="absolute bottom-8 right-8 bg-background/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-elevated"
-          >
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Certified</span>
-            <p className="font-serif font-semibold text-foreground">{propertyData.classification}</p>
-          </motion.div>
         </div>
       </div>
     </section>

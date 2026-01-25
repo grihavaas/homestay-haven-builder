@@ -1,10 +1,21 @@
 import { motion } from "framer-motion";
-import { Star, MapPin, Award, Mountain } from "lucide-react";
+import { Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { propertyData } from "@/lib/propertyData";
+import { useProperty } from "@/contexts/PropertyContext";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function MountainHero() {
+  const { property, loading } = useProperty();
+  
+  if (loading || !property) {
+    return null;
+  }
+  
+  // Schema: media has s3_url and media_type (hero, gallery, room_image, video, host_image)
+  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+  const avgRating = property.review_sources?.length > 0
+    ? property.review_sources.reduce((sum: number, r: any) => sum + (r.stars || 0), 0) / property.review_sources.length
+    : 0;
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
@@ -17,8 +28,8 @@ export function MountainHero() {
       {/* Dramatic dark overlay - Mountain style */}
       <div className="absolute inset-0">
         <img
-          src={heroImage}
-          alt={propertyData.name}
+          src={heroMedia}
+          alt={property.name}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
@@ -28,31 +39,13 @@ export function MountainHero() {
       {/* Centered content with strong typography */}
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Mountain icon accent */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-8"
-          >
-            <Mountain className="w-16 h-16 text-primary mx-auto" />
-          </motion.div>
-
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="inline-block px-4 py-2 bg-primary/20 text-primary rounded text-sm font-bold uppercase tracking-widest mb-6"
-          >
-            {propertyData.classification}
-          </motion.span>
-
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-primary-foreground mb-6 leading-none"
           >
-            {propertyData.name}
+            {property.name}
           </motion.h1>
 
           <motion.div
@@ -62,46 +55,52 @@ export function MountainHero() {
             className="w-24 h-1 bg-primary mx-auto mb-6"
           />
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-xl md:text-2xl text-primary-foreground/80 mb-4"
-          >
-            {propertyData.tagline}
-          </motion.p>
+          {property.tagline && (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-xl md:text-2xl text-primary-foreground/80 mb-4"
+            >
+              {property.tagline}
+            </motion.p>
+          )}
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="flex items-center justify-center gap-2 text-primary-foreground/70 mb-10"
-          >
-            <MapPin className="w-5 h-5" />
-            <span>{propertyData.location.city}, {propertyData.location.state}</span>
-          </motion.div>
+          {(property.city || property.state) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="flex items-center justify-center gap-2 text-primary-foreground/70 mb-10"
+            >
+              <MapPin className="w-5 h-5" />
+              <span>{[property.city, property.state].filter(Boolean).join(", ")}</span>
+            </motion.div>
+          )}
 
           {/* Rating badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="flex items-center justify-center gap-1 mb-10"
-          >
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-6 h-6 ${
-                  i < Math.floor(propertyData.ratings.overall)
-                    ? "text-primary fill-current"
-                    : "text-primary/30"
-                }`}
-              />
-            ))}
-            <span className="ml-2 text-primary-foreground font-semibold">
-              {propertyData.ratings.overall}
-            </span>
-          </motion.div>
+          {avgRating > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="flex items-center justify-center gap-1 mb-10"
+            >
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-6 h-6 ${
+                    i < Math.floor(avgRating)
+                      ? "text-primary fill-current"
+                      : "text-primary/30"
+                  }`}
+                />
+              ))}
+              <span className="ml-2 text-primary-foreground font-semibold">
+                {avgRating.toFixed(1)}
+              </span>
+            </motion.div>
+          )}
 
           {/* Stacked CTAs */}
           <motion.div

@@ -31,9 +31,34 @@ import { Location } from "./homestay/Location";
 import { Booking } from "./homestay/Booking";
 import { HouseRules } from "./homestay/HouseRules";
 import { Footer } from "./homestay/Footer";
+import { useProperty } from "@/contexts/PropertyContext";
+import { DocumentHead } from "./DocumentHead";
 
 export function ThemedContent() {
   const { currentTheme } = useTheme();
+  const { property, loading, error } = useProperty();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading property...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error || !property) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Failed to load property</p>
+          <p className="text-muted-foreground text-sm">{error || "Property not found"}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Render theme-specific Hero
   const renderHero = () => {
@@ -61,6 +86,7 @@ export function ThemedContent() {
 
   return (
     <>
+      <DocumentHead />
       <Header />
       {renderHero()}
       <About />

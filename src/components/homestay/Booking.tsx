@@ -6,13 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { propertyData } from "@/lib/propertyData";
+import { useProperty } from "@/contexts/PropertyContext";
 import { toast } from "@/hooks/use-toast";
 
 export function Booking() {
+  const { property, loading } = useProperty();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  if (loading || !property) {
+    return null;
+  }
+  
+  const bookingSettings = property.booking_settings;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,11 +119,20 @@ export function Booking() {
                     <SelectValue placeholder="Select a room type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {propertyData.rooms.map((room) => (
-                      <SelectItem key={room.id} value={room.id}>
-                        {room.name} - ₹{room.discountedPrice.toLocaleString()}/night
-                      </SelectItem>
-                    ))}
+                    {property.rooms?.map((room: any) => {
+                      const currentPricing = room.pricing?.find((p: any) => {
+                        const today = new Date();
+                        const validFrom = p.valid_from ? new Date(p.valid_from) : null;
+                        const validTo = p.valid_to ? new Date(p.valid_to) : null;
+                        return (!validFrom || today >= validFrom) && (!validTo || today <= validTo);
+                      }) || room.pricing?.[0];
+                      const price = currentPricing?.discounted_rate || currentPricing?.base_rate || room.base_rate;
+                      return (
+                        <SelectItem key={room.id} value={room.id}>
+                          {room.name} - ₹{Number(price || 0).toLocaleString()}/night
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -168,29 +184,35 @@ export function Booking() {
                 Our team is available from 8 AM to 10 PM to assist you with bookings and inquiries.
               </p>
               <div className="space-y-4">
-                <a
-                  href={`tel:${propertyData.contact.phone}`}
-                  className="flex items-center gap-3 text-primary-foreground hover:text-primary-foreground/80 transition-colors"
-                >
-                  <Phone className="w-5 h-5" />
-                  {propertyData.contact.phone}
-                </a>
-                <a
-                  href={`mailto:${propertyData.contact.email}`}
-                  className="flex items-center gap-3 text-primary-foreground hover:text-primary-foreground/80 transition-colors"
-                >
-                  <Mail className="w-5 h-5" />
-                  {propertyData.contact.email}
-                </a>
-                <a
-                  href={`https://wa.me/${propertyData.contact.whatsapp.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-primary-foreground hover:text-primary-foreground/80 transition-colors"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  WhatsApp Us
-                </a>
+                {property.phone && (
+                  <a
+                    href={`tel:${property.phone}`}
+                    className="flex items-center gap-3 text-primary-foreground hover:text-primary-foreground/80 transition-colors"
+                  >
+                    <Phone className="w-5 h-5" />
+                    {property.phone}
+                  </a>
+                )}
+                {property.email && (
+                  <a
+                    href={`mailto:${property.email}`}
+                    className="flex items-center gap-3 text-primary-foreground hover:text-primary-foreground/80 transition-colors"
+                  >
+                    <Mail className="w-5 h-5" />
+                    {property.email}
+                  </a>
+                )}
+                {property.hosts?.[0]?.whatsapp && (
+                  <a
+                    href={`https://wa.me/${property.hosts[0].whatsapp.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-primary-foreground hover:text-primary-foreground/80 transition-colors"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    WhatsApp Us
+                  </a>
+                )}
               </div>
             </div>
 
@@ -199,54 +221,137 @@ export function Booking() {
               <h3 className="font-serif text-lg font-semibold text-foreground mb-4">
                 Check-in & Check-out
               </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Check-in</span>
-                  <span className="font-medium text-foreground">{propertyData.booking.checkIn}</span>
+              {bookingSettings && (
+                <div className="space-y-3 text-sm">
+                  {bookingSettings.check_in_time && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Check-in</span>
+                      <span className="font-medium text-foreground">{bookingSettings.check_in_time}</span>
+                    </div>
+                  )}
+                  {bookingSettings.check_out_time && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Check-out</span>
+                      <span className="font-medium text-foreground">{bookingSettings.check_out_time}</span>
+                    </div>
+                  )}
+                  {bookingSettings.min_stay_nights && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Minimum Stay</span>
+                      <span className="font-medium text-foreground">{bookingSettings.min_stay_nights} night{bookingSettings.min_stay_nights > 1 ? 's' : ''}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Check-out</span>
-                  <span className="font-medium text-foreground">{propertyData.booking.checkOut}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Minimum Stay</span>
-                  <span className="font-medium text-foreground">{propertyData.booking.minStay} night</span>
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Cancellation Policy */}
-            <div className="bg-card rounded-xl p-6 shadow-soft">
-              <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <h3 className="font-serif text-lg font-semibold text-foreground mb-2">
-                    Cancellation Policy
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {propertyData.booking.policies.cancellation}
-                  </p>
+            {/* Cancellation Policy - 3-Tier System */}
+            {(bookingSettings?.cancellation_full_refund_policy || 
+              bookingSettings?.cancellation_partial_refund_policy || 
+              bookingSettings?.cancellation_no_refund_policy ||
+              bookingSettings?.cancellation_policy) && (
+              <div className="bg-card rounded-xl p-6 shadow-soft">
+                <div className="flex items-start gap-3 mb-4">
+                  <Info className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <h3 className="font-serif text-lg font-semibold text-foreground mb-2">
+                      Cancellation Policy
+                    </h3>
+                    {/* Legacy single cancellation_policy field */}
+                    {bookingSettings?.cancellation_policy && 
+                     !bookingSettings?.cancellation_full_refund_policy &&
+                     !bookingSettings?.cancellation_partial_refund_policy &&
+                     !bookingSettings?.cancellation_no_refund_policy && (
+                      <p className="text-sm text-muted-foreground">
+                        {bookingSettings.cancellation_policy}
+                      </p>
+                    )}
+                  </div>
                 </div>
+
+                {/* 3-Tier Cancellation Policies */}
+                {(bookingSettings?.cancellation_full_refund_policy || 
+                  bookingSettings?.cancellation_partial_refund_policy || 
+                  bookingSettings?.cancellation_no_refund_policy) && (
+                  <div className="space-y-3 mt-4">
+                    {/* Full Refund Policy */}
+                    {bookingSettings?.cancellation_full_refund_policy && (
+                      <div className="border-l-4 border-green-500 pl-4 py-2 bg-green-50/50 rounded-r">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700">
+                            1
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">Full Refund</span>
+                          {bookingSettings?.cancellation_full_refund_hours && (
+                            <span className="text-xs text-muted-foreground">
+                              (Cancel {bookingSettings.cancellation_full_refund_hours}+ hours before check-in)
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {bookingSettings.cancellation_full_refund_policy}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Partial Refund Policy */}
+                    {bookingSettings?.cancellation_partial_refund_policy && (
+                      <div className="border-l-4 border-yellow-500 pl-4 py-2 bg-yellow-50/50 rounded-r">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-100 text-xs font-semibold text-yellow-700">
+                            2
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">Partial Refund</span>
+                          {bookingSettings?.cancellation_partial_refund_hours && (
+                            <span className="text-xs text-muted-foreground">
+                              (Cancel {bookingSettings.cancellation_partial_refund_hours}+ hours before check-in)
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {bookingSettings.cancellation_partial_refund_policy}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* No Refund Policy */}
+                    {bookingSettings?.cancellation_no_refund_policy && (
+                      <div className="border-l-4 border-red-500 pl-4 py-2 bg-red-50/50 rounded-r">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700">
+                            3
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">No Refund</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {bookingSettings.cancellation_no_refund_policy}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {/* Payment Methods */}
-            <div className="bg-card rounded-xl p-6 shadow-soft">
-              <h3 className="font-serif text-lg font-semibold text-foreground mb-4">
-                We Accept
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {propertyData.booking.policies.methods.map((method) => (
-                  <span
-                    key={method}
-                    className="flex items-center gap-1 text-sm px-3 py-1.5 bg-muted rounded-full text-muted-foreground"
-                  >
-                    <CheckCircle className="w-3 h-3" />
-                    {method}
-                  </span>
-                ))}
+            {property.payment_methods && property.payment_methods.length > 0 && (
+              <div className="bg-card rounded-xl p-6 shadow-soft">
+                <h3 className="font-serif text-lg font-semibold text-foreground mb-4">
+                  We Accept
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {property.payment_methods.map((method: any) => (
+                    <span
+                      key={method.id}
+                      className="flex items-center gap-1 text-sm px-3 py-1.5 bg-muted rounded-full text-muted-foreground"
+                    >
+                      <CheckCircle className="w-3 h-3" />
+                      {method.payment_type}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </motion.div>
         </div>
       </div>
