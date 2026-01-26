@@ -17,11 +17,21 @@ http://localhost:3000/admin/reset-password
 http://localhost:3000/admin/login
 ```
 
-For production, add:
+For production (homestay.gudcook.me), configure:
+
+**Site URL:**
 ```
-https://yourdomain.com/admin/reset-password
-https://yourdomain.com/admin/login
+https://homestay.gudcook.me
 ```
+
+**Redirect URLs (add ALL of these):**
+```
+https://homestay.gudcook.me/admin/reset-password
+https://homestay.gudcook.me/admin/login
+https://homestay.gudcook.me/**
+```
+
+**Important:** The Site URL must match your production domain. If it's set to `localhost:3000`, Supabase will reject authentication requests from your production domain, causing sessions to fail and redirecting users back to login.
 
 ### 2. How It Works
 

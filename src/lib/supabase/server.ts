@@ -23,6 +23,7 @@ export async function createSupabaseServerClient() {
       },
       setAll(cookiesToSet) {
         try {
+          // Let Supabase handle cookie options - don't override them
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, options),
           );

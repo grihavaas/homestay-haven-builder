@@ -23,7 +23,7 @@ export async function middleware(req: NextRequest) {
   });
 
   // Handle Supabase auth cookie refresh for admin routes
-  // This ensures auth tokens are refreshed and cookies are updated
+  // Supabase SSR automatically refreshes tokens and updates cookies
   if (isAdmin && req.nextUrl.pathname.startsWith("/admin")) {
     try {
       const supabase = createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
@@ -32,6 +32,7 @@ export async function middleware(req: NextRequest) {
             return req.cookies.getAll();
           },
           setAll(cookiesToSet) {
+            // Let Supabase handle cookie options - don't override them
             cookiesToSet.forEach(({ name, value, options }) => {
               req.cookies.set(name, value);
               res.cookies.set(name, value, options);
@@ -40,11 +41,10 @@ export async function middleware(req: NextRequest) {
         },
       });
 
-      // Refresh the session - this updates cookies if needed
-      // Only call getUser if we're not on the login page to avoid unnecessary calls
-      if (!req.nextUrl.pathname.startsWith("/admin/login") && !req.nextUrl.pathname.startsWith("/admin/reset-password")) {
-        await supabase.auth.getUser();
-      }
+      // Just refresh the session - Supabase handles token refresh automatically
+      // Don't call getUser() here as it's not needed and can interfere with cookie setting
+      // The server components will call getUser() when needed via requireUser()
+      await supabase.auth.getSession();
     } catch (error) {
       // If there's an error with auth, allow the request to continue
       // The server component will handle the redirect if needed
