@@ -1,8 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { normalizeHostname, isAdminHost } from "@/lib/tenant";
+import { env } from "@/lib/env";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const hostname = normalizeHostname(req.headers.get("host"));
   const isAdmin = isAdminHost(hostname);
 
@@ -13,7 +15,40 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const res = NextResponse.next();
+  // Create a response object
+  let res = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
+
+  // Handle Supabase auth cookie refresh for admin routes
+  // This ensures auth tokens are refreshed and cookies are updated
+  if (isAdmin && req.nextUrl.pathname.startsWith("/admin")) {
+    try {
+      const supabase = createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
+        cookies: {
+          getAll() {
+            return req.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              req.cookies.set(name, value);
+              res.cookies.set(name, value, options);
+            });
+          },
+        },
+      });
+
+      // Refresh the session - this updates cookies if needed
+      await supabase.auth.getUser();
+    } catch (error) {
+      // If there's an error with auth, allow the request to continue
+      // The server component will handle the redirect if needed
+      console.error("Middleware auth refresh error:", error);
+    }
+  }
+
   res.headers.set("x-homestay-host", hostname ?? "");
   res.headers.set("x-homestay-is-admin", isAdmin ? "1" : "0");
   return res;

@@ -12,14 +12,25 @@ export type Membership = {
 export async function requireUser() {
   try {
     const supabase = await createSupabaseServerClient();
+    
+    // First check if we have a session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData?.session) {
+      console.log("No session found, redirecting to login");
+      redirect("/admin/login");
+    }
+    
+    // Then get the user
     const { data, error } = await supabase.auth.getUser();
     // Handle missing session gracefully - redirect to login
     if (error || !data?.user) {
+      console.log("Error getting user or no user data:", error?.message);
       redirect("/admin/login");
     }
     return data.user;
   } catch (err) {
     // Catch any auth errors (like AuthSessionMissingError) and redirect
+    console.error("Error in requireUser:", err);
     redirect("/admin/login");
   }
 }

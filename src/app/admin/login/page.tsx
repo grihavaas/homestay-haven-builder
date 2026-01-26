@@ -35,8 +35,17 @@ function LoginForm() {
         throw new Error("Login succeeded but no user data returned");
       }
       
-      // Login succeeded - navigate immediately
+      // Login succeeded - wait for session to be established in cookies
       // The auth context will handle refresh automatically via onAuthStateChange
+      // Give a small delay to ensure cookies are set before navigating
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify session is available before navigating
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        throw new Error("Session not established after login");
+      }
+      
       router.push("/admin");
       router.refresh();
       
