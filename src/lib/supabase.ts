@@ -1,12 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
+import { createSupabaseBrowserClient } from "./supabase/browser";
+import { env } from "./env";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Legacy client for backward compatibility (use createSupabaseBrowserClient instead)
+export const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey);
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase environment variables. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY",
-  );
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Use browser client for auth operations
+export { createSupabaseBrowserClient };

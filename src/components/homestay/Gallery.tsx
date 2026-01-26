@@ -54,7 +54,7 @@ export function Gallery() {
 
           {/* Gallery Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {galleryImages.map((image, index) => (
+            {galleryImages.map((image: { src: string; alt: string; category: string }, index: number) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, scale: 0.9 }}

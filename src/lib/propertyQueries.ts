@@ -16,7 +16,7 @@ export async function fetchPublishedProperty(propertyId: string) {
     .select("*")
     .eq("id", propertyId)
     .eq("is_published", true)
-    .single();
+    .maybeSingle();
   if (propError) throw propError;
   if (!property) return null;
 

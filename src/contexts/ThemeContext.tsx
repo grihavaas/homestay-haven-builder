@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ThemeId, themes, ThemeConfig } from '@/lib/themes';
 
@@ -11,8 +13,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [currentTheme, setCurrentTheme] = useState<ThemeId>(() => {
-    const stored = localStorage.getItem('homestay-theme');
-    return (stored as ThemeId) || 'beach';
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('homestay-theme');
+      return (stored as ThemeId) || 'beach';
+    }
+    return 'beach';
   });
 
   useEffect(() => {
