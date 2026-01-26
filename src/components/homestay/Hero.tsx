@@ -1,19 +1,41 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import heroImage from "@/assets/hero-homestay.jpg";
+import { useState, useEffect } from "react";
 
 export function Hero() {
   const { property, loading } = useProperty();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   if (loading || !property) {
     return null;
   }
   
-  // Get hero image from property media or fallback
-  // Schema: media has s3_url and media_type (hero, gallery, room_image, video, host_image)
-  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+  // Get all hero images from property media, then fallback to gallery, then default image
+  const heroImages = property.media?.filter((m: any) => m.media_type === 'hero').map((m: any) => m.s3_url) || [];
+  const galleryImages = property.media?.filter((m: any) => m.media_type === 'gallery').map((m: any) => m.s3_url) || [];
+  
+  // Combine hero images, fallback to gallery if no hero images, then default
+  const allImages = heroImages.length > 0 
+    ? heroImages 
+    : galleryImages.length > 0 
+    ? galleryImages 
+    : [heroImage];
+  
+  // Auto-rotate images every 30 seconds if there are multiple images
+  useEffect(() => {
+    if (allImages.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [allImages.length]);
   
   // Calculate average rating from reviews
   const avgRating = property.review_sources?.length > 0
@@ -32,13 +54,40 @@ export function Hero() {
     <section id="hero" className="relative min-h-screen flex items-center">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
-        <img
-          src={heroMedia}
-          alt={property.name}
-          className="w-full h-full object-cover"
-        />
+        {allImages.map((image, index) => (
+          <motion.img
+            key={image}
+            src={image}
+            alt={property.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: index === currentImageIndex ? 1 : 0,
+              scale: index === currentImageIndex ? 1 : 1.05
+            }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+          />
+        ))}
         <div className="absolute inset-0 bg-gradient-to-r from-charcoal/80 via-charcoal/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-charcoal/30" />
+        
+        {/* Image indicators (dots) - only show if multiple images */}
+        {allImages.length > 1 && (
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {allImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentImageIndex 
+                    ? 'w-8 bg-primary-foreground' 
+                    : 'w-2 bg-primary-foreground/40 hover:bg-primary-foreground/60'
+                }`}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Content */}
