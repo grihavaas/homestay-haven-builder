@@ -25,7 +25,6 @@ function LoginForm() {
     setSubmitting(true);
     setError(null);
     try {
-      console.log("[Login] Starting signInWithPassword...");
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -36,43 +35,18 @@ function LoginForm() {
         throw new Error("Login succeeded but no user data returned");
       }
 
-      console.log("[Login] Sign in successful, user:", data.user.email);
-      console.log("[Login] Session expires_at:", data.session?.expires_at);
-
-      // Login succeeded - wait for session to be established in cookies
+      // Wait for session to be established in cookies
       await new Promise(resolve => setTimeout(resolve, 200));
 
       // Verify session is available before navigating
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      console.log("[Login] After 200ms - getSession result:", {
-        hasSession: !!sessionData?.session,
-        sessionError: sessionError?.message,
-        expiresAt: sessionData?.session?.expires_at,
-      });
-
       if (sessionError || !sessionData?.session) {
-        console.error("[Login] Session not established after login:", sessionError);
         throw new Error("Session not established after login");
       }
 
-      // Check cookies directly
-      console.log("[Login] Document cookies:", document.cookie);
-
       // Force a router refresh to ensure server components get the new session
-      console.log("[Login] Calling router.refresh()...");
       router.refresh();
-
-      // Small delay before navigation to ensure refresh completes
       await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Check session one more time before navigation
-      const { data: finalCheck } = await supabase.auth.getSession();
-      console.log("[Login] Final session check before navigation:", {
-        hasSession: !!finalCheck?.session,
-        expiresAt: finalCheck?.session?.expires_at,
-      });
-
-      console.log("[Login] Navigating to /admin...");
       router.push("/admin");
       
       // Reset submitting after a short delay to allow navigation

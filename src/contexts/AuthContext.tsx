@@ -64,12 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!isMounted) return;
 
           try {
-            console.log("[AuthContext] Auth state change:", {
-              event,
-              userEmail: session?.user?.email,
-              hasAccessToken: !!session?.access_token,
-              expiresAt: session?.expires_at,
-            });
             if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
               if (!isMounted) return;
               setLoading(true);
