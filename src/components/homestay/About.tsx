@@ -34,7 +34,7 @@ export function About() {
               {property.property_history || property.name}
             </h2>
             <div className="prose prose-lg text-muted-foreground">
-              {descriptionParts.map((part, idx) => (
+              {descriptionParts.map((part: string, idx: number) => (
                 <p key={idx} className={`leading-relaxed ${idx > 0 ? 'mt-4' : ''}`}>
                   {part}
                 </p>

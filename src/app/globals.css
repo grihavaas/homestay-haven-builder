@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ========================================
+     BEACH THEME - Light, airy, ocean-inspired
+     ======================================== */
+  :root,
+  [data-theme="beach"] {
+    --background: 200 30% 98%;
+    --foreground: 210 25% 15%;
+
+    --card: 200 25% 96%;
+    --card-foreground: 210 25% 15%;
+
+    --popover: 200 30% 98%;
+    --popover-foreground: 210 25% 15%;
+
+    --primary: 195 70% 45%;
+    --primary-foreground: 200 30% 98%;
+
+    --secondary: 35 55% 60%;
+    --secondary-foreground: 210 25% 15%;
+
+    --muted: 200 20% 92%;
+    --muted-foreground: 210 15% 45%;
+
+    --accent: 195 60% 55%;
+    --accent-foreground: 210 25% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 200 30% 98%;
+
+    --border: 200 20% 88%;
+    --input: 200 20% 88%;
+    --ring: 195 70% 45%;
+
+    --radius: 0.5rem;
+  }
+
+  /* ========================================
+     FOREST THEME - Natural, earthy, green
+     ======================================== */
+  [data-theme="forest"] {
+    --background: 120 15% 96%;
+    --foreground: 120 25% 12%;
+
+    --card: 120 12% 94%;
+    --card-foreground: 120 25% 12%;
+
+    --popover: 120 15% 96%;
+    --popover-foreground: 120 25% 12%;
+
+    --primary: 142 60% 35%;
+    --primary-foreground: 120 15% 96%;
+
+    --secondary: 45 50% 55%;
+    --secondary-foreground: 120 25% 12%;
+
+    --muted: 120 10% 90%;
+    --muted-foreground: 120 15% 40%;
+
+    --accent: 142 50% 45%;
+    --accent-foreground: 120 25% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 120 15% 96%;
+
+    --border: 120 10% 86%;
+    --input: 120 10% 86%;
+    --ring: 142 60% 35%;
+  }
+
+  /* ========================================
+     MOUNTAIN THEME - Cool, crisp, elevated
+     ======================================== */
+  [data-theme="mountain"] {
+    --background: 210 20% 97%;
+    --foreground: 210 30% 10%;
+
+    --card: 210 15% 95%;
+    --card-foreground: 210 30% 10%;
+
+    --popover: 210 20% 97%;
+    --popover-foreground: 210 30% 10%;
+
+    --primary: 210 50% 40%;
+    --primary-foreground: 210 20% 97%;
+
+    --secondary: 200 30% 50%;
+    --secondary-foreground: 210 30% 10%;
+
+    --muted: 210 12% 91%;
+    --muted-foreground: 210 20% 35%;
+
+    --accent: 210 45% 50%;
+    --accent-foreground: 210 30% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 97%;
+
+    --border: 210 12% 87%;
+    --input: 210 12% 87%;
+    --ring: 210 50% 40%;
+  }
+
+  /* ========================================
+     ADVENTURE THEME - Bold, energetic, vibrant
+     ======================================== */
+  [data-theme="adventure"] {
+    --background: 25 20% 96%;
+    --foreground: 25 30% 12%;
+
+    --card: 25 15% 94%;
+    --card-foreground: 25 30% 12%;
+
+    --popover: 25 20% 96%;
+    --popover-foreground: 25 30% 12%;
+
+    --primary: 25 85% 50%;
+    --primary-foreground: 25 20% 96%;
+
+    --secondary: 200 60% 50%;
+    --secondary-foreground: 25 30% 12%;
+
+    --muted: 25 10% 90%;
+    --muted-foreground: 25 20% 40%;
+
+    --accent: 25 75% 55%;
+    --accent-foreground: 25 30% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 25 20% 96%;
+
+    --border: 25 10% 86%;
+    --input: 25 10% 86%;
+    --ring: 25 85% 50%;
+  }
+
+  /* ========================================
+     BACKWATER THEME - Serene, calm, water-inspired
+     ======================================== */
+  [data-theme="backwater"] {
+    --background: 180 25% 97%;
+    --foreground: 180 30% 10%;
+
+    --card: 180 20% 95%;
+    --card-foreground: 180 30% 10%;
+
+    --popover: 180 25% 97%;
+    --popover-foreground: 180 30% 10%;
+
+    --primary: 180 60% 35%;
+    --primary-foreground: 180 25% 97%;
+
+    --secondary: 45 40% 55%;
+    --secondary-foreground: 180 30% 10%;
+
+    --muted: 180 15% 91%;
+    --muted-foreground: 180 20% 35%;
+
+    --accent: 180 55% 45%;
+    --accent-foreground: 180 30% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 180 25% 97%;
+
+    --border: 180 15% 87%;
+    --input: 180 15% 87%;
+    --ring: 180 60% 35%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

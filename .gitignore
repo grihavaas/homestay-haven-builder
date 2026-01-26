@@ -12,6 +12,27 @@ dist
 dist-ssr
 *.local
 
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Environment variables - ignore all .env files and variants
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.backup
+.env.old
+.env.tmp
+*.env
+*.env.local
+*.env.backup
+*.env.old
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
