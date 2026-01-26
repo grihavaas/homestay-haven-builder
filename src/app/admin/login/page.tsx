@@ -35,26 +35,23 @@ function LoginForm() {
         throw new Error("Login succeeded but no user data returned");
       }
       
-      // Wait for auth context to refresh
-      await refresh();
-      
-      // Verify user is available (use same client instance)
-      const { data: { user: verifiedUser }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError && !userError.message?.includes('aborted')) {
-        throw new Error(`Failed to verify user session: ${userError.message}`);
-      }
-      
-      if (!verifiedUser) {
-        throw new Error("Failed to verify user session after login");
-      }
-      
-      // Navigate to admin page
+      // Login succeeded - navigate immediately
+      // The auth context will handle refresh automatically via onAuthStateChange
       router.push("/admin");
       router.refresh();
+      
+      // Reset submitting after a short delay to allow navigation
+      setTimeout(() => {
+        setSubmitting(false);
+      }, 500);
+      
     } catch (e: any) {
       // Ignore abort errors - they're usually from navigation
       if (e?.name === 'AbortError' || e?.message?.includes('aborted')) {
+        // If it's an abort error, navigation might have succeeded
+        // Try to navigate anyway
+        router.push("/admin");
+        setSubmitting(false);
         return;
       }
       
