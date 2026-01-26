@@ -9,15 +9,18 @@ export async function middleware(req: NextRequest) {
   const isAdmin = isAdminHost(hostname);
 
   // Debug logging for production troubleshooting
-  if (process.env.DEBUG_AUTH && req.nextUrl.pathname.startsWith("/admin")) {
+  const debugAuth = process.env.DEBUG_AUTH === "true";
+  if (debugAuth && req.nextUrl.pathname.startsWith("/admin")) {
     const adminHost = process.env.NEXT_PUBLIC_ADMIN_HOST || "localhost";
-    console.log("[Middleware]", {
+    const allCookies = req.cookies.getAll();
+    const authCookies = allCookies.filter(c => c.name.includes("sb-"));
+    console.log("[Middleware] Request:", {
       path: req.nextUrl.pathname,
       hostname,
       adminHost,
       isAdmin,
-      cookieCount: req.cookies.getAll().length,
-      authCookies: req.cookies.getAll().filter(c => c.name.includes("sb-")).map(c => c.name),
+      cookieCount: allCookies.length,
+      authCookieNames: authCookies.map(c => c.name),
     });
   }
 
@@ -28,33 +31,45 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Create a response object - important: we need to create this first
-  // and then potentially modify it when Supabase sets cookies
+  // Create response - we'll modify it if we need to update cookies
   let res = NextResponse.next({
     request: req,
   });
 
   // Handle Supabase auth cookie refresh for admin routes
-  // Supabase SSR automatically refreshes tokens and updates cookies
-  if (isAdmin && req.nextUrl.pathname.startsWith("/admin")) {
+  // Only process if this is an admin host and an admin route (not login/reset pages)
+  const shouldRefreshAuth = isAdmin &&
+    req.nextUrl.pathname.startsWith("/admin") &&
+    !req.nextUrl.pathname.startsWith("/admin/login") &&
+    !req.nextUrl.pathname.startsWith("/admin/reset-password") &&
+    !req.nextUrl.pathname.startsWith("/admin/logout");
+
+  if (shouldRefreshAuth) {
     try {
+      // Create Supabase client with cookie handling
       const supabase = createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
         cookies: {
           getAll() {
             return req.cookies.getAll();
           },
           setAll(cookiesToSet) {
-            // When Supabase refreshes tokens, it calls setAll with new cookies
-            // We need to set them on both the request (for downstream middleware/server components)
-            // and on the response (to send back to the browser)
+            // Log when cookies are being set/cleared
+            if (debugAuth) {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                const isDeleting = !value || options?.maxAge === 0;
+                console.log(`[Middleware] Cookie ${isDeleting ? 'DELETE' : 'SET'}: ${name}`, {
+                  hasValue: !!value,
+                  maxAge: options?.maxAge,
+                  path: options?.path,
+                });
+              });
+            }
+
+            // Apply cookies to both request and response
             cookiesToSet.forEach(({ name, value, options }) => {
-              // Set on request for downstream reads
               req.cookies.set(name, value);
-              // Set on response to persist in browser
-              // Ensure cookies work across the whole site
               res.cookies.set(name, value, {
                 ...options,
-                // Ensure path is set to root so cookies work for all routes
                 path: options?.path ?? "/",
               });
             });
@@ -62,30 +77,30 @@ export async function middleware(req: NextRequest) {
         },
       });
 
-      // Refresh the session - this may trigger setAll if token needs refresh
-      // Use getUser() instead of getSession() as recommended by Supabase
-      // getUser() validates the JWT with the server, ensuring the session is valid
-      const { error } = await supabase.auth.getUser();
+      // IMPORTANT: Only call getSession() which reads from cookies without validation.
+      // Do NOT call getUser() here as it makes a request to Supabase and can trigger
+      // token refresh which may fail and clear all cookies.
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-      if (error) {
-        // Log auth errors for debugging (except on login pages)
-        if (!req.nextUrl.pathname.startsWith("/admin/login") &&
-            !req.nextUrl.pathname.startsWith("/admin/reset-password")) {
-          console.log("Middleware auth check - no valid session:", error.message);
-        }
+      if (debugAuth) {
+        console.log("[Middleware] getSession result:", {
+          hasSession: !!session,
+          error: error?.message,
+          accessTokenExp: session?.expires_at,
+        });
       }
     } catch (error) {
-      // If there's an error with auth, allow the request to continue
-      // The server component will handle the redirect if needed
-      if (!req.nextUrl.pathname.startsWith("/admin/login") &&
-          !req.nextUrl.pathname.startsWith("/admin/reset-password")) {
-        console.error("Middleware auth refresh error:", error);
+      // Log but don't block - server component will handle auth
+      if (debugAuth) {
+        console.error("[Middleware] Auth error (non-blocking):", error);
       }
     }
   }
 
+  // Set custom headers for downstream use
   res.headers.set("x-homestay-host", hostname ?? "");
   res.headers.set("x-homestay-is-admin", isAdmin ? "1" : "0");
+
   return res;
 }
 
