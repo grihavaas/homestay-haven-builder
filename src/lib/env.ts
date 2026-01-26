@@ -23,6 +23,15 @@ export const env = {
   get adminHost(): string {
     return process.env.NEXT_PUBLIC_ADMIN_HOST || "localhost";
   },
+  // Admin site URL for constructing absolute URLs in admin operations (e.g., admin email links)
+  // Always constructed from NEXT_PUBLIC_ADMIN_HOST
+  // Note: For tenant-specific URLs, use getCurrentSiteUrl() which gets the URL from the request
+  get adminSiteUrl(): string {
+    const adminHost = this.adminHost;
+    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+    const port = process.env.NODE_ENV === "production" ? "" : ":3000";
+    return `${protocol}://${adminHost}${port}`;
+  },
   // Service role key for admin operations (server-side only, never expose to client)
   // ⚠️ SECURITY: This key has full admin access. Only use in server actions/API routes.
   get supabaseServiceRoleKey(): string {
