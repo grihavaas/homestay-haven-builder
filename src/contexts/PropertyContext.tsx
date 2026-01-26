@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { getCurrentHostname } from "@/lib/hostname";
+import { isAdminHost } from "@/lib/tenant";
 import { resolvePropertyIdByHostname, fetchPublishedProperty } from "@/lib/propertyQueries";
 
 type PropertyContextType = {
@@ -30,6 +31,13 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return;
         }
+        
+        // Skip property loading for admin domains
+        if (isAdminHost(hostname)) {
+          setLoading(false);
+          return;
+        }
+        
         const id = await resolvePropertyIdByHostname(hostname);
         if (!id) {
           setError(`No property found for hostname: ${hostname}`);

@@ -11,18 +11,18 @@ These are **required** for the application to work:
 ```bash
 # Supabase Project URL
 # Get this from: https://supabase.com/dashboard/project/YOUR_PROJECT/settings/api
-VITE_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 
 # Supabase Anonymous/Public Key (also called "anon key" or "publishable key")
 # Get this from the same API settings page
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 **Where to find these:**
 1. Go to your Supabase project dashboard
 2. Navigate to **Settings** → **API**
-3. Copy the **Project URL** → `VITE_SUPABASE_URL`
-4. Copy the **anon/public key** → `VITE_SUPABASE_ANON_KEY`
+3. Copy the **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+4. Copy the **anon/public key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ## Optional Variables
 
@@ -32,7 +32,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 # The hostname that should be treated as the admin interface
 # Defaults to "localhost" for local development
 # In production, set this to your admin domain
-VITE_ADMIN_HOST=localhost
+NEXT_PUBLIC_ADMIN_HOST=localhost
 ```
 
 **When to set:**
@@ -45,9 +45,9 @@ This is used to determine if the current request is accessing the admin interfac
 
 ```bash
 # ⚠️ SECURITY WARNING: This key has full admin access!
-# Only use in server-side code (backend API routes), NEVER expose to client
-# Currently optional since we're using client-side only
-VITE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+# Only use in server-side code (Server Actions/API routes), NEVER expose to client
+# Note: This does NOT use NEXT_PUBLIC_ prefix because it's server-only
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
 
 **Important Notes:**
@@ -64,7 +64,8 @@ VITE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```bash
 # Backend service URL for OTA import feature
 # Only needed if you're using the OTA import feature
-VITE_BACKEND_SERVICE_URL=http://localhost:3001
+# Note: This does NOT use NEXT_PUBLIC_ prefix because it's server-only
+BACKEND_SERVICE_URL=http://localhost:3001
 ```
 
 **When to set:**
@@ -77,36 +78,41 @@ VITE_BACKEND_SERVICE_URL=http://localhost:3001
 Create a `.env` file in the root of `homestay-haven-builder/`:
 
 ```bash
-# Required
-VITE_SUPABASE_URL=https://jrlrosxqrftbyeumhusb.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+# Required (client-side accessible)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 
-# Optional
-VITE_ADMIN_HOST=localhost
-# VITE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-# VITE_BACKEND_SERVICE_URL=http://localhost:3001
+# Optional (client-side accessible)
+NEXT_PUBLIC_ADMIN_HOST=localhost
+
+# Optional (server-side only - no NEXT_PUBLIC_ prefix)
+# SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# BACKEND_SERVICE_URL=http://localhost:3001
 ```
 
 ## Current Configuration Status
 
-Based on your existing `.env` file, you have:
-- ✅ `VITE_SUPABASE_URL` - Configured
-- ✅ `VITE_SUPABASE_ANON_KEY` - Configured
-- ⚠️ `VITE_ADMIN_HOST` - Not set (will default to "localhost")
-- ⚠️ `VITE_SUPABASE_SERVICE_ROLE_KEY` - Not set (optional, only for backend APIs)
-- ⚠️ `VITE_BACKEND_SERVICE_URL` - Not set (optional, only for OTA import)
+Based on your existing `.env` file, you should have:
+- ✅ `NEXT_PUBLIC_SUPABASE_URL` - Required
+- ✅ `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Required
+- ⚠️ `NEXT_PUBLIC_ADMIN_HOST` - Optional (defaults to "localhost")
+- ⚠️ `SUPABASE_SERVICE_ROLE_KEY` - Optional (server-side only, for admin operations)
+- ⚠️ `BACKEND_SERVICE_URL` - Optional (only for OTA import feature)
 
 ## Notes
 
-1. **Vite Environment Variables**: All variables must be prefixed with `VITE_` to be accessible in the browser
+1. **Next.js Environment Variables**: 
+   - Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser (client-side)
+   - Variables without `NEXT_PUBLIC_` are server-side only and never exposed to the client
+   - This is a security feature - sensitive keys should NOT use `NEXT_PUBLIC_` prefix
 2. **Security**: Never commit `.env` files to git (they should be in `.gitignore`)
 3. **Restart Required**: After changing `.env` file, restart your dev server (`npm run dev`)
 4. **Production**: Set these in your hosting platform's environment variables (Vercel, Netlify, etc.)
 
 ## Getting Your Supabase Credentials
 
-1. Go to: https://supabase.com/dashboard/project/jrlrosxqrftbyeumhusb/settings/api
+1. Go to your Supabase project dashboard: https://supabase.com/dashboard/project/YOUR_PROJECT_REF/settings/api
 2. Copy the values:
-   - **Project URL** → `VITE_SUPABASE_URL`
-   - **anon public** key → `VITE_SUPABASE_ANON_KEY`
-   - (Optional) **service_role** key → `VITE_SUPABASE_SERVICE_ROLE_KEY` (keep secret!)
+   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL` (client-side accessible)
+   - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY` (client-side accessible)
+   - (Optional) **service_role** key → `SUPABASE_SERVICE_ROLE_KEY` (server-side only, keep secret!)
