@@ -38,16 +38,20 @@ function LoginForm() {
       // Login succeeded - wait for session to be established in cookies
       // The auth context will handle refresh automatically via onAuthStateChange
       // Give a small delay to ensure cookies are set before navigating
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // Verify session is available before navigating
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData?.session) {
+        console.error("Session not established after login:", sessionError);
         throw new Error("Session not established after login");
       }
       
-      router.push("/admin");
+      // Force a router refresh to ensure server components get the new session
       router.refresh();
+      // Small delay before navigation to ensure refresh completes
+      await new Promise(resolve => setTimeout(resolve, 100));
+      router.push("/admin");
       
       // Reset submitting after a short delay to allow navigation
       setTimeout(() => {

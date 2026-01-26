@@ -41,11 +41,17 @@ export async function middleware(req: NextRequest) {
       });
 
       // Refresh the session - this updates cookies if needed
-      await supabase.auth.getUser();
+      // Only call getUser if we're not on the login page to avoid unnecessary calls
+      if (!req.nextUrl.pathname.startsWith("/admin/login") && !req.nextUrl.pathname.startsWith("/admin/reset-password")) {
+        await supabase.auth.getUser();
+      }
     } catch (error) {
       // If there's an error with auth, allow the request to continue
       // The server component will handle the redirect if needed
-      console.error("Middleware auth refresh error:", error);
+      // Don't log errors for login/reset-password pages
+      if (!req.nextUrl.pathname.startsWith("/admin/login") && !req.nextUrl.pathname.startsWith("/admin/reset-password")) {
+        console.error("Middleware auth refresh error:", error);
+      }
     }
   }
 

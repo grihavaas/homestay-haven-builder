@@ -13,24 +13,54 @@ export async function requireUser() {
   try {
     const supabase = await createSupabaseServerClient();
     
-    // First check if we have a session
+    // First try to get session to check if cookies are present
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !sessionData?.session) {
-      console.log("No session found, redirecting to login");
+    
+    // Debug: Log session check (only in development or with debug flag)
+    if (process.env.NODE_ENV === "development" || process.env.DEBUG_AUTH) {
+      console.log("Session check:", {
+        hasSession: !!sessionData?.session,
+        sessionError: sessionError?.message,
+        hasUser: !!sessionData?.session?.user,
+      });
+    }
+    
+    // Get the user directly
+    const { data, error } = await supabase.auth.getUser();
+    
+    // Handle missing session gracefully - redirect to login
+    if (error) {
+      // Log specific error for debugging (but not NEXT_REDIRECT which is expected)
+      if (error.message !== "NEXT_REDIRECT" && !error.message.includes("JWT")) {
+        console.log("Auth error in requireUser:", {
+          message: error.message,
+          name: error.name,
+          status: (error as any).status,
+        });
+      }
       redirect("/admin/login");
     }
     
-    // Then get the user
-    const { data, error } = await supabase.auth.getUser();
-    // Handle missing session gracefully - redirect to login
-    if (error || !data?.user) {
-      console.log("Error getting user or no user data:", error?.message);
+    if (!data?.user) {
+      if (process.env.NODE_ENV === "development" || process.env.DEBUG_AUTH) {
+        console.log("No user data returned from getUser() - redirecting to login");
+      }
       redirect("/admin/login");
     }
+    
     return data.user;
-  } catch (err) {
-    // Catch any auth errors (like AuthSessionMissingError) and redirect
-    console.error("Error in requireUser:", err);
+  } catch (err: any) {
+    // NEXT_REDIRECT is not an error - it's how Next.js handles redirects
+    // Re-throw it so Next.js can handle it properly
+    if (err?.digest?.startsWith("NEXT_REDIRECT")) {
+      throw err;
+    }
+    
+    // Log actual errors (not redirects)
+    console.error("Error in requireUser:", {
+      message: err instanceof Error ? err.message : String(err),
+      name: err instanceof Error ? err.name : undefined,
+    });
     redirect("/admin/login");
   }
 }
