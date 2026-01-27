@@ -113,7 +113,7 @@ export function BackwaterHero() {
           <Button size="lg" className="rounded-full px-8" onClick={() => scrollToSection("#booking")}>
             Reserve Now
           </Button>
-          <Button variant="heroOutline" size="lg" className="rounded-full px-8" onClick={() => scrollToSection("#rooms")}>
+          <Button variant="outline" size="lg" className="rounded-full px-8" onClick={() => scrollToSection("#rooms")}>
             View Rooms
           </Button>
         </motion.div>
