@@ -14,25 +14,66 @@ export function Booking() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [adults, setAdults] = useState("2");
+  const [children, setChildren] = useState("0");
+  const [selectedRoom, setSelectedRoom] = useState("");
+
   if (loading || !property) {
     return null;
   }
-  
+
   const bookingSettings = property.booking_settings;
+
+  // Get WhatsApp number from hosts or property
+  const whatsappNumber = property.hosts?.[0]?.whatsapp || property.phone || "";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      toast({
-        title: "Inquiry Sent!",
-        description: "We'll get back to you within 24 hours.",
-      });
-    }, 1500);
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    // Get form values
+    const checkin = formData.get("checkin") as string;
+    const checkout = formData.get("checkout") as string;
+    const name = formData.get("name") as string;
+    const phone = formData.get("phone") as string;
+    const email = formData.get("email") as string;
+    const requests = formData.get("requests") as string;
+
+    // Find room name from selected room ID (using state)
+    const roomData = property.rooms?.find((r: any) => r.id === selectedRoom);
+    const roomName = roomData?.name || "Not specified";
+
+    // Format the WhatsApp message
+    const message = `🏡 *Booking Inquiry - ${property.name}*
+
+📅 *Check-in:* ${checkin}
+📅 *Check-out:* ${checkout}
+👥 *Guests:* ${adults} Adult${parseInt(adults) > 1 ? "s" : ""}${parseInt(children) > 0 ? `, ${children} Child${parseInt(children) > 1 ? "ren" : ""}` : ""}
+🛏️ *Room:* ${roomName}
+
+👤 *Name:* ${name}
+📞 *Phone:* ${phone}
+✉️ *Email:* ${email}
+${requests ? `\n💬 *Special Requests:*\n${requests}` : ""}
+
+_Sent via ${property.name} website_`;
+
+    // Clean phone number (remove non-digits except leading +)
+    const cleanNumber = whatsappNumber.replace(/[^\d+]/g, "").replace(/^\+/, "");
+
+    // Open WhatsApp with pre-filled message
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+
+    setIsSubmitting(false);
+    window.open(whatsappUrl, "_blank");
+
+    toast({
+      title: "Opening WhatsApp",
+      description: "Complete your inquiry by sending the message.",
+    });
   };
 
   return (
@@ -59,6 +100,7 @@ export function Booking() {
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="checkin"
+                      name="checkin"
                       type="date"
                       className="pl-10"
                       required
@@ -71,6 +113,7 @@ export function Booking() {
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="checkout"
+                      name="checkout"
                       type="date"
                       className="pl-10"
                       required
@@ -82,7 +125,7 @@ export function Booking() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="adults">Adults</Label>
-                  <Select defaultValue="2">
+                  <Select value={adults} onValueChange={setAdults}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select adults" />
                     </SelectTrigger>
@@ -97,7 +140,7 @@ export function Booking() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="children">Children</Label>
-                  <Select defaultValue="0">
+                  <Select value={children} onValueChange={setChildren}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select children" />
                     </SelectTrigger>
@@ -114,7 +157,7 @@ export function Booking() {
 
               <div className="space-y-2">
                 <Label htmlFor="room">Room Type</Label>
-                <Select>
+                <Select value={selectedRoom} onValueChange={setSelectedRoom}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a room type" />
                   </SelectTrigger>
@@ -140,30 +183,32 @@ export function Booking() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="Your name" required />
+                  <Input id="name" name="name" placeholder="Your name" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" placeholder="+91 98765 43210" required />
+                  <Input id="phone" name="phone" type="tel" placeholder="+91 98765 43210" required />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="you@example.com" required />
+                <Input id="email" name="email" type="email" placeholder="you@example.com" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="requests">Special Requests (Optional)</Label>
                 <Textarea
                   id="requests"
+                  name="requests"
                   placeholder="Any special requirements or questions..."
                   rows={3}
                 />
               </div>
 
               <Button variant="warm" size="lg" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Sending..." : "Send Inquiry"}
+                <MessageCircle className="w-5 h-5 mr-2" />
+                {isSubmitting ? "Opening WhatsApp..." : "Send via WhatsApp"}
               </Button>
             </form>
           </motion.div>

@@ -95,7 +95,7 @@ export function BeachHero() {
               <Button size="lg" onClick={() => scrollToSection("#booking")}>
                 Book Your Stay
               </Button>
-              <Button variant="outline" size="lg" onClick={() => scrollToSection("#rooms")}>
+              <Button variant="heroOutline" size="lg" onClick={() => scrollToSection("#rooms")}>
                 View Rooms
               </Button>
             </motion.div>

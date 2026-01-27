@@ -113,10 +113,9 @@ export function AdventureHero() {
                 Start Your Adventure
                 <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="heroOutline"
                 size="lg"
-                className="border-white/50 text-white hover:bg-white/20 hover:border-white"
                 onClick={() => scrollToSection("#rooms")}
               >
                 Explore Rooms

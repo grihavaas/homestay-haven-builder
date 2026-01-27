@@ -105,8 +105,8 @@ export function ForestHero() {
                 <TreePine className="w-4 h-4 mr-2" />
                 Book Your Escape
               </Button>
-              <Button variant="ghost" size="lg" onClick={() => scrollToSection("#rooms")}>
-                Discover Rooms →
+              <Button variant="warmOutline" size="lg" onClick={() => scrollToSection("#rooms")}>
+                Discover Rooms
               </Button>
             </motion.div>
           </div>

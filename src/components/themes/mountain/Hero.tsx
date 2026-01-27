@@ -112,7 +112,7 @@ export function MountainHero() {
             <Button size="lg" className="min-w-48" onClick={() => scrollToSection("#booking")}>
               Reserve Your Retreat
             </Button>
-            <Button variant="outline" size="lg" className="min-w-48 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10" onClick={() => scrollToSection("#rooms")}>
+            <Button variant="heroOutline" size="lg" className="min-w-48" onClick={() => scrollToSection("#rooms")}>
               Explore Accommodations
             </Button>
           </motion.div>
