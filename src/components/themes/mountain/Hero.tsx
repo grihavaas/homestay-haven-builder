@@ -32,8 +32,8 @@ export function MountainHero() {
           alt={property.name}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
-        <div className="absolute inset-0 bg-foreground/40" />
+        {/* Minimal overlay for text readability */}
+        <div className="absolute inset-0 bg-black/25" />
       </div>
 
       {/* Centered content with strong typography */}

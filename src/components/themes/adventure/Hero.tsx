@@ -33,10 +33,8 @@ export function AdventureHero() {
           alt={property.name}
           className="w-full h-full object-cover"
         />
-        {/* Lighter diagonal gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background/50 via-background/30 to-transparent" />
-        {/* Diagonal accent stripe */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-primary/15 via-transparent to-secondary/5" />
+        {/* Minimal overlay for text readability */}
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
       {/* Content with diagonal energy */}

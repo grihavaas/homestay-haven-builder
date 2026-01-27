@@ -33,8 +33,8 @@ export function BackwaterHero() {
           alt={property.name}
           className="w-full h-full object-cover"
         />
-        {/* Soft, reflective gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-background/60 to-background" />
+        {/* Minimal gradient for text readability */}
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
       {/* Minimal centered content */}

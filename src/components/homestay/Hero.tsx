@@ -68,8 +68,8 @@ export function Hero() {
             transition={{ duration: 1.5, ease: "easeInOut" }}
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-charcoal/60 via-charcoal/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/50 via-transparent to-transparent" />
+        {/* Minimal overlay for text readability */}
+        <div className="absolute inset-0 bg-black/20" />
         
         {/* Image indicators (dots) - only show if multiple images */}
         {allImages.length > 1 && (

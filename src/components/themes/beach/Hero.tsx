@@ -33,8 +33,8 @@ export function BeachHero() {
           alt={property.name}
           className="w-full h-full object-cover"
         />
-        {/* Light, airy overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/30 via-transparent to-background/90" />
+        {/* Minimal overlay for text readability */}
+        <div className="absolute inset-0 bg-black/10" />
       </div>
 
       {/* Content positioned at bottom - horizontal flow */}
