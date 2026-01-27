@@ -9,7 +9,25 @@ export function DocumentHead() {
   useEffect(() => {
     if (!loading && property) {
       // Update document title
-      document.title = property.name || "Homestay";
+      const title = property.tagline
+        ? `${property.name} | ${property.tagline}`
+        : property.name;
+      document.title = title || "Homestay";
+
+      // Update meta description
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription && property.description) {
+        metaDescription.setAttribute('content', property.description.substring(0, 160));
+      }
+
+      // Update OG tags if present
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', property.name);
+
+      const ogDescription = document.querySelector('meta[property="og:description"]');
+      if (ogDescription && property.description) {
+        ogDescription.setAttribute('content', property.description.substring(0, 160));
+      }
     } else if (!loading && !property) {
       document.title = "Homestay";
     }

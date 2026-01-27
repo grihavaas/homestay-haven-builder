@@ -3,8 +3,8 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Homestay Haven Builder",
-  description: "Beautiful homestay website builder",
+  title: "Welcome",
+  description: "Book your perfect getaway",
 };
 
 export default function RootLayout({
