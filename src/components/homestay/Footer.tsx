@@ -20,7 +20,7 @@ export function Footer() {
   const facebookLink = property.social_media_links?.find((s: any) => s.platform === 'facebook');
 
   return (
-    <footer id="contact" className="bg-charcoal text-primary-foreground py-16">
+    <footer id="contact" className="bg-charcoal text-white py-16">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
@@ -29,12 +29,12 @@ export function Footer() {
               {property.name}
             </h3>
             {property.tagline && (
-              <p className="text-primary-foreground/60 italic mb-4">
+              <p className="text-white/60 italic mb-4">
                 {property.tagline}
               </p>
             )}
             {property.description && (
-              <p className="text-primary-foreground/80 text-sm leading-relaxed max-w-md">
+              <p className="text-white/80 text-sm leading-relaxed max-w-md">
                 {property.description.split('\n\n')[0]}
               </p>
             )}
@@ -47,7 +47,7 @@ export function Footer() {
                     href={instagramLink.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors"
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                   >
                     <Instagram className="w-5 h-5" />
                   </a>
@@ -57,7 +57,7 @@ export function Footer() {
                     href={facebookLink.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors"
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                   >
                     <Facebook className="w-5 h-5" />
                   </a>
@@ -80,7 +80,7 @@ export function Footer() {
                 <li key={link.name}>
                   <button
                     onClick={() => scrollToSection(link.href)}
-                    className="text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm"
+                    className="text-white/70 hover:text-white transition-colors text-sm"
                   >
                     {link.name}
                   </button>
@@ -97,7 +97,7 @@ export function Footer() {
                 <li>
                   <a
                     href={`tel:${property.phone}`}
-                    className="flex items-start gap-3 text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm"
+                    className="flex items-start gap-3 text-white/70 hover:text-white transition-colors text-sm"
                   >
                     <Phone className="w-4 h-4 mt-0.5" />
                     {property.phone}
@@ -108,7 +108,7 @@ export function Footer() {
                 <li>
                   <a
                     href={`mailto:${property.email}`}
-                    className="flex items-start gap-3 text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm"
+                    className="flex items-start gap-3 text-white/70 hover:text-white transition-colors text-sm"
                   >
                     <Mail className="w-4 h-4 mt-0.5" />
                     {property.email}
@@ -116,7 +116,7 @@ export function Footer() {
                 </li>
               )}
               {(property.street_address || property.city) && (
-                <li className="flex items-start gap-3 text-primary-foreground/70 text-sm">
+                <li className="flex items-start gap-3 text-white/70 text-sm">
                   <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <span>{[property.street_address, property.city, property.state].filter(Boolean).join(", ")}</span>
                 </li>
@@ -127,11 +127,11 @@ export function Footer() {
 
         {/* Property Tags as Badges */}
         {property.property_tags && property.property_tags.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-4 py-8 border-t border-primary-foreground/10">
+          <div className="flex flex-wrap justify-center gap-4 py-8 border-t border-white/10">
             {property.property_tags.slice(0, 6).map((tag: string) => (
               <div
                 key={tag}
-                className="px-4 py-2 bg-primary-foreground/5 rounded-full text-xs text-primary-foreground/60"
+                className="px-4 py-2 bg-white/5 rounded-full text-xs text-white/60"
               >
                 {tag}
               </div>
@@ -140,9 +140,12 @@ export function Footer() {
         )}
 
         {/* Copyright */}
-        <div className="pt-8 border-t border-primary-foreground/10 text-center">
-          <p className="text-sm text-primary-foreground/50">
+        <div className="pt-8 border-t border-white/10 text-center space-y-2">
+          <p className="text-sm text-white/50">
             © {new Date().getFullYear()} {property.name}. All rights reserved.
+          </p>
+          <p className="text-[10px] text-white/15">
+            Website by Das Technologies
           </p>
         </div>
       </div>
