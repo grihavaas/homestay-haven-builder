@@ -23,7 +23,7 @@ async function getProperty(propertyId: string) {
   const { data, error } = await supabase
     .from("properties")
     .select(
-      "id,tenant_id,name,type,tagline,description,classification,slug,city,state,country,postal_code,street_address,location_description,latitude,longitude,is_published,is_active,updated_at,feature_seo_elements,review_summary",
+      "id,tenant_id,name,type,tagline,description,classification,slug,city,state,country,postal_code,street_address,location_description,latitude,longitude,is_published,is_active,updated_at,feature_seo_elements,review_summary,room_section_header,room_section_tagline",
     )
     .eq("id", propertyId)
     .single();

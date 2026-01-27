@@ -32,7 +32,7 @@ export function Hero() {
     
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-    }, 30000); // 30 seconds
+    }, 5000); // 5 seconds
     
     return () => clearInterval(interval);
   }, [allImages.length]);
@@ -54,7 +54,7 @@ export function Hero() {
     <section id="hero" className="relative min-h-screen flex items-center">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
-        {allImages.map((image, index) => (
+        {allImages.map((image: string, index: number) => (
           <motion.img
             key={image}
             src={image}
@@ -68,13 +68,13 @@ export function Hero() {
             transition={{ duration: 1.5, ease: "easeInOut" }}
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-charcoal/80 via-charcoal/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-charcoal/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-charcoal/60 via-charcoal/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/50 via-transparent to-transparent" />
         
         {/* Image indicators (dots) - only show if multiple images */}
         {allImages.length > 1 && (
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-            {allImages.map((_, index) => (
+            {allImages.map((_: string, index: number) => (
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}

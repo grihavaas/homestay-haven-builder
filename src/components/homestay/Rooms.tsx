@@ -36,16 +36,12 @@ export function Rooms() {
           <span className="text-sm uppercase tracking-wider text-primary font-medium">
             Accommodations
           </span>
-          {property.room_section_header && (
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-foreground mt-3 mb-4">
-              {property.room_section_header}
-            </h2>
-          )}
-          {property.room_section_tagline && (
-            <p className="text-muted-foreground">
-              {property.room_section_tagline}
-            </p>
-          )}
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-foreground mt-3 mb-4">
+            {property.room_section_header || "Our Rooms & Suites"}
+          </h2>
+          <p className="text-muted-foreground">
+            {property.room_section_tagline || "Comfortable spaces designed for relaxation and rejuvenation"}
+          </p>
         </motion.div>
 
         {/* Rooms Grid */}
