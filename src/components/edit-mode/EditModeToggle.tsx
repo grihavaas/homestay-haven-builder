@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Pencil, Check, Palette, Image } from "lucide-react";
+import { Pencil, Check, Palette, Image, LogOut } from "lucide-react";
 import { useEditMode } from "@/contexts/EditModeContext";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProperty } from "@/contexts/PropertyContext";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,12 @@ export function EditModeToggle({ onThemeClick, onMediaClick }: EditModeTogglePro
   const { isEditMode, canEdit, toggleEditMode } = useEditMode();
   const { user, membership, loading: authLoading } = useAuth();
   const { property } = useProperty();
+
+  const handleLogout = async () => {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
 
   // Debug: Log auth state (remove in production)
   console.log("[EditModeToggle] Auth state:", {
@@ -37,6 +44,22 @@ export function EditModeToggle({ onThemeClick, onMediaClick }: EditModeTogglePro
   return (
     <AnimatePresence>
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 items-end">
+        {/* Logout button - only visible in edit mode */}
+        {isEditMode && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="text-sm font-medium">Logout</span>
+          </motion.button>
+        )}
+
         {/* Media button - only visible in edit mode */}
         {isEditMode && onMediaClick && (
           <motion.button
