@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEditMode } from "@/contexts/EditModeContext";
 
 const navLinks = [
   { name: "Home", href: "#hero" },
@@ -15,12 +17,22 @@ const navLinks = [
 
 export function Header() {
   const { property, loading } = useProperty();
+  const { user } = useAuth();
+  const { canEdit, toggleEditMode } = useEditMode();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   if (loading || !property) {
     return null; // Or a loading skeleton
   }
+
+  const handleManageClick = () => {
+    if (user && canEdit) {
+      toggleEditMode();
+    } else {
+      window.location.href = "/admin/login";
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -89,6 +101,17 @@ export function Header() {
                   {link.name}
                 </motion.button>
               ))}
+              <motion.button
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: navLinks.length * 0.1 }}
+                onClick={handleManageClick}
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  isScrolled ? "text-foreground" : "text-primary-foreground"
+                }`}
+              >
+                Manage
+              </motion.button>
             </nav>
 
             {/* Desktop CTA */}
@@ -148,6 +171,15 @@ export function Header() {
                     {link.name}
                   </button>
                 ))}
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleManageClick();
+                  }}
+                  className="text-xl font-serif text-foreground py-3 border-b border-border"
+                >
+                  Manage
+                </button>
                 <div className="mt-6 flex flex-col gap-4">
                   {property.phone && (
                     <a
