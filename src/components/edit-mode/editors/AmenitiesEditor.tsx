@@ -34,10 +34,12 @@ export function AmenitiesEditor({ isOpen, onClose }: AmenitiesEditorProps) {
   // Amenities
   const [availableAmenities, setAvailableAmenities] = useState<StandardAmenity[]>([]);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<Set<string>>(new Set());
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Fetch property-scope amenities when editor opens
   useEffect(() => {
-    if (isOpen && availableAmenities.length === 0) {
+    if (isOpen) {
+      console.log("AmenitiesEditor opened, fetching amenities...");
       fetchPropertyAmenities();
     }
   }, [isOpen]);
@@ -53,9 +55,12 @@ export function AmenitiesEditor({ isOpen, onClose }: AmenitiesEditorProps) {
   }, [property, isOpen]);
 
   const fetchPropertyAmenities = async () => {
+    console.log("fetchPropertyAmenities called");
     setLoading(true);
+    setLoadError(null);
     try {
       const supabase = createSupabaseBrowserClient();
+      console.log("Querying standard_amenities...");
       const { data, error } = await supabase
         .from("standard_amenities")
         .select("id, name, category, icon")
@@ -63,15 +68,25 @@ export function AmenitiesEditor({ isOpen, onClose }: AmenitiesEditorProps) {
         .order("category")
         .order("name");
 
-      if (error) throw error;
-      setAvailableAmenities(data || []);
+      console.log("Query result:", { data, error });
+
+      if (error) {
+        console.error("Supabase error:", error);
+        setLoadError(`Database error: ${error.message}. Check if standard_amenities table has proper RLS policies.`);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        setLoadError("No amenities found. The standard_amenities table may be empty or RLS is blocking access.");
+        return;
+      }
+
+      console.log(`Loaded ${data.length} amenities`);
+      setAvailableAmenities(data);
     } catch (error) {
       console.error("Error fetching amenities:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load amenities.",
-        variant: "destructive",
-      });
+      const message = error instanceof Error ? error.message : "Unknown error";
+      setLoadError(`Failed to load amenities: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -200,6 +215,17 @@ export function AmenitiesEditor({ isOpen, onClose }: AmenitiesEditorProps) {
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-8">
+              <p className="text-destructive text-sm">{loadError}</p>
+              <button
+                type="button"
+                onClick={fetchPropertyAmenities}
+                className="mt-3 text-sm text-primary hover:underline"
+              >
+                Retry
+              </button>
             </div>
           ) : Object.keys(filteredGroups).length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
