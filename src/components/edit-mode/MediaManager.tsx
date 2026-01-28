@@ -15,6 +15,8 @@ import {
   Bed,
   User,
   Grid3X3,
+  Edit2,
+  Check,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,13 @@ interface MediaManagerProps {
 
 type MediaCategory = "all" | "hero" | "room_image" | "host_image" | "gallery";
 
+interface EditingMedia {
+  id: string;
+  media_type: string;
+  room_id: string | null;
+  host_id: string | null;
+}
+
 export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
   const { property } = useProperty();
   const [uploading, setUploading] = useState(false);
@@ -34,6 +43,8 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
   const [mediaType, setMediaType] = useState<string>("gallery");
   const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [selectedHost, setSelectedHost] = useState<string>("");
+  const [editingMedia, setEditingMedia] = useState<EditingMedia | null>(null);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!property) return null;
@@ -182,6 +193,70 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
     } finally {
       setDeleting(null);
     }
+  };
+
+  const handleStartEdit = (media: any) => {
+    setEditingMedia({
+      id: media.id,
+      media_type: media.media_type,
+      room_id: media.room_id || "",
+      host_id: media.host_id || "",
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMedia) return;
+
+    setSaving(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+
+      const updateData: any = {
+        media_type: editingMedia.media_type,
+        room_id: editingMedia.media_type === "room_image" && editingMedia.room_id
+          ? editingMedia.room_id
+          : null,
+        host_id: editingMedia.media_type === "host_image" && editingMedia.host_id
+          ? editingMedia.host_id
+          : null,
+      };
+
+      const { error } = await supabase
+        .from("media")
+        .update(updateData)
+        .eq("id", editingMedia.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Updated",
+        description: "Image category updated successfully.",
+      });
+      setEditingMedia(null);
+      window.location.reload();
+    } catch (error) {
+      console.error("Update error:", error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMedia(null);
+  };
+
+  // Get room/host name for display
+  const getRoomName = (roomId: string) => {
+    return property.rooms?.find((r: any) => r.id === roomId)?.name || "Unknown";
+  };
+
+  const getHostName = (hostId: string) => {
+    return property.hosts?.find((h: any) => h.id === hostId)?.name || "Unknown";
   };
 
   return (
@@ -342,47 +417,177 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
                   <p className="text-sm">No images in this category</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-3">
-                  {filteredMedia.map((media: any) => (
-                    <div
-                      key={media.id}
-                      className="relative aspect-square rounded-lg overflow-hidden bg-muted group"
-                    >
-                      <img
-                        src={media.s3_url}
-                        alt={media.alt_text || "Media"}
-                        className="w-full h-full object-cover"
-                      />
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredMedia.map((media: any) => {
+                    const isEditing = editingMedia?.id === media.id;
 
-                      {/* Type badge */}
-                      <div className="absolute top-1 left-1">
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-black/60 text-white rounded">
-                          {media.media_type === "room_image"
-                            ? "Room"
-                            : media.media_type === "host_image"
-                            ? "Host"
-                            : media.media_type}
-                        </span>
-                      </div>
+                    return (
+                      <div
+                        key={media.id}
+                        className={cn(
+                          "relative rounded-lg overflow-hidden bg-muted group",
+                          isEditing && "ring-2 ring-primary"
+                        )}
+                      >
+                        {/* Image */}
+                        <div className="aspect-square">
+                          <img
+                            src={media.s3_url}
+                            alt={media.alt_text || "Media"}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
 
-                      {/* Delete button */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleDelete(media.id, media.s3_key)}
-                          disabled={deleting === media.id}
-                        >
-                          {deleting === media.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </Button>
+                        {/* Edit Form Overlay */}
+                        {isEditing && editingMedia ? (
+                          <div className="absolute inset-0 bg-black/80 p-3 flex flex-col">
+                            <div className="flex-1 space-y-2">
+                              <div>
+                                <label className="text-xs text-white/70 block mb-1">Type</label>
+                                <select
+                                  value={editingMedia.media_type}
+                                  onChange={(e) =>
+                                    setEditingMedia({
+                                      ...editingMedia,
+                                      media_type: e.target.value,
+                                    })
+                                  }
+                                  className="w-full text-xs border rounded px-2 py-1"
+                                >
+                                  <option value="hero">Hero</option>
+                                  <option value="room_image">Room</option>
+                                  <option value="host_image">Host</option>
+                                  <option value="gallery">Gallery</option>
+                                  <option value="exterior">Exterior</option>
+                                  <option value="common_area">Common Area</option>
+                                </select>
+                              </div>
+
+                              {editingMedia.media_type === "room_image" && (
+                                <div>
+                                  <label className="text-xs text-white/70 block mb-1">Room</label>
+                                  <select
+                                    value={editingMedia.room_id || ""}
+                                    onChange={(e) =>
+                                      setEditingMedia({
+                                        ...editingMedia,
+                                        room_id: e.target.value,
+                                      })
+                                    }
+                                    className="w-full text-xs border rounded px-2 py-1"
+                                  >
+                                    <option value="">Select room...</option>
+                                    {property.rooms?.map((room: any) => (
+                                      <option key={room.id} value={room.id}>
+                                        {room.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+
+                              {editingMedia.media_type === "host_image" && (
+                                <div>
+                                  <label className="text-xs text-white/70 block mb-1">Host</label>
+                                  <select
+                                    value={editingMedia.host_id || ""}
+                                    onChange={(e) =>
+                                      setEditingMedia({
+                                        ...editingMedia,
+                                        host_id: e.target.value,
+                                      })
+                                    }
+                                    className="w-full text-xs border rounded px-2 py-1"
+                                  >
+                                    <option value="">Select host...</option>
+                                    {property.hosts?.map((host: any) => (
+                                      <option key={host.id} value={host.id}>
+                                        {host.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="flex-1 h-7 text-xs"
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="flex-1 h-7 text-xs"
+                                onClick={handleSaveEdit}
+                                disabled={saving}
+                              >
+                                {saving ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <>
+                                    <Check className="w-3 h-3 mr-1" />
+                                    Save
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Type badge */}
+                            <div className="absolute top-1 left-1 right-1 flex flex-wrap gap-1">
+                              <span className="px-1.5 py-0.5 text-[10px] font-medium bg-black/60 text-white rounded">
+                                {media.media_type === "room_image"
+                                  ? "Room"
+                                  : media.media_type === "host_image"
+                                  ? "Host"
+                                  : media.media_type}
+                              </span>
+                              {media.room_id && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/80 text-white rounded truncate max-w-[80px]">
+                                  {getRoomName(media.room_id)}
+                                </span>
+                              )}
+                              {media.host_id && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/80 text-white rounded truncate max-w-[80px]">
+                                  {getHostName(media.host_id)}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              <Button
+                                variant="secondary"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleStartEdit(media)}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleDelete(media.id, media.s3_key)}
+                                disabled={deleting === media.id}
+                              >
+                                {deleting === media.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

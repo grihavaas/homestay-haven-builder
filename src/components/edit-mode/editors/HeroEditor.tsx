@@ -24,6 +24,7 @@ export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
     tagline: "",
   });
   const [heroImage, setHeroImage] = useState<string | null>(null);
+  const [selectedMediaId, setSelectedMediaId] = useState<string | null>(null);
 
   // Get current hero image
   const currentHeroImage = property?.media?.find(
@@ -41,9 +42,9 @@ export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
     }
   }, [property, isOpen, currentHeroImage]);
 
-  const handleImageChange = (url: string, s3Key: string) => {
+  const handleImageSelect = (mediaId: string, url: string) => {
+    setSelectedMediaId(mediaId);
     setHeroImage(url);
-    // Image is already saved to media table by ImagePicker
   };
 
   const handleSave = async () => {
@@ -87,7 +88,7 @@ export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
         <BottomSheetField label="Hero Image">
           <ImagePicker
             currentImage={heroImage}
-            onImageChange={handleImageChange}
+            onImageSelect={handleImageSelect}
             mediaType="hero"
             aspectRatio="video"
           />

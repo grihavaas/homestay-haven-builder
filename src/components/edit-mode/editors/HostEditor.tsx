@@ -46,6 +46,7 @@ export function HostEditor({ isOpen, onClose, host }: HostEditorProps) {
     languages: "",
   });
   const [hostImage, setHostImage] = useState<string | null>(null);
+  const [selectedMediaId, setSelectedMediaId] = useState<string | null>(null);
 
   // Get current host image
   const getCurrentHostImage = () => {
@@ -72,9 +73,9 @@ export function HostEditor({ isOpen, onClose, host }: HostEditorProps) {
     }
   }, [host, isOpen, property]);
 
-  const handleImageChange = (url: string, s3Key: string) => {
+  const handleImageSelect = (mediaId: string, url: string) => {
+    setSelectedMediaId(mediaId);
     setHostImage(url);
-    // Image is already saved to media table by ImagePicker with host_id
   };
 
   const handleSave = async () => {
@@ -133,7 +134,7 @@ export function HostEditor({ isOpen, onClose, host }: HostEditorProps) {
         <BottomSheetField label="Profile Photo">
           <ImagePicker
             currentImage={hostImage}
-            onImageChange={handleImageChange}
+            onImageSelect={handleImageSelect}
             mediaType="host_image"
             hostId={host.id}
             aspectRatio="square"

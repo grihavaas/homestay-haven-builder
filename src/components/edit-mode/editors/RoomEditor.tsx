@@ -43,6 +43,7 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
     room_features: "",
   });
   const [roomImage, setRoomImage] = useState<string | null>(null);
+  const [selectedMediaId, setSelectedMediaId] = useState<string | null>(null);
 
   // Get current room image
   const getCurrentRoomImage = () => {
@@ -68,9 +69,9 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
     }
   }, [room, isOpen, property]);
 
-  const handleImageChange = (url: string, s3Key: string) => {
+  const handleImageSelect = (mediaId: string, url: string) => {
+    setSelectedMediaId(mediaId);
     setRoomImage(url);
-    // Image is already saved to media table by ImagePicker with room_id
   };
 
   const handleSave = async () => {
@@ -125,7 +126,7 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
         <BottomSheetField label="Room Image">
           <ImagePicker
             currentImage={roomImage}
-            onImageChange={handleImageChange}
+            onImageSelect={handleImageSelect}
             mediaType="room_image"
             roomId={room.id}
             aspectRatio="video"
