@@ -15,25 +15,35 @@ async function listUsers() {
 
   const memberships = data ?? [];
 
-  // Fetch user emails using admin client (server-side only)
+  // Fetch user emails/phones using admin client (server-side only)
   try {
     const adminClient = createSupabaseAdminClient();
     const { data: usersData } = await adminClient.auth.admin.listUsers();
-    const emails: Record<string, string> = {};
+    const userInfo: Record<string, { email?: string; phone?: string }> = {};
 
     usersData?.users.forEach((user) => {
-      emails[user.id] = user.email || "";
+      userInfo[user.id] = {
+        email: user.email || undefined,
+        phone: user.phone || undefined,
+      };
     });
 
     return memberships.map((m) => ({
       ...m,
-      email: emails[m.user_id] || m.user_id.substring(0, 8) + "...",
+      email: userInfo[m.user_id]?.email || undefined,
+      phone: userInfo[m.user_id]?.phone || undefined,
+      displayName:
+        userInfo[m.user_id]?.email ||
+        userInfo[m.user_id]?.phone ||
+        m.user_id.substring(0, 8) + "...",
     }));
   } catch {
     // If admin client fails (e.g., no service role key), fall back to showing user_id
     return memberships.map((m) => ({
       ...m,
-      email: m.user_id.substring(0, 8) + "...",
+      email: undefined,
+      phone: undefined,
+      displayName: m.user_id.substring(0, 8) + "...",
     }));
   }
 }
@@ -63,13 +73,15 @@ export default async function AgencyUsersPage() {
 
   async function createUserAndMembership(formData: FormData) {
     "use server";
-    const email = String(formData.get("email") ?? "").trim();
-    const password = String(formData.get("password") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim() || undefined;
+    const phone = String(formData.get("phone") ?? "").trim() || undefined;
+    const password = String(formData.get("password") ?? "").trim() || undefined;
     const tenantId = String(formData.get("tenant_id") ?? "").trim();
     const role = String(formData.get("role") ?? "").trim();
     const sendInvite = Boolean(formData.get("send_invite"));
 
-    if (!email || !tenantId || !role) return;
+    // Require at least email or phone
+    if ((!email && !phone) || !tenantId || !role) return;
 
     // Use admin client for user creation (server-side only)
     const adminClient = createSupabaseAdminClient();
@@ -77,7 +89,11 @@ export default async function AgencyUsersPage() {
 
     // Check if user already exists
     const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-    const existingUser = existingUsers?.users.find((u) => u.email === email);
+    const existingUser = existingUsers?.users.find((u) => {
+      if (email && u.email === email) return true;
+      if (phone && u.phone === phone) return true;
+      return false;
+    });
 
     let userId: string;
 
@@ -85,7 +101,17 @@ export default async function AgencyUsersPage() {
       userId = existingUser.id;
     } else {
       // Create new user
-      if (sendInvite) {
+      if (phone && !email) {
+        // Phone-only user creation
+        const { data: userData, error: userError } =
+          await adminClient.auth.admin.createUser({
+            phone,
+            phone_confirm: true, // Auto-confirm phone
+            user_metadata: { tenant_id: tenantId },
+          });
+        if (userError) throw userError;
+        userId = userData.user.id;
+      } else if (sendInvite && email) {
         // Send invitation email (user sets their own password)
         const { data: inviteData, error: inviteError } =
           await adminClient.auth.admin.inviteUserByEmail(email, {
@@ -93,20 +119,34 @@ export default async function AgencyUsersPage() {
           });
         if (inviteError) throw inviteError;
         userId = inviteData.user.id;
-      } else if (password) {
-        // Create user with password
+      } else if (password && email) {
+        // Create user with email/password (optionally with phone too)
+        const userCreateData: {
+          email: string;
+          password: string;
+          email_confirm: boolean;
+          phone?: string;
+          phone_confirm?: boolean;
+          user_metadata: { tenant_id: string };
+        } = {
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { tenant_id: tenantId },
+        };
+
+        if (phone) {
+          userCreateData.phone = phone;
+          userCreateData.phone_confirm = true;
+        }
+
         const { data: userData, error: userError } =
-          await adminClient.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true, // Auto-confirm email
-            user_metadata: { tenant_id: tenantId },
-          });
+          await adminClient.auth.admin.createUser(userCreateData);
         if (userError) throw userError;
         userId = userData.user.id;
       } else {
         throw new Error(
-          "Either password or 'send invitation' must be provided to create a new user."
+          "For email users: provide password or 'send invitation'. For phone-only users: just provide phone number."
         );
       }
     }
@@ -156,20 +196,40 @@ export default async function AgencyUsersPage() {
       >
         <h3 className="font-medium">Create User & Assign to Tenant</h3>
         <p className="text-sm text-zinc-600">
-          Create a new user account and assign them to a tenant. If the user
-          already exists, they will just be assigned to the tenant.
+          Create a new user account and assign them to a tenant. Provide either
+          email or phone (or both). If the user already exists, they will just
+          be assigned to the tenant.
         </p>
-        <div className="grid gap-3 sm:grid-cols-3">
+
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <div className="text-sm font-medium">Email</div>
+            <div className="text-sm font-medium">
+              Email <span className="text-zinc-400">(optional if phone provided)</span>
+            </div>
             <input
               name="email"
               type="email"
               placeholder="user@example.com"
               className="mt-1 w-full rounded-md border px-3 py-2"
-              required
             />
           </label>
+          <label className="block">
+            <div className="text-sm font-medium">
+              Phone <span className="text-zinc-400">(optional if email provided)</span>
+            </div>
+            <input
+              name="phone"
+              type="tel"
+              placeholder="+91 98765 43210"
+              className="mt-1 w-full rounded-md border px-3 py-2"
+            />
+            <p className="mt-1 text-xs text-zinc-500">
+              Include country code. Phone-only users can login via OTP.
+            </p>
+          </label>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
             <div className="text-sm font-medium">Tenant</div>
             <select
@@ -201,7 +261,7 @@ export default async function AgencyUsersPage() {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <div className="text-sm font-medium">Password (optional)</div>
+            <div className="text-sm font-medium">Password (for email users)</div>
             <input
               name="password"
               type="password"
@@ -209,14 +269,14 @@ export default async function AgencyUsersPage() {
               className="mt-1 w-full rounded-md border px-3 py-2"
             />
             <p className="mt-1 text-xs text-zinc-500">
-              If provided, user will be created with this password. If empty,
-              an invitation email will be sent.
+              Required for email users unless sending invitation. Not needed for
+              phone-only users.
             </p>
           </label>
-          <div className="flex items-end">
+          <div className="flex items-end pb-6">
             <label className="flex items-center gap-2">
-              <input name="send_invite" type="checkbox" defaultChecked />
-              <span className="text-sm">Send invitation email</span>
+              <input name="send_invite" type="checkbox" />
+              <span className="text-sm">Send invitation email (email users only)</span>
             </label>
           </div>
         </div>
@@ -240,8 +300,13 @@ export default async function AgencyUsersPage() {
               className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 p-3 text-sm"
             >
               <div>
-                {user.email}
-                <div className="mt-1 font-mono text-xs text-zinc-500">
+                <div>{user.displayName}</div>
+                {user.email && user.phone && (
+                  <div className="mt-0.5 text-xs text-zinc-500">
+                    {user.phone}
+                  </div>
+                )}
+                <div className="mt-1 font-mono text-xs text-zinc-400">
                   {user.user_id}
                 </div>
               </div>
