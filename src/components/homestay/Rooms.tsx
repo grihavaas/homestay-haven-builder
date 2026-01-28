@@ -1,17 +1,22 @@
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Users, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { RoomEditor } from "@/components/edit-mode/editors/RoomEditor";
 import { RoomFeaturesSection } from "./RoomFeaturesSection";
 
 import roomDeluxe from "@/assets/room-deluxe.jpg";
 
 export function Rooms() {
   const { property, loading } = useProperty();
+  const { isEditMode } = useEditMode();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  
+  const [editingRoom, setEditingRoom] = useState<any>(null);
+
   if (loading || !property || !property.rooms || property.rooms.length === 0) {
     return null;
   }
@@ -103,9 +108,16 @@ export function Rooms() {
 
               {/* Content */}
               <div className={`${index % 2 === 1 ? "lg:order-1" : ""}`}>
-                <h3 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-3">
-                  {room.name}
-                </h3>
+                <div className="relative inline-block">
+                  <h3 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-3">
+                    {room.name}
+                  </h3>
+                  {isEditMode && (
+                    <div className="absolute -right-12 top-1/2 -translate-y-1/2">
+                      <EditButton onClick={() => setEditingRoom(room)} label="Edit" />
+                    </div>
+                  )}
+                </div>
                 
                 {/* Description with Room Features/USP integrated */}
                 {(room.description || room.room_features) && (
@@ -164,6 +176,13 @@ export function Rooms() {
           })}
         </div>
       </div>
+
+      {/* Room Editor Bottom Sheet */}
+      <RoomEditor
+        isOpen={!!editingRoom}
+        onClose={() => setEditingRoom(null)}
+        room={editingRoom}
+      />
     </section>
   );
 }

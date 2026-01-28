@@ -1,14 +1,19 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { CheckCircle, Leaf, Award, Heart } from "lucide-react";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { AboutEditor } from "@/components/edit-mode/editors/AboutEditor";
 
 export function About() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { property, loading } = useProperty();
-  
+  const { isEditMode } = useEditMode();
+  const [showEditor, setShowEditor] = useState(false);
+
   if (loading || !property) {
     return null;
   }
@@ -30,9 +35,16 @@ export function About() {
             <span className="text-sm uppercase tracking-wider text-primary font-medium">
               {property.property_history ? "Welcome to Our Estate" : `About ${property.name}`}
             </span>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-foreground mt-3 mb-6">
-              {property.property_history || property.name}
-            </h2>
+            <div className="relative inline-block">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-foreground mt-3 mb-6">
+                {property.property_history || property.name}
+              </h2>
+              {isEditMode && (
+                <div className="absolute -right-12 top-1/2 -translate-y-1/2">
+                  <EditButton onClick={() => setShowEditor(true)} label="Edit" />
+                </div>
+              )}
+            </div>
             <div className="prose prose-lg text-muted-foreground">
               {descriptionParts.map((part: string, idx: number) => (
                 <p key={idx} className={`leading-relaxed ${idx > 0 ? 'mt-4' : ''}`}>
@@ -101,6 +113,9 @@ export function About() {
           </motion.div>
         </div>
       </div>
+
+      {/* About Editor Bottom Sheet */}
+      <AboutEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
     </section>
   );
 }

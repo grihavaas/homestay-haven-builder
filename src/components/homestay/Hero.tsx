@@ -4,13 +4,18 @@ import { motion } from "framer-motion";
 import { Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 import { useState, useEffect } from "react";
 
 export function Hero() {
   const { property, loading } = useProperty();
+  const { isEditMode } = useEditMode();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+  const [showEditor, setShowEditor] = useState(false);
+
   if (loading || !property) {
     return null;
   }
@@ -109,14 +114,21 @@ export function Hero() {
           )}
 
           {/* Main Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-serif font-semibold text-primary-foreground mb-4 leading-tight"
-          >
-            {property.name}
-          </motion.h1>
+          <div className="relative inline-block">
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl md:text-6xl lg:text-7xl font-serif font-semibold text-primary-foreground mb-4 leading-tight"
+            >
+              {property.name}
+            </motion.h1>
+            {isEditMode && (
+              <div className="absolute -right-16 top-1/2 -translate-y-1/2">
+                <EditButton onClick={() => setShowEditor(true)} label="Edit" />
+              </div>
+            )}
+          </div>
 
           {/* Tagline */}
           {property.tagline && (
@@ -200,6 +212,9 @@ export function Hero() {
           <div className="w-1 h-2 bg-primary-foreground/50 rounded-full" />
         </motion.div>
       </motion.div>
+
+      {/* Hero Editor Bottom Sheet */}
+      <HeroEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
     </section>
   );
 }

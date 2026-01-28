@@ -35,6 +35,7 @@ import { HouseRules } from "./homestay/HouseRules";
 import { Footer } from "./homestay/Footer";
 import { useProperty } from "@/contexts/PropertyContext";
 import { DocumentHead } from "./DocumentHead";
+import { EditModeToggle } from "./edit-mode/EditModeToggle";
 
 export function ThemedContent() {
   const { currentTheme } = useTheme();
@@ -152,6 +153,7 @@ export function ThemedContent() {
       <Booking />
       <HouseRules />
       <Footer />
+      <EditModeToggle />
     </>
   );
 }

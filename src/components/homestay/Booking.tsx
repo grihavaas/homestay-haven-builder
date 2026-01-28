@@ -7,16 +7,21 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { ContactEditor } from "@/components/edit-mode/editors/ContactEditor";
 import { toast } from "@/hooks/use-toast";
 
 export function Booking() {
   const { property, loading } = useProperty();
+  const { isEditMode } = useEditMode();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [adults, setAdults] = useState("2");
   const [children, setChildren] = useState("0");
   const [selectedRoom, setSelectedRoom] = useState("");
+  const [showEditor, setShowEditor] = useState(false);
 
   if (loading || !property) {
     return null;
@@ -221,7 +226,12 @@ _Sent via ${property.name} website_`;
             className="space-y-6"
           >
             {/* Quick Contact */}
-            <div className="bg-primary rounded-2xl p-8 text-primary-foreground">
+            <div className="bg-primary rounded-2xl p-8 text-primary-foreground relative">
+              {isEditMode && (
+                <div className="absolute top-4 right-4">
+                  <EditButton onClick={() => setShowEditor(true)} label="Edit" />
+                </div>
+              )}
               <h3 className="font-serif text-xl font-semibold mb-4">
                 Prefer to Call?
               </h3>
@@ -400,6 +410,9 @@ _Sent via ${property.name} website_`;
           </motion.div>
         </div>
       </div>
+
+      {/* Contact Editor Bottom Sheet */}
+      <ContactEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
     </section>
   );
 }
