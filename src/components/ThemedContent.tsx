@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useEditMode } from "@/contexts/EditModeContext";
 
 // Beach theme components
 import { BeachHero } from "./themes/beach/Hero";
@@ -36,10 +38,13 @@ import { Footer } from "./homestay/Footer";
 import { useProperty } from "@/contexts/PropertyContext";
 import { DocumentHead } from "./DocumentHead";
 import { EditModeToggle } from "./edit-mode/EditModeToggle";
+import { ThemeEditor } from "./edit-mode/editors/ThemeEditor";
 
 export function ThemedContent() {
   const { currentTheme } = useTheme();
   const { property, loading, error } = useProperty();
+  const { isEditMode } = useEditMode();
+  const [showThemeEditor, setShowThemeEditor] = useState(false);
   
   if (loading) {
     return (
@@ -153,7 +158,8 @@ export function ThemedContent() {
       <Booking />
       <HouseRules />
       <Footer />
-      <EditModeToggle />
+      <EditModeToggle onThemeClick={() => setShowThemeEditor(true)} />
+      <ThemeEditor isOpen={showThemeEditor} onClose={() => setShowThemeEditor(false)} />
     </>
   );
 }

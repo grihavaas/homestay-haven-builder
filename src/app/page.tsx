@@ -1,8 +1,6 @@
 "use client";
 
-import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ThemedContent } from "@/components/ThemedContent";
-import { ThemeSelector } from "@/components/ThemeSelector";
 import { getCurrentHostname } from "@/lib/hostname";
 import { isAdminHost } from "@/lib/tenant";
 import Link from "next/link";
@@ -46,11 +44,8 @@ export default function HomePage() {
 
   // Show property website for customer domains
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-background">
-        <ThemedContent />
-        <ThemeSelector />
-      </div>
-    </ThemeProvider>
+    <div className="min-h-screen bg-background">
+      <ThemedContent />
+    </div>
   );
 }

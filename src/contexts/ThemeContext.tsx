@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ThemeId, themes, ThemeConfig } from '@/lib/themes';
+import { useProperty } from './PropertyContext';
 
 interface ThemeContextType {
   currentTheme: ThemeId;
@@ -12,16 +13,17 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [currentTheme, setCurrentTheme] = useState<ThemeId>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('homestay-theme');
-      return (stored as ThemeId) || 'beach';
+  const { property } = useProperty();
+  const [currentTheme, setCurrentTheme] = useState<ThemeId>('backwater');
+
+  // Sync theme from property when it loads
+  useEffect(() => {
+    if (property?.theme && themes[property.theme as ThemeId]) {
+      setCurrentTheme(property.theme as ThemeId);
     }
-    return 'beach';
-  });
+  }, [property?.theme]);
 
   useEffect(() => {
-    localStorage.setItem('homestay-theme', currentTheme);
     // Apply theme class to document
     document.documentElement.setAttribute('data-theme', currentTheme);
   }, [currentTheme]);
