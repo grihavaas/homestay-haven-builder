@@ -8,8 +8,14 @@ export async function middleware(req: NextRequest) {
   const hostname = normalizeHostname(req.headers.get("host"));
   const isAdmin = isAdminHost(hostname);
 
-  // Prevent accidental access to /admin on customer domains
-  if (!isAdmin && req.nextUrl.pathname.startsWith("/admin")) {
+  // Allow auth routes on tenant domains (needed for tap-to-edit feature)
+  // Block other admin routes on non-admin hosts
+  const isAuthRoute =
+    req.nextUrl.pathname === "/admin/login" ||
+    req.nextUrl.pathname === "/admin/logout" ||
+    req.nextUrl.pathname === "/admin/reset-password";
+
+  if (!isAdmin && req.nextUrl.pathname.startsWith("/admin") && !isAuthRoute) {
     const url = req.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
