@@ -39,12 +39,14 @@ import { useProperty } from "@/contexts/PropertyContext";
 import { DocumentHead } from "./DocumentHead";
 import { EditModeToggle } from "./edit-mode/EditModeToggle";
 import { ThemeEditor } from "./edit-mode/editors/ThemeEditor";
+import { MediaManager } from "./edit-mode/MediaManager";
 
 export function ThemedContent() {
   const { currentTheme } = useTheme();
   const { property, loading, error } = useProperty();
   const { isEditMode } = useEditMode();
   const [showThemeEditor, setShowThemeEditor] = useState(false);
+  const [showMediaManager, setShowMediaManager] = useState(false);
   
   if (loading) {
     return (
@@ -158,8 +160,12 @@ export function ThemedContent() {
       <Booking />
       <HouseRules />
       <Footer />
-      <EditModeToggle onThemeClick={() => setShowThemeEditor(true)} />
+      <EditModeToggle
+        onThemeClick={() => setShowThemeEditor(true)}
+        onMediaClick={() => setShowMediaManager(true)}
+      />
       <ThemeEditor isOpen={showThemeEditor} onClose={() => setShowThemeEditor(false)} />
+      <MediaManager isOpen={showMediaManager} onClose={() => setShowMediaManager(false)} />
     </>
   );
 }

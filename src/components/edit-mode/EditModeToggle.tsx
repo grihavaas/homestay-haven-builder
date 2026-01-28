@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Pencil, Check, Palette } from "lucide-react";
+import { Pencil, Check, Palette, Image } from "lucide-react";
 import { useEditMode } from "@/contexts/EditModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProperty } from "@/contexts/PropertyContext";
@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 
 interface EditModeToggleProps {
   onThemeClick?: () => void;
+  onMediaClick?: () => void;
 }
 
-export function EditModeToggle({ onThemeClick }: EditModeToggleProps) {
+export function EditModeToggle({ onThemeClick, onMediaClick }: EditModeToggleProps) {
   const { isEditMode, canEdit, toggleEditMode } = useEditMode();
   const { user, membership, loading: authLoading } = useAuth();
   const { property } = useProperty();
@@ -36,6 +37,22 @@ export function EditModeToggle({ onThemeClick }: EditModeToggleProps) {
   return (
     <AnimatePresence>
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 items-end">
+        {/* Media button - only visible in edit mode */}
+        {isEditMode && onMediaClick && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onMediaClick}
+            className="flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-white text-slate-900 hover:bg-slate-100 transition-colors"
+          >
+            <Image className="w-5 h-5" />
+            <span className="text-sm font-medium">Media</span>
+          </motion.button>
+        )}
+
         {/* Theme button - only visible in edit mode */}
         {isEditMode && onThemeClick && (
           <motion.button

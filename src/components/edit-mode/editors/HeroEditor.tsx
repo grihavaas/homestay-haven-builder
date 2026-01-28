@@ -9,6 +9,7 @@ import { useProperty } from "@/contexts/PropertyContext";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { ImagePicker } from "../ImagePicker";
 
 interface HeroEditorProps {
   isOpen: boolean;
@@ -22,6 +23,12 @@ export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
     name: "",
     tagline: "",
   });
+  const [heroImage, setHeroImage] = useState<string | null>(null);
+
+  // Get current hero image
+  const currentHeroImage = property?.media?.find(
+    (m: any) => m.media_type === "hero" || m.media_type === "gallery"
+  )?.s3_url;
 
   // Initialize form data when property loads or editor opens
   useEffect(() => {
@@ -30,8 +37,14 @@ export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
         name: property.name || "",
         tagline: property.tagline || "",
       });
+      setHeroImage(currentHeroImage || null);
     }
-  }, [property, isOpen]);
+  }, [property, isOpen, currentHeroImage]);
+
+  const handleImageChange = (url: string, s3Key: string) => {
+    setHeroImage(url);
+    // Image is already saved to media table by ImagePicker
+  };
 
   const handleSave = async () => {
     if (!property) return;
@@ -71,6 +84,15 @@ export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title="Edit Hero Section">
       <div className="space-y-6">
+        <BottomSheetField label="Hero Image">
+          <ImagePicker
+            currentImage={heroImage}
+            onImageChange={handleImageChange}
+            mediaType="hero"
+            aspectRatio="video"
+          />
+        </BottomSheetField>
+
         <BottomSheetField label="Property Name">
           <Input
             value={formData.name}

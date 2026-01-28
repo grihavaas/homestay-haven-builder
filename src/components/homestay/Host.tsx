@@ -1,23 +1,28 @@
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { MessageCircle, Clock, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { HostEditor } from "@/components/edit-mode/editors/HostEditor";
 
 export function Host() {
   const { property, loading } = useProperty();
+  const { isEditMode } = useEditMode();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  
+  const [editingHost, setEditingHost] = useState<any>(null);
+
   if (loading || !property || !property.hosts || property.hosts.length === 0) {
     return null;
   }
-  
+
   // Helper function to get host image - returns null if no image found
   const getHostImage = (host: any) => {
-    return property.media?.find((m: any) => 
+    return property.media?.find((m: any) =>
       m.media_type === 'host_image' && m.host_id === host.id
-    )?.s3_url || property.media?.find((m: any) => 
+    )?.s3_url || property.media?.find((m: any) =>
       m.media_type === 'host_image' && !m.host_id && !m.room_id
     )?.s3_url || null;
   };
@@ -64,9 +69,16 @@ export function Host() {
 
                     {/* Host Content */}
                     <div className="p-6 md:p-8">
-                      <h3 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-2">
-                        {host.name}
-                      </h3>
+                      <div className="relative inline-block">
+                        <h3 className="text-2xl md:text-3xl font-serif font-semibold text-foreground mb-2">
+                          {host.name}
+                        </h3>
+                        {isEditMode && (
+                          <div className="absolute -right-10 top-1/2 -translate-y-1/2">
+                            <EditButton onClick={() => setEditingHost(host)} label="Edit" />
+                          </div>
+                        )}
+                      </div>
                       {host.title && (
                         <p className="text-base text-muted-foreground italic mb-6">
                           {host.title}
@@ -157,9 +169,16 @@ export function Host() {
 
                     {/* Host Content */}
                     <div className="p-6">
-                      <h3 className="text-xl font-serif font-semibold text-foreground mb-1">
-                        {host.name}
-                      </h3>
+                      <div className="relative inline-block">
+                        <h3 className="text-xl font-serif font-semibold text-foreground mb-1">
+                          {host.name}
+                        </h3>
+                        {isEditMode && (
+                          <div className="absolute -right-10 top-1/2 -translate-y-1/2">
+                            <EditButton onClick={() => setEditingHost(host)} label="Edit" />
+                          </div>
+                        )}
+                      </div>
                       {host.title && (
                         <p className="text-sm text-muted-foreground italic mb-4">
                           {host.title}
@@ -228,6 +247,13 @@ export function Host() {
           )}
         </motion.div>
       </div>
+
+      {/* Host Editor Bottom Sheet */}
+      <HostEditor
+        isOpen={!!editingHost}
+        onClose={() => setEditingHost(null)}
+        host={editingHost}
+      />
     </section>
   );
 }

@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { useProperty } from "@/contexts/PropertyContext";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { ImagePicker } from "../ImagePicker";
 
 interface RoomEditorProps {
   isOpen: boolean;
@@ -29,6 +31,7 @@ interface RoomEditorProps {
 }
 
 export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
+  const { property } = useProperty();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -39,6 +42,15 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
     view_type: "",
     room_features: "",
   });
+  const [roomImage, setRoomImage] = useState<string | null>(null);
+
+  // Get current room image
+  const getCurrentRoomImage = () => {
+    if (!property || !room) return null;
+    return property.media?.find(
+      (m: any) => m.media_type === "room_image" && m.room_id === room.id
+    )?.s3_url;
+  };
 
   // Initialize form data when room loads or editor opens
   useEffect(() => {
@@ -52,8 +64,14 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
         view_type: room.view_type || "",
         room_features: room.room_features || "",
       });
+      setRoomImage(getCurrentRoomImage() || null);
     }
-  }, [room, isOpen]);
+  }, [room, isOpen, property]);
+
+  const handleImageChange = (url: string, s3Key: string) => {
+    setRoomImage(url);
+    // Image is already saved to media table by ImagePicker with room_id
+  };
 
   const handleSave = async () => {
     if (!room) return;
@@ -104,6 +122,16 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title={`Edit ${room.name}`}>
       <div className="space-y-5">
+        <BottomSheetField label="Room Image">
+          <ImagePicker
+            currentImage={roomImage}
+            onImageChange={handleImageChange}
+            mediaType="room_image"
+            roomId={room.id}
+            aspectRatio="video"
+          />
+        </BottomSheetField>
+
         <BottomSheetField label="Room Name">
           <Input
             value={formData.name}
