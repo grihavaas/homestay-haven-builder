@@ -1,13 +1,18 @@
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Star, Quote } from "lucide-react";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { ReviewsEditor } from "@/components/edit-mode/editors/ReviewsEditor";
 
 export function Reviews() {
   const { property, loading } = useProperty();
+  const { isEditMode } = useEditMode();
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  
+
   if (loading || !property) {
     return null;
   }
@@ -19,25 +24,31 @@ export function Reviews() {
   const totalReviews = property.review_sources?.reduce((sum: number, r: any) => sum + (r.total_reviews || 0), 0) || 0;
 
   return (
-    <section id="reviews" className="py-20 md:py-32 bg-background">
-      <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <motion.div
-          ref={ref}
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          className="text-center max-w-2xl mx-auto mb-16"
-        >
-          <span className="text-sm uppercase tracking-wider text-primary font-medium">
-            Guest Reviews
-          </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-foreground mt-3 mb-4">
-            What Our Guests Say
-          </h2>
-          <p className="text-muted-foreground">
-            Don't just take our word for it – hear from travelers who've experienced the magic of Serenity Hills.
-          </p>
-        </motion.div>
+    <>
+      <section id="reviews" className="py-20 md:py-32 bg-background">
+        <div className="container mx-auto px-4">
+          {/* Section Header */}
+          <motion.div
+            ref={ref}
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            className="text-center max-w-2xl mx-auto mb-16 relative"
+          >
+            {isEditMode && (
+              <div className="absolute -top-2 -right-2 z-10">
+                <EditButton onClick={() => setIsEditorOpen(true)} label="Edit Reviews" />
+              </div>
+            )}
+            <span className="text-sm uppercase tracking-wider text-primary font-medium">
+              Guest Reviews
+            </span>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-foreground mt-3 mb-4">
+              What Our Guests Say
+            </h2>
+            <p className="text-muted-foreground">
+              Don't just take our word for it – hear from travelers who've experienced the magic of Serenity Hills.
+            </p>
+          </motion.div>
 
         {/* Overall Rating */}
         <motion.div
@@ -130,7 +141,10 @@ export function Reviews() {
             ))}
           </motion.div>
         )}
-      </div>
-    </section>
+        </div>
+      </section>
+
+      <ReviewsEditor isOpen={isEditorOpen} onClose={() => setIsEditorOpen(false)} />
+    </>
   );
 }
