@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function BeachHero() {
   const { property, loading } = useProperty();
-  
+  const { isEditMode } = useEditMode();
+  const [showEditor, setShowEditor] = useState(false);
+
   if (loading || !property) {
     return null;
   }
@@ -41,14 +47,21 @@ export function BeachHero() {
       <div className="absolute bottom-0 left-0 right-0 z-10">
         <div className="container mx-auto px-4 pb-16">
           <div className="bg-background/80 backdrop-blur-xl rounded-3xl p-8 md:p-12 shadow-elevated max-w-4xl">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-4xl md:text-6xl font-serif font-semibold text-foreground mb-3"
-            >
-              {property.name}
-            </motion.h1>
+            <div className="relative inline-block">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-4xl md:text-6xl font-serif font-semibold text-foreground mb-3"
+              >
+                {property.name}
+              </motion.h1>
+              {isEditMode && (
+                <div className="absolute -right-12 top-1/2 -translate-y-1/2">
+                  <EditButton onClick={() => setShowEditor(true)} label="Edit" />
+                </div>
+              )}
+            </div>
 
             {property.tagline && (
               <motion.p
@@ -102,6 +115,9 @@ export function BeachHero() {
           </div>
         </div>
       </div>
+
+      {/* Hero Editor Bottom Sheet */}
+      <HeroEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
     </section>
   );
 }

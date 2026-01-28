@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, TreePine, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function ForestHero() {
   const { property, loading } = useProperty();
-  
+  const { isEditMode } = useEditMode();
+  const [showEditor, setShowEditor] = useState(false);
+
   if (loading || !property) {
     return null;
   }
@@ -35,14 +41,21 @@ export function ForestHero() {
           <div className="absolute bottom-40 right-10 w-48 h-48 bg-secondary/10 rounded-full blur-3xl" />
           
           <div className="container px-8 lg:px-16 py-20 relative z-10">
-            <motion.h1
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-foreground mb-6 leading-tight"
-            >
-              {property.name}
-            </motion.h1>
+            <div className="relative inline-block">
+              <motion.h1
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-foreground mb-6 leading-tight"
+              >
+                {property.name}
+              </motion.h1>
+              {isEditMode && (
+                <div className="absolute -right-12 top-1/2 -translate-y-1/2">
+                  <EditButton onClick={() => setShowEditor(true)} label="Edit" />
+                </div>
+              )}
+            </div>
 
             {property.tagline && (
               <motion.p
@@ -130,6 +143,9 @@ export function ForestHero() {
 
         </div>
       </div>
+
+      {/* Hero Editor Bottom Sheet */}
+      <HeroEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
     </section>
   );
 }

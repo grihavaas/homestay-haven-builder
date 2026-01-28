@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function AdventureHero() {
   const { property, loading } = useProperty();
-  
+  const { isEditMode } = useEditMode();
+  const [showEditor, setShowEditor] = useState(false);
+
   if (loading || !property) {
     return null;
   }
@@ -42,18 +48,25 @@ export function AdventureHero() {
         <div className="container mx-auto px-4">
           <div className="max-w-2xl">
             {/* Bold headline */}
-            <motion.h1
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-4 leading-none drop-shadow-lg"
-            >
-              {property.name.split(' ').map((word: string, i: number) => (
-                <span key={i} className="block">
-                  {word}
-                </span>
-              ))}
-            </motion.h1>
+            <div className="relative inline-block">
+              <motion.h1
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-4 leading-none drop-shadow-lg"
+              >
+                {property.name.split(' ').map((word: string, i: number) => (
+                  <span key={i} className="block">
+                    {word}
+                  </span>
+                ))}
+              </motion.h1>
+              {isEditMode && (
+                <div className="absolute -right-12 top-8">
+                  <EditButton onClick={() => setShowEditor(true)} label="Edit" />
+                </div>
+              )}
+            </div>
 
             {/* Tagline with accent */}
             {property.tagline && (
@@ -167,6 +180,9 @@ export function AdventureHero() {
           </div>
         </motion.div>
       </motion.div>
+
+      {/* Hero Editor Bottom Sheet */}
+      <HeroEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
     </section>
   );
 }

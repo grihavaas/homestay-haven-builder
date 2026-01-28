@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, Anchor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function BackwaterHero() {
   const { property, loading } = useProperty();
-  
+  const { isEditMode } = useEditMode();
+  const [showEditor, setShowEditor] = useState(false);
+
   if (loading || !property) {
     return null;
   }
@@ -50,14 +56,21 @@ export function BackwaterHero() {
         </motion.div>
 
         {/* Main title - elegant, spacious */}
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-foreground mb-6 tracking-tight"
-        >
-          {property.name}
-        </motion.h1>
+        <div className="relative inline-block">
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-foreground mb-6 tracking-tight"
+          >
+            {property.name}
+          </motion.h1>
+          {isEditMode && (
+            <div className="absolute -right-12 top-1/2 -translate-y-1/2">
+              <EditButton onClick={() => setShowEditor(true)} label="Edit" />
+            </div>
+          )}
+        </div>
 
         {property.tagline && (
           <motion.p
@@ -136,6 +149,9 @@ export function BackwaterHero() {
           <div className="w-8 h-px bg-border" />
         </motion.div>
       </motion.div>
+
+      {/* Hero Editor Bottom Sheet */}
+      <HeroEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
     </section>
   );
 }

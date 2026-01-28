@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
+import { EditButton } from "@/components/edit-mode/EditableSection";
+import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
 export function MountainHero() {
   const { property, loading } = useProperty();
-  
+  const { isEditMode } = useEditMode();
+  const [showEditor, setShowEditor] = useState(false);
+
   if (loading || !property) {
     return null;
   }
@@ -39,14 +45,21 @@ export function MountainHero() {
       {/* Centered content with strong typography */}
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-primary-foreground mb-6 leading-none"
-          >
-            {property.name}
-          </motion.h1>
+          <div className="relative inline-block">
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-primary-foreground mb-6 leading-none"
+            >
+              {property.name}
+            </motion.h1>
+            {isEditMode && (
+              <div className="absolute -right-16 top-1/2 -translate-y-1/2">
+                <EditButton onClick={() => setShowEditor(true)} label="Edit" />
+              </div>
+            )}
+          </div>
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -135,6 +148,9 @@ export function MountainHero() {
           <div className="w-px h-12 bg-gradient-to-b from-primary to-transparent" />
         </motion.div>
       </motion.div>
+
+      {/* Hero Editor Bottom Sheet */}
+      <HeroEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
     </section>
   );
 }
