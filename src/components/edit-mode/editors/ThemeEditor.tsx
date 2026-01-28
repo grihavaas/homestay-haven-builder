@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { toast } from "@/hooks/use-toast";
 import { themeList, ThemeId } from "@/lib/themes";
 
@@ -24,7 +24,7 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
   const { property } = useProperty();
   const { currentTheme, setTheme } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<ThemeId>(
-    (property?.theme as ThemeId) || currentTheme || 'backwater'
+    (property?.theme as ThemeId) || currentTheme || 'mountain'
   );
   const [saving, setSaving] = useState(false);
 
@@ -39,6 +39,7 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
 
     setSaving(true);
     try {
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase
         .from("properties")
         .update({ theme: selectedTheme })
@@ -52,11 +53,12 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
       });
 
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving theme:", error);
+      const errorMessage = error?.message || error?.code || "Unknown error";
       toast({
-        title: "Error",
-        description: "Failed to save theme. Please try again.",
+        title: "Error saving theme",
+        description: errorMessage,
         variant: "destructive",
       });
       // Revert to original theme on error
@@ -68,7 +70,7 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
 
   const handleClose = () => {
     // Revert to saved theme if not saving
-    const savedTheme = (property?.theme as ThemeId) || 'backwater';
+    const savedTheme = (property?.theme as ThemeId) || 'mountain';
     setTheme(savedTheme);
     setSelectedTheme(savedTheme);
     onClose();

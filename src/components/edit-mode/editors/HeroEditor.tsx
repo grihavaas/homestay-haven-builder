@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -38,6 +38,7 @@ export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
 
     setSaving(true);
     try {
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase
         .from("properties")
         .update({

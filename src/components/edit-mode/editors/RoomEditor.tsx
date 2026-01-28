@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -60,6 +60,7 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
 
     setSaving(true);
     try {
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase
         .from("rooms")
         .update({

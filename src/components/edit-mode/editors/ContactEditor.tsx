@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -47,6 +47,8 @@ export function ContactEditor({ isOpen, onClose }: ContactEditorProps) {
 
     setSaving(true);
     try {
+      const supabase = createSupabaseBrowserClient();
+
       // Update property contact info
       const { error: propertyError } = await supabase
         .from("properties")

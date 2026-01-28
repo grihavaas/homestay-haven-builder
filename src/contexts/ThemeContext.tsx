@@ -14,7 +14,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const { property } = useProperty();
-  const [currentTheme, setCurrentTheme] = useState<ThemeId>('backwater');
+  const [currentTheme, setCurrentTheme] = useState<ThemeId>('mountain');
 
   // Sync theme from property when it loads
   useEffect(() => {
