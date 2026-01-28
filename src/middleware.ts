@@ -55,6 +55,12 @@ export async function middleware(req: NextRequest) {
   res.headers.set("x-homestay-host", hostname ?? "");
   res.headers.set("x-homestay-is-admin", isAdmin ? "1" : "0");
 
+  // Prevent search engines from indexing preview/development environments
+  const vercelEnv = process.env.VERCEL_ENV;
+  if (vercelEnv && vercelEnv !== "production") {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+
   return res;
 }
 
