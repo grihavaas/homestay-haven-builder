@@ -1,6 +1,17 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Calendar, Users, Phone, Mail, MessageCircle, Info, CheckCircle } from "lucide-react";
+import {
+  Calendar,
+  Users,
+  Phone,
+  Mail,
+  MessageCircle,
+  Info,
+  Banknote,
+  CreditCard,
+  Smartphone,
+  Building2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +21,7 @@ import { useProperty } from "@/contexts/PropertyContext";
 import { useEditMode } from "@/contexts/EditModeContext";
 import { EditButton } from "@/components/edit-mode/EditableSection";
 import { ContactEditor } from "@/components/edit-mode/editors/ContactEditor";
+import { BookingSettingsEditor } from "@/components/edit-mode/editors/BookingSettingsEditor";
 import { toast } from "@/hooks/use-toast";
 
 export function Booking() {
@@ -22,12 +34,22 @@ export function Booking() {
   const [children, setChildren] = useState("0");
   const [selectedRoom, setSelectedRoom] = useState("");
   const [showEditor, setShowEditor] = useState(false);
+  const [showBookingSettingsEditor, setShowBookingSettingsEditor] = useState(false);
 
   if (loading || !property) {
     return null;
   }
 
   const bookingSettings = property.booking_settings;
+
+  // Payment method display config
+  const paymentMethodConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
+    cash: { label: "Cash", icon: Banknote },
+    upi: { label: "UPI", icon: Smartphone },
+    bank_transfer: { label: "Bank Transfer", icon: Building2 },
+    credit_card: { label: "Credit Card", icon: CreditCard },
+    debit_card: { label: "Debit Card", icon: CreditCard },
+  };
 
   // Get WhatsApp number from hosts or property
   const whatsappNumber = property.hosts?.[0]?.whatsapp || property.phone || "";
@@ -272,7 +294,12 @@ _Sent via ${property.name} website_`;
             </div>
 
             {/* Check-in Info */}
-            <div className="bg-card rounded-xl p-6 shadow-soft">
+            <div className="bg-card rounded-xl p-6 shadow-soft relative">
+              {isEditMode && (
+                <div className="absolute top-4 right-4">
+                  <EditButton onClick={() => setShowBookingSettingsEditor(true)} label="Edit" />
+                </div>
+              )}
               <h3 className="font-serif text-lg font-semibold text-foreground mb-4">
                 Check-in & Check-out
               </h3>
@@ -301,11 +328,17 @@ _Sent via ${property.name} website_`;
             </div>
 
             {/* Cancellation Policy - 3-Tier System */}
-            {(bookingSettings?.cancellation_full_refund_policy || 
-              bookingSettings?.cancellation_partial_refund_policy || 
+            {(bookingSettings?.cancellation_full_refund_policy ||
+              bookingSettings?.cancellation_partial_refund_policy ||
               bookingSettings?.cancellation_no_refund_policy ||
-              bookingSettings?.cancellation_policy) && (
-              <div className="bg-card rounded-xl p-6 shadow-soft">
+              bookingSettings?.cancellation_policy ||
+              isEditMode) && (
+              <div className="bg-card rounded-xl p-6 shadow-soft relative">
+                {isEditMode && (
+                  <div className="absolute top-4 right-4">
+                    <EditButton onClick={() => setShowBookingSettingsEditor(true)} label="Edit" />
+                  </div>
+                )}
                 <div className="flex items-start gap-3 mb-4">
                   <Info className="w-5 h-5 text-primary mt-0.5" />
                   <div>
@@ -313,12 +346,22 @@ _Sent via ${property.name} website_`;
                       Cancellation Policy
                     </h3>
                     {/* Legacy single cancellation_policy field */}
-                    {bookingSettings?.cancellation_policy && 
+                    {bookingSettings?.cancellation_policy &&
                      !bookingSettings?.cancellation_full_refund_policy &&
                      !bookingSettings?.cancellation_partial_refund_policy &&
                      !bookingSettings?.cancellation_no_refund_policy && (
                       <p className="text-sm text-muted-foreground">
                         {bookingSettings.cancellation_policy}
+                      </p>
+                    )}
+                    {/* Edit mode placeholder when no policy exists */}
+                    {isEditMode &&
+                     !bookingSettings?.cancellation_policy &&
+                     !bookingSettings?.cancellation_full_refund_policy &&
+                     !bookingSettings?.cancellation_partial_refund_policy &&
+                     !bookingSettings?.cancellation_no_refund_policy && (
+                      <p className="text-sm text-muted-foreground italic">
+                        No cancellation policy set. Click Edit to add one.
                       </p>
                     )}
                   </div>
@@ -394,16 +437,23 @@ _Sent via ${property.name} website_`;
                 <h3 className="font-serif text-lg font-semibold text-foreground mb-4">
                   We Accept
                 </h3>
-                <div className="flex flex-wrap gap-2">
-                  {property.payment_methods.map((method: any) => (
-                    <span
-                      key={method.id}
-                      className="flex items-center gap-1 text-sm px-3 py-1.5 bg-muted rounded-full text-muted-foreground"
-                    >
-                      <CheckCircle className="w-3 h-3" />
-                      {method.payment_type}
-                    </span>
-                  ))}
+                <div className="flex flex-wrap gap-3">
+                  {property.payment_methods.map((method: any) => {
+                    const config = paymentMethodConfig[method.payment_type] || {
+                      label: method.payment_type,
+                      icon: Banknote,
+                    };
+                    const Icon = config.icon;
+                    return (
+                      <div
+                        key={method.id}
+                        className="flex items-center gap-2 text-sm px-4 py-2 bg-muted rounded-lg text-foreground"
+                      >
+                        <Icon className="w-5 h-5 text-primary" />
+                        <span className="font-medium">{config.label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -413,6 +463,12 @@ _Sent via ${property.name} website_`;
 
       {/* Contact Editor Bottom Sheet */}
       <ContactEditor isOpen={showEditor} onClose={() => setShowEditor(false)} />
+
+      {/* Booking Settings Editor Bottom Sheet */}
+      <BookingSettingsEditor
+        isOpen={showBookingSettingsEditor}
+        onClose={() => setShowBookingSettingsEditor(false)}
+      />
     </section>
   );
 }
