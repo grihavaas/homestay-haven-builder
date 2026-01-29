@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
 
 interface Tenant {
@@ -14,12 +16,27 @@ interface CreateUserFormProps {
 }
 
 export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProps) {
+  const router = useRouter();
   const [phone, setPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (formData: FormData) => {
-    // Add the phone value from state to the form data
-    formData.set("phone", phone);
-    await createUserAction(formData);
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      // Add the phone value from state to the form data
+      formData.set("phone", phone);
+      await createUserAction(formData);
+      // Reset form
+      setPhone("");
+      // Refresh the page to update the user list
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create user");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -31,90 +48,128 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
         be assigned to the tenant.
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <div className="text-sm font-medium">
-            Email <span className="text-zinc-400">(optional if phone provided)</span>
-          </div>
-          <input
-            name="email"
-            type="email"
-            placeholder="user@example.com"
-            className="mt-1 w-full rounded-md border px-3 py-2"
-          />
-        </label>
-        <div>
-          <div className="text-sm font-medium">
-            Phone <span className="text-zinc-400">(optional if email provided)</span>
-          </div>
-          <div className="mt-1">
-            <PhoneInput
-              value={phone}
-              onChange={setPhone}
-              placeholder="98765 43210"
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>
+      )}
+
+      <fieldset disabled={isSubmitting} className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <div className="text-sm font-medium">First Name</div>
+            <input
+              name="first_name"
+              type="text"
+              placeholder="John"
+              className="mt-1 w-full rounded-md border px-3 py-2 disabled:opacity-50"
             />
-          </div>
-          <p className="mt-1 text-xs text-zinc-500">
-            Phone-only users can login via OTP.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <div className="text-sm font-medium">Tenant</div>
-          <select
-            name="tenant_id"
-            className="mt-1 w-full rounded-md border px-3 py-2"
-            required
-          >
-            <option value="">Select tenant</option>
-            {tenants.map((tenant) => (
-              <option key={tenant.id} value={tenant.id}>
-                {tenant.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block">
-          <div className="text-sm font-medium">Role</div>
-          <select
-            name="role"
-            className="mt-1 w-full rounded-md border px-3 py-2"
-            required
-          >
-            <option value="">Select role</option>
-            <option value="tenant_admin">Tenant Admin</option>
-            <option value="tenant_editor">Tenant Editor</option>
-          </select>
-        </label>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <div className="text-sm font-medium">Password (for email users)</div>
-          <input
-            name="password"
-            type="password"
-            placeholder="Leave empty to send invitation"
-            className="mt-1 w-full rounded-md border px-3 py-2"
-          />
-          <p className="mt-1 text-xs text-zinc-500">
-            Required for email users unless sending invitation. Not needed for
-            phone-only users.
-          </p>
-        </label>
-        <div className="flex items-end pb-6">
-          <label className="flex items-center gap-2">
-            <input name="send_invite" type="checkbox" />
-            <span className="text-sm">Send invitation email (email users only)</span>
+          </label>
+          <label className="block">
+            <div className="text-sm font-medium">Last Name</div>
+            <input
+              name="last_name"
+              type="text"
+              placeholder="Doe"
+              className="mt-1 w-full rounded-md border px-3 py-2 disabled:opacity-50"
+            />
           </label>
         </div>
-      </div>
 
-      <button className="rounded-md bg-black px-4 py-2 text-white">
-        Create User & Assign
-      </button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <div className="text-sm font-medium">
+              Email <span className="text-zinc-400">(optional if phone provided)</span>
+            </div>
+            <input
+              name="email"
+              type="email"
+              placeholder="user@example.com"
+              className="mt-1 w-full rounded-md border px-3 py-2 disabled:opacity-50"
+            />
+          </label>
+          <div>
+            <div className="text-sm font-medium">
+              Phone <span className="text-zinc-400">(optional if email provided)</span>
+            </div>
+            <div className="mt-1">
+              <PhoneInput
+                value={phone}
+                onChange={setPhone}
+                placeholder="98765 43210"
+              />
+            </div>
+            <p className="mt-1 text-xs text-zinc-500">
+              Phone-only users can login via OTP.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <div className="text-sm font-medium">Tenant</div>
+            <select
+              name="tenant_id"
+              className="mt-1 w-full rounded-md border px-3 py-2 disabled:opacity-50"
+              required
+            >
+              <option value="">Select tenant</option>
+              {tenants.map((tenant) => (
+                <option key={tenant.id} value={tenant.id}>
+                  {tenant.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <div className="text-sm font-medium">Role</div>
+            <select
+              name="role"
+              className="mt-1 w-full rounded-md border px-3 py-2 disabled:opacity-50"
+              required
+            >
+              <option value="">Select role</option>
+              <option value="tenant_admin">Tenant Admin</option>
+              <option value="tenant_editor">Tenant Editor</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <div className="text-sm font-medium">Password (for email users)</div>
+            <input
+              name="password"
+              type="password"
+              placeholder="Leave empty to send invitation"
+              className="mt-1 w-full rounded-md border px-3 py-2 disabled:opacity-50"
+            />
+            <p className="mt-1 text-xs text-zinc-500">
+              Required for email users unless sending invitation. Not needed for
+              phone-only users.
+            </p>
+          </label>
+          <div className="flex items-end pb-6">
+            <label className="flex items-center gap-2">
+              <input name="send_invite" type="checkbox" className="disabled:opacity-50" />
+              <span className="text-sm">Send invitation email (email users only)</span>
+            </label>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded-md bg-black px-4 py-2 text-white disabled:opacity-50 flex items-center gap-2"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            "Create User & Assign"
+          )}
+        </button>
+      </fieldset>
     </form>
   );
 }

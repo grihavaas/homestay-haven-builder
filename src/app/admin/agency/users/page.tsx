@@ -7,47 +7,52 @@ import { AdminHeader } from "@/components/AdminHeader";
 import { CreateUserForm } from "./CreateUserForm";
 import { UserList } from "./UserList";
 
-async function listUsers() {
+async function listAllUsers() {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const adminClient = createSupabaseAdminClient();
+
+  // Get all memberships
+  const { data: memberships, error } = await supabase
     .from("tenant_memberships")
     .select("id,user_id,tenant_id,role,created_at,tenants(name)")
     .order("created_at", { ascending: false });
   if (error) throw error;
 
-  const memberships = data ?? [];
+  // Get all Supabase users
+  const { data: usersData } = await adminClient.auth.admin.listUsers();
+  const allUsers = usersData?.users ?? [];
 
-  // Fetch user emails/phones using admin client (server-side only)
-  try {
-    const adminClient = createSupabaseAdminClient();
-    const { data: usersData } = await adminClient.auth.admin.listUsers();
-    const userInfo: Record<string, { email?: string; phone?: string }> = {};
+  // Create a map of user_id to membership
+  const membershipMap: Record<string, typeof memberships[0]> = {};
+  (memberships ?? []).forEach((m) => {
+    membershipMap[m.user_id] = m;
+  });
 
-    usersData?.users.forEach((user) => {
-      userInfo[user.id] = {
-        email: user.email || undefined,
-        phone: user.phone || undefined,
-      };
-    });
+  // Build unified user list
+  return allUsers.map((user) => {
+    const membership = membershipMap[user.id];
+    const firstName = user.user_metadata?.first_name || "";
+    const lastName = user.user_metadata?.last_name || "";
+    const fullName = [firstName, lastName].filter(Boolean).join(" ");
 
-    return memberships.map((m) => ({
-      ...m,
-      email: userInfo[m.user_id]?.email || undefined,
-      phone: userInfo[m.user_id]?.phone || undefined,
-      displayName:
-        userInfo[m.user_id]?.email ||
-        userInfo[m.user_id]?.phone ||
-        m.user_id.substring(0, 8) + "...",
-    }));
-  } catch {
-    // If admin client fails (e.g., no service role key), fall back to showing user_id
-    return memberships.map((m) => ({
-      ...m,
-      email: undefined,
-      phone: undefined,
-      displayName: m.user_id.substring(0, 8) + "...",
-    }));
-  }
+    return {
+      id: user.id,
+      user_id: user.id,
+      email: user.email || undefined,
+      phone: user.phone || undefined,
+      first_name: firstName,
+      last_name: lastName,
+      displayName: fullName || user.email || user.phone || user.id.substring(0, 8) + "...",
+      created_at: user.created_at,
+      // Membership info (may be null if unassigned)
+      membership_id: membership?.id || null,
+      tenant_id: membership?.tenant_id || null,
+      tenant_name: Array.isArray(membership?.tenants)
+        ? membership.tenants[0]?.name
+        : (membership?.tenants as any)?.name || null,
+      role: membership?.role || null,
+    };
+  });
 }
 
 async function listTenants() {
@@ -72,10 +77,12 @@ export default async function AgencyUsersPage() {
     );
   }
 
-  const [users, tenants] = await Promise.all([listUsers(), listTenants()]);
+  const [users, tenants] = await Promise.all([listAllUsers(), listTenants()]);
 
   async function createUserAndMembership(formData: FormData) {
     "use server";
+    const firstName = String(formData.get("first_name") ?? "").trim();
+    const lastName = String(formData.get("last_name") ?? "").trim();
     const email = String(formData.get("email") ?? "").trim() || undefined;
     const phone = String(formData.get("phone") ?? "").trim() || undefined;
     const password = String(formData.get("password") ?? "").trim() || undefined;
@@ -98,10 +105,26 @@ export default async function AgencyUsersPage() {
       return false;
     });
 
+    const userMetadata = {
+      tenant_id: tenantId,
+      first_name: firstName || undefined,
+      last_name: lastName || undefined,
+    };
+
     let userId: string;
 
     if (existingUser) {
       userId = existingUser.id;
+      // Update metadata if name provided
+      if (firstName || lastName) {
+        await adminClient.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            ...existingUser.user_metadata,
+            first_name: firstName || existingUser.user_metadata?.first_name,
+            last_name: lastName || existingUser.user_metadata?.last_name,
+          },
+        });
+      }
     } else {
       // Create new user
       if (phone && !email) {
@@ -109,8 +132,8 @@ export default async function AgencyUsersPage() {
         const { data: userData, error: userError } =
           await adminClient.auth.admin.createUser({
             phone,
-            phone_confirm: true, // Auto-confirm phone
-            user_metadata: { tenant_id: tenantId },
+            phone_confirm: true,
+            user_metadata: userMetadata,
           });
         if (userError) throw userError;
         userId = userData.user.id;
@@ -118,7 +141,7 @@ export default async function AgencyUsersPage() {
         // Send invitation email (user sets their own password)
         const { data: inviteData, error: inviteError } =
           await adminClient.auth.admin.inviteUserByEmail(email, {
-            data: { tenant_id: tenantId },
+            data: userMetadata,
           });
         if (inviteError) throw inviteError;
         userId = inviteData.user.id;
@@ -130,12 +153,12 @@ export default async function AgencyUsersPage() {
           email_confirm: boolean;
           phone?: string;
           phone_confirm?: boolean;
-          user_metadata: { tenant_id: string };
+          user_metadata: typeof userMetadata;
         } = {
           email,
           password,
           email_confirm: true,
-          user_metadata: { tenant_id: tenantId },
+          user_metadata: userMetadata,
         };
 
         if (phone) {
@@ -178,6 +201,38 @@ export default async function AgencyUsersPage() {
     revalidatePath("/admin/agency/users");
   }
 
+  async function assignTenant(formData: FormData) {
+    "use server";
+    const userId = String(formData.get("user_id") ?? "").trim();
+    const tenantId = String(formData.get("tenant_id") ?? "").trim();
+    const role = String(formData.get("role") ?? "").trim();
+
+    if (!userId || !tenantId || !role) return;
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase.from("tenant_memberships").insert({
+      tenant_id: tenantId,
+      user_id: userId,
+      role,
+    });
+
+    if (error) {
+      if (error.code === "23505") {
+        // Already exists, update
+        const { error: updateError } = await supabase
+          .from("tenant_memberships")
+          .update({ role, tenant_id: tenantId })
+          .eq("user_id", userId);
+        if (updateError) throw updateError;
+      } else {
+        throw error;
+      }
+    }
+
+    revalidatePath("/admin/agency/users");
+  }
+
   async function deleteMembership(membershipId: string) {
     "use server";
     const supabase = await createSupabaseServerClient();
@@ -197,8 +252,10 @@ export default async function AgencyUsersPage() {
 
       <UserList
         users={users}
+        tenants={tenants}
         currentUserId={user.id}
         deleteAction={deleteMembership}
+        assignAction={assignTenant}
       />
     </div>
   );
