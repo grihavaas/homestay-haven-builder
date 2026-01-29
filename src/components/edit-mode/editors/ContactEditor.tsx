@@ -12,6 +12,7 @@ import { useProperty } from "@/contexts/PropertyContext";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface ContactEditorProps {
   isOpen: boolean;
@@ -108,14 +109,11 @@ export function ContactEditor({ isOpen, onClose }: ContactEditorProps) {
     <BottomSheet isOpen={isOpen} onClose={onClose} title="Edit Contact & Booking">
       <div className="space-y-5">
         <BottomSheetField label="Phone Number">
-          <Input
-            type="tel"
+          <PhoneInput
             value={formData.phone}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, phone: e.target.value }))
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, phone: value }))
             }
-            placeholder="+91 98765 43210"
-            className="text-base"
           />
         </BottomSheetField>
 
@@ -132,14 +130,11 @@ export function ContactEditor({ isOpen, onClose }: ContactEditorProps) {
         </BottomSheetField>
 
         <BottomSheetField label="WhatsApp Number">
-          <Input
-            type="tel"
+          <PhoneInput
             value={formData.whatsapp}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, whatsapp: e.target.value }))
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, whatsapp: value }))
             }
-            placeholder="+91 98765 43210"
-            className="text-base"
           />
           <p className="text-xs text-muted-foreground mt-1">
             Used for inquiry form and contact buttons

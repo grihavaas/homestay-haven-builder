@@ -23,6 +23,7 @@ import { EditButton } from "@/components/edit-mode/EditableSection";
 import { ContactEditor } from "@/components/edit-mode/editors/ContactEditor";
 import { BookingSettingsEditor } from "@/components/edit-mode/editors/BookingSettingsEditor";
 import { toast } from "@/hooks/use-toast";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 export function Booking() {
   const { property, loading } = useProperty();
@@ -33,6 +34,7 @@ export function Booking() {
   const [adults, setAdults] = useState("2");
   const [children, setChildren] = useState("0");
   const [selectedRoom, setSelectedRoom] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
   const [showEditor, setShowEditor] = useState(false);
   const [showBookingSettingsEditor, setShowBookingSettingsEditor] = useState(false);
 
@@ -65,7 +67,7 @@ export function Booking() {
     const checkin = formData.get("checkin") as string;
     const checkout = formData.get("checkout") as string;
     const name = formData.get("name") as string;
-    const phone = formData.get("phone") as string;
+    const phone = guestPhone;
     const email = formData.get("email") as string;
     const requests = formData.get("requests") as string;
 
@@ -214,7 +216,11 @@ _Sent via ${property.name} website_`;
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" name="phone" type="tel" placeholder="+91 98765 43210" required />
+                  <PhoneInput
+                    value={guestPhone}
+                    onChange={setGuestPhone}
+                    required
+                  />
                 </div>
               </div>
 

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { requireMembership } from "@/lib/authz";
+import { requireMembership, requireUser } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AdminHeader } from "@/components/AdminHeader";
+import { CreateUserForm } from "./CreateUserForm";
+import { UserList } from "./UserList";
 
 async function listUsers() {
   const supabase = await createSupabaseServerClient();
@@ -59,7 +61,8 @@ async function listTenants() {
 }
 
 export default async function AgencyUsersPage() {
-  const membership = await requireMembership();
+  const [user, membership] = await Promise.all([requireUser(), requireMembership()]);
+
   if (membership.role !== "agency_admin") {
     return (
       <div className="mx-auto max-w-3xl p-8">
@@ -190,143 +193,13 @@ export default async function AgencyUsersPage() {
     <div className="mx-auto max-w-3xl p-8">
       <AdminHeader title="User Management" />
 
-      <form
-        action={createUserAndMembership}
-        className="mt-6 space-y-4 rounded-lg border p-4"
-      >
-        <h3 className="font-medium">Create User & Assign to Tenant</h3>
-        <p className="text-sm text-zinc-600">
-          Create a new user account and assign them to a tenant. Provide either
-          email or phone (or both). If the user already exists, they will just
-          be assigned to the tenant.
-        </p>
+      <CreateUserForm tenants={tenants} createUserAction={createUserAndMembership} />
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <div className="text-sm font-medium">
-              Email <span className="text-zinc-400">(optional if phone provided)</span>
-            </div>
-            <input
-              name="email"
-              type="email"
-              placeholder="user@example.com"
-              className="mt-1 w-full rounded-md border px-3 py-2"
-            />
-          </label>
-          <label className="block">
-            <div className="text-sm font-medium">
-              Phone <span className="text-zinc-400">(optional if email provided)</span>
-            </div>
-            <input
-              name="phone"
-              type="tel"
-              placeholder="+91 98765 43210"
-              className="mt-1 w-full rounded-md border px-3 py-2"
-            />
-            <p className="mt-1 text-xs text-zinc-500">
-              Include country code. Phone-only users can login via OTP.
-            </p>
-          </label>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <div className="text-sm font-medium">Tenant</div>
-            <select
-              name="tenant_id"
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              required
-            >
-              <option value="">Select tenant</option>
-              {tenants.map((tenant) => (
-                <option key={tenant.id} value={tenant.id}>
-                  {tenant.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <div className="text-sm font-medium">Role</div>
-            <select
-              name="role"
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              required
-            >
-              <option value="">Select role</option>
-              <option value="tenant_admin">Tenant Admin</option>
-              <option value="tenant_editor">Tenant Editor</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <div className="text-sm font-medium">Password (for email users)</div>
-            <input
-              name="password"
-              type="password"
-              placeholder="Leave empty to send invitation"
-              className="mt-1 w-full rounded-md border px-3 py-2"
-            />
-            <p className="mt-1 text-xs text-zinc-500">
-              Required for email users unless sending invitation. Not needed for
-              phone-only users.
-            </p>
-          </label>
-          <div className="flex items-end pb-6">
-            <label className="flex items-center gap-2">
-              <input name="send_invite" type="checkbox" />
-              <span className="text-sm">Send invitation email (email users only)</span>
-            </label>
-          </div>
-        </div>
-
-        <button className="rounded-md bg-black px-4 py-2 text-white">
-          Create User & Assign
-        </button>
-      </form>
-
-      <div className="mt-8 rounded-lg border">
-        <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 border-b bg-zinc-50 p-3 text-sm font-medium">
-          <div>User</div>
-          <div>Tenant</div>
-          <div>Role</div>
-          <div>Actions</div>
-        </div>
-        <div className="divide-y">
-          {users.map((user) => (
-            <div
-              key={user.id}
-              className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 p-3 text-sm"
-            >
-              <div>
-                <div>{user.displayName}</div>
-                {user.email && user.phone && (
-                  <div className="mt-0.5 text-xs text-zinc-500">
-                    {user.phone}
-                  </div>
-                )}
-                <div className="mt-1 font-mono text-xs text-zinc-400">
-                  {user.user_id}
-                </div>
-              </div>
-              <div>{(user as any).tenants?.name || "—"}</div>
-              <div>{user.role}</div>
-              <form action={deleteMembership.bind(null, user.id)}>
-                <button
-                  type="submit"
-                  className="text-xs text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-              </form>
-            </div>
-          ))}
-          {users.length === 0 ? (
-            <div className="p-3 text-sm text-zinc-600">No users yet.</div>
-          ) : null}
-        </div>
-      </div>
+      <UserList
+        users={users}
+        currentUserId={user.id}
+        deleteAction={deleteMembership}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface PhoneLinkFormProps {
   currentPhone?: string | null;
@@ -33,20 +34,9 @@ export function PhoneLinkForm({ currentPhone }: PhoneLinkFormProps) {
     );
   }
 
-  // Format phone number
-  const formatPhoneDisplay = (value: string) => {
-    return value.replace(/[^\d+]/g, "");
-  };
-
+  // Phone is already formatted with country code from PhoneInput
   const formatPhoneForApi = (phoneNumber: string) => {
-    let formatted = phoneNumber.replace(/[^\d+]/g, "");
-    if (!formatted.startsWith("+")) {
-      if (formatted.startsWith("0")) {
-        formatted = formatted.substring(1);
-      }
-      formatted = "+91" + formatted;
-    }
-    return formatted;
+    return phoneNumber;
   };
 
   // Send OTP to link phone
@@ -141,20 +131,14 @@ export function PhoneLinkForm({ currentPhone }: PhoneLinkFormProps) {
 
       {!otpSent ? (
         <form onSubmit={onSendOtp} className="mt-4 space-y-3">
-          <label className="block">
-            <div className="text-sm font-medium">Phone Number</div>
-            <input
-              className="mt-1 w-full rounded-md border px-3 py-2"
+          <div>
+            <div className="text-sm font-medium mb-1">Phone Number</div>
+            <PhoneInput
               value={phone}
-              onChange={(e) => setPhone(formatPhoneDisplay(e.target.value))}
-              type="tel"
-              placeholder="+91 98765 43210"
+              onChange={setPhone}
               required
             />
-            <p className="mt-1 text-xs text-zinc-500">
-              Include country code (e.g., +91 for India)
-            </p>
-          </label>
+          </div>
           <button
             type="submit"
             disabled={submitting || !phone.trim()}

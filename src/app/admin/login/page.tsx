@@ -9,6 +9,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 type AuthMethod = "email" | "phone";
 
@@ -26,22 +27,9 @@ function LoginForm() {
   const [password, setPassword] = useState("");
 
   // Phone/OTP state
-  const [countryCode, setCountryCode] = useState("+91");
   const [phone, setPhone] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
-
-  // Common country codes
-  const countryCodes = [
-    { code: "+91", country: "India" },
-    { code: "+1", country: "USA/Canada" },
-    { code: "+44", country: "UK" },
-    { code: "+971", country: "UAE" },
-    { code: "+65", country: "Singapore" },
-    { code: "+61", country: "Australia" },
-    { code: "+49", country: "Germany" },
-    { code: "+33", country: "France" },
-  ];
 
   // Common state
   const [submitting, setSubmitting] = useState(false);
@@ -51,20 +39,9 @@ function LoginForm() {
 
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
-  // Format phone number for display (digits only)
-  const formatPhoneDisplay = (value: string) => {
-    // Remove all non-digits
-    return value.replace(/\D/g, "");
-  };
-
-  // Combine country code and phone number for API
+  // Phone is already formatted with country code from PhoneInput
   const formatPhoneForApi = (phoneNumber: string) => {
-    let digits = phoneNumber.replace(/\D/g, "");
-    // Remove leading 0 if present
-    if (digits.startsWith("0")) {
-      digits = digits.substring(1);
-    }
-    return countryCode + digits;
+    return phoneNumber;
   };
 
   async function handleLoginSuccess() {
@@ -294,29 +271,12 @@ function LoginForm() {
           {!otpSent ? (
             <form onSubmit={onSendOtp} className="mt-6 space-y-4">
               <div>
-                <div className="text-sm font-medium">Phone Number</div>
-                <div className="mt-1 flex gap-2">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="rounded-md border px-2 py-2 bg-white text-sm"
-                  >
-                    {countryCodes.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.code} {c.country}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    className="flex-1 rounded-md border px-3 py-2"
-                    value={phone}
-                    onChange={(e) => setPhone(formatPhoneDisplay(e.target.value))}
-                    type="tel"
-                    autoComplete="tel"
-                    placeholder="98765 43210"
-                    required
-                  />
-                </div>
+                <div className="text-sm font-medium mb-1">Phone Number</div>
+                <PhoneInput
+                  value={phone}
+                  onChange={setPhone}
+                  required
+                />
               </div>
 
               <button

@@ -14,6 +14,7 @@ import { useProperty } from "@/contexts/PropertyContext";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { ImagePicker } from "../ImagePicker";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface HostEditorProps {
   isOpen: boolean;
@@ -191,31 +192,23 @@ export function HostEditor({ isOpen, onClose, host }: HostEditorProps) {
           </BottomSheetField>
 
           <BottomSheetField label="Phone">
-            <Input
-              type="tel"
+            <PhoneInput
               value={formData.phone}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, phone: e.target.value }))
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, phone: value }))
               }
-              placeholder="+91 98765 43210"
-              className="text-base"
             />
           </BottomSheetField>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <BottomSheetField label="WhatsApp">
-            <Input
+            <PhoneInput
               value={formData.whatsapp}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, whatsapp: e.target.value }))
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, whatsapp: value }))
               }
-              placeholder="+91 98765 43210"
-              className="text-base"
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Include country code
-            </p>
           </BottomSheetField>
 
           <BottomSheetField label="Response Time">
