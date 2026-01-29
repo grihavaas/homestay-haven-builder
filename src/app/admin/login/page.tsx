@@ -26,9 +26,22 @@ function LoginForm() {
   const [password, setPassword] = useState("");
 
   // Phone/OTP state
+  const [countryCode, setCountryCode] = useState("+91");
   const [phone, setPhone] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
+
+  // Common country codes
+  const countryCodes = [
+    { code: "+91", country: "India" },
+    { code: "+1", country: "USA/Canada" },
+    { code: "+44", country: "UK" },
+    { code: "+971", country: "UAE" },
+    { code: "+65", country: "Singapore" },
+    { code: "+61", country: "Australia" },
+    { code: "+49", country: "Germany" },
+    { code: "+33", country: "France" },
+  ];
 
   // Common state
   const [submitting, setSubmitting] = useState(false);
@@ -38,25 +51,20 @@ function LoginForm() {
 
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
-  // Format phone number for display
+  // Format phone number for display (digits only)
   const formatPhoneDisplay = (value: string) => {
-    // Remove all non-digits except leading +
-    const cleaned = value.replace(/[^\d+]/g, "");
-    return cleaned;
+    // Remove all non-digits
+    return value.replace(/\D/g, "");
   };
 
-  // Ensure phone has country code
+  // Combine country code and phone number for API
   const formatPhoneForApi = (phoneNumber: string) => {
-    let formatted = phoneNumber.replace(/[^\d+]/g, "");
-    // If doesn't start with +, assume India (+91)
-    if (!formatted.startsWith("+")) {
-      // Remove leading 0 if present
-      if (formatted.startsWith("0")) {
-        formatted = formatted.substring(1);
-      }
-      formatted = "+91" + formatted;
+    let digits = phoneNumber.replace(/\D/g, "");
+    // Remove leading 0 if present
+    if (digits.startsWith("0")) {
+      digits = digits.substring(1);
     }
-    return formatted;
+    return countryCode + digits;
   };
 
   async function handleLoginSuccess() {
@@ -285,21 +293,31 @@ function LoginForm() {
         <>
           {!otpSent ? (
             <form onSubmit={onSendOtp} className="mt-6 space-y-4">
-              <label className="block">
+              <div>
                 <div className="text-sm font-medium">Phone Number</div>
-                <input
-                  className="mt-1 w-full rounded-md border px-3 py-2"
-                  value={phone}
-                  onChange={(e) => setPhone(formatPhoneDisplay(e.target.value))}
-                  type="tel"
-                  autoComplete="tel"
-                  placeholder="+91 98765 43210"
-                  required
-                />
-                <p className="mt-1 text-xs text-zinc-500">
-                  Include country code (e.g., +91 for India)
-                </p>
-              </label>
+                <div className="mt-1 flex gap-2">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="rounded-md border px-2 py-2 bg-white text-sm"
+                  >
+                    {countryCodes.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.code} {c.country}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className="flex-1 rounded-md border px-3 py-2"
+                    value={phone}
+                    onChange={(e) => setPhone(formatPhoneDisplay(e.target.value))}
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="98765 43210"
+                    required
+                  />
+                </div>
+              </div>
 
               <button
                 type="submit"
