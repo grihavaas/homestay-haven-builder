@@ -1,5 +1,23 @@
 import { supabase } from "./supabase";
 
+/** Lightweight fetch for SEO metadata only (name, description, tagline). Use from generateMetadata. */
+export async function fetchPropertyMetadataByHostname(hostname: string): Promise<{
+  name: string;
+  description: string | null;
+  tagline: string | null;
+} | null> {
+  const id = await resolvePropertyIdByHostname(hostname);
+  if (!id) return null;
+  const { data, error } = await supabase
+    .from("properties")
+    .select("name, description, tagline")
+    .eq("id", id)
+    .eq("is_published", true)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function resolvePropertyIdByHostname(hostname: string): Promise<string | null> {
   const { data, error } = await supabase
     .from("domains")
