@@ -62,7 +62,9 @@ async function listAllProperties() {
 
 export default async function AgencyTenantsPage() {
   const membership = await requireMembership();
-  if (membership.role !== "agency_admin") {
+  const canAccess =
+    membership.role === "agency_admin" || membership.role === "agency_rm";
+  if (!canAccess) {
     return (
       <div className="mx-auto max-w-3xl p-8">
         <h1 className="text-2xl font-semibold">Tenants</h1>

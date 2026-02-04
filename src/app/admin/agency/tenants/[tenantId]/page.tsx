@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { requireMembership } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { DeleteTenantButton } from "../DeleteTenantButton";
 
 async function getTenant(tenantId: string) {
   const supabase = await createSupabaseServerClient();
@@ -31,8 +33,11 @@ export default async function AgencyTenantDetailPage({
 }: {
   params: Promise<{ tenantId: string }>;
 }) {
-  const membership = await requireMembership();
-  if (membership.role !== "agency_admin") {
+  const { tenantId } = await params;
+  const membership = await requireMembership(tenantId);
+  const canAccess =
+    membership.role === "agency_admin" || membership.role === "agency_rm";
+  if (!canAccess) {
     return (
       <div className="mx-auto max-w-3xl p-8">
         <h1 className="text-2xl font-semibold">Tenant</h1>
@@ -41,9 +46,20 @@ export default async function AgencyTenantDetailPage({
     );
   }
 
-  const { tenantId } = await params;
   const tenant = await getTenant(tenantId);
   const properties = await listProperties(tenantId);
+
+  async function deleteTenant(formData: FormData) {
+    "use server";
+    const id = String(formData.get("tenantId"));
+    if (!id) return;
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.from("tenants").delete().eq("id", id);
+    if (error) throw error;
+    revalidatePath("/admin/agency/tenants");
+    revalidatePath("/admin/rm");
+    redirect("/admin/agency/tenants");
+  }
 
   async function createProperty(formData: FormData) {
     "use server";
@@ -65,6 +81,9 @@ export default async function AgencyTenantDetailPage({
     revalidatePath(`/admin/agency/tenants/${tenantId}`);
   }
 
+  const backHref =
+    membership.role === "agency_rm" ? "/admin/rm" : "/admin/agency/tenants";
+
   return (
     <div className="mx-auto max-w-3xl p-8">
       <div className="flex items-baseline justify-between">
@@ -72,9 +91,16 @@ export default async function AgencyTenantDetailPage({
           <h1 className="text-2xl font-semibold">{tenant.name}</h1>
           <div className="mt-1 font-mono text-xs text-zinc-500">{tenant.id}</div>
         </div>
-        <Link className="underline" href="/admin/agency/tenants">
-          Back to tenants
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link className="underline" href={backHref}>
+            Back to tenants
+          </Link>
+          <DeleteTenantButton
+            tenantId={tenant.id}
+            tenantName={tenant.name}
+            deleteAction={deleteTenant}
+          />
+        </div>
       </div>
 
       <div className="mt-6 rounded-lg border p-4 text-sm">

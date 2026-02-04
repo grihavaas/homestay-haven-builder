@@ -65,6 +65,25 @@ async function listTenants() {
   return data ?? [];
 }
 
+async function listRMMemberships() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("tenant_memberships")
+    .select("id,user_id,tenant_id,tenants(name)")
+    .eq("role", "agency_rm")
+    .order("tenant_id");
+  if (error) throw error;
+  return (data ?? []).map((m) => ({
+    id: m.id,
+    user_id: m.user_id,
+    tenant_id: m.tenant_id,
+    tenant_name:
+      Array.isArray(m.tenants) && m.tenants[0]
+        ? (m.tenants[0] as { name: string }).name
+        : (m.tenants as { name: string } | null)?.name ?? "—",
+  }));
+}
+
 export default async function AgencyUsersPage() {
   const [user, membership] = await Promise.all([requireUser(), requireMembership()]);
 
@@ -77,7 +96,30 @@ export default async function AgencyUsersPage() {
     );
   }
 
-  const [users, tenants] = await Promise.all([listAllUsers(), listTenants()]);
+  const [users, tenants, rmMemberships] = await Promise.all([
+    listAllUsers(),
+    listTenants(),
+    listRMMemberships(),
+  ]);
+
+  const userDisplayMap: Record<string, string> = {};
+  users.forEach((u) => {
+    userDisplayMap[u.user_id] =
+      u.displayName || u.email || u.phone || u.user_id.slice(0, 8) + "...";
+  });
+
+  async function deleteMembershipForm(formData: FormData) {
+    "use server";
+    const membershipId = String(formData.get("membershipId") ?? "").trim();
+    if (!membershipId) return;
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase
+      .from("tenant_memberships")
+      .delete()
+      .eq("id", membershipId);
+    if (error) throw error;
+    revalidatePath("/admin/agency/users");
+  }
 
   async function createUserAndMembership(formData: FormData) {
     "use server";
@@ -249,6 +291,45 @@ export default async function AgencyUsersPage() {
       <AdminHeader title="User Management" />
 
       <CreateUserForm tenants={tenants} createUserAction={createUserAndMembership} />
+
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold">Relationship managers</h2>
+        <p className="mt-1 text-sm text-zinc-600">
+          RMs assigned to tenants. Remove to unassign from that tenant. Add via the form above (role
+          = Relationship Manager).
+        </p>
+        <div className="mt-3 rounded-lg border">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2 border-b bg-zinc-50 p-3 text-sm font-medium">
+            <div>RM</div>
+            <div>Tenant</div>
+            <div>Action</div>
+          </div>
+          <div className="divide-y">
+            {rmMemberships.length === 0 ? (
+              <div className="p-3 text-sm text-zinc-600">No relationship managers assigned.</div>
+            ) : (
+              rmMemberships.map((m) => (
+                <div
+                  key={m.id}
+                  className="grid grid-cols-[1fr_1fr_auto] gap-2 p-3 text-sm items-center"
+                >
+                  <div>{userDisplayMap[m.user_id] ?? m.user_id.slice(0, 8) + "..."}</div>
+                  <div>{m.tenant_name}</div>
+                  <form action={deleteMembershipForm} className="inline">
+                    <input type="hidden" name="membershipId" value={m.id} />
+                    <button
+                      type="submit"
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </form>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
 
       <UserList
         users={users}

@@ -5,13 +5,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # Start Next.js dev server (port 3000)
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
-npm run test     # Run vitest tests
-npm run test:watch  # Run tests in watch mode
+npm run dev          # Start Next.js dev server with Turbopack (port 3000)
+npm run dev:webpack  # Start dev server without Turbopack (--no-turbo)
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run test         # Run vitest tests
+npm run test:watch   # Run tests in watch mode
 ```
+
+Tests are in `src/test/` using Vitest. Run a single test file with `npx vitest run src/test/example.test.ts`.
 
 ## Architecture
 
@@ -44,9 +47,9 @@ This is a multi-tenant SaaS application for creating and hosting homestay websit
   - `requireMembership()` - Returns user's tenant membership and role
 - Roles: `agency_admin`, `tenant_admin`, `tenant_editor`
 - Supabase clients:
-  - `src/lib/supabase/browser.ts` - Client-side
-  - `src/lib/supabase/server.ts` - Server-side (SSR)
-  - `src/lib/supabase/admin.ts` - Admin operations (uses service role key)
+  - `src/lib/supabase/browser.ts` - Client-side (`createSupabaseBrowserClient`)
+  - `src/lib/supabase/server.ts` - Server-side SSR (`createSupabaseServerClient`)
+  - `src/lib/supabase/admin.ts` - Admin operations with service role key (server-only)
 
 ### Theming System
 
@@ -65,6 +68,8 @@ The `ThemeContext` manages theme selection; `ThemedContent` renders the appropri
 
 ## Environment Variables
 
+Access via `src/lib/env.ts` helper which provides runtime validation.
+
 Required (prefix with `NEXT_PUBLIC_` for client-side):
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase public key
@@ -72,6 +77,7 @@ Required (prefix with `NEXT_PUBLIC_` for client-side):
 
 Server-only (no prefix):
 - `SUPABASE_SERVICE_ROLE_KEY` - For admin operations (never expose to client)
+- `BACKEND_SERVICE_URL` - Backend service URL for OTA import (defaults to localhost:3001)
 
 ## Tech Stack
 

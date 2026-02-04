@@ -268,6 +268,7 @@ function AssignRow({
           className="w-full text-xs rounded border px-2 py-1 disabled:opacity-50"
         >
           <option value="">Select...</option>
+          <option value="agency_rm">Relationship Manager</option>
           <option value="tenant_admin">Admin</option>
           <option value="tenant_editor">Editor</option>
         </select>

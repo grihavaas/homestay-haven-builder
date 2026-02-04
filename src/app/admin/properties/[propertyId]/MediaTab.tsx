@@ -6,11 +6,10 @@ import { MediaList } from "./MediaList";
 
 async function createMediaRecord(formData: FormData) {
   "use server";
-  // Verify user is authenticated and has permission
-  const membership = await requireMembership();
-  
   const property_id = String(formData.get("property_id") ?? "");
   const tenant_id = String(formData.get("tenant_id") ?? "");
+  const membership = await requireMembership(tenant_id || undefined);
+
   const media_type = String(formData.get("media_type") ?? "");
   const room_id = String(formData.get("room_id") ?? "").trim() || null;
   const s3_url = String(formData.get("s3_url") ?? "");
@@ -19,8 +18,7 @@ async function createMediaRecord(formData: FormData) {
   const display_order = Number(formData.get("display_order")) || 0;
   const is_active = formData.get("is_active") === "true";
 
-  // Verify tenant_id matches user's membership (unless agency_admin)
-  if (membership.role !== "agency_admin" && membership.tenant_id !== tenant_id) {
+  if (tenant_id && membership.tenant_id !== tenant_id) {
     throw new Error("Unauthorized: tenant_id mismatch");
   }
 
@@ -43,7 +41,7 @@ async function createMediaRecord(formData: FormData) {
     throw new Error("Property not found");
   }
   
-  if (membership.role !== "agency_admin" && property.tenant_id !== tenant_id) {
+  if (property.tenant_id !== tenant_id) {
     throw new Error("Property does not belong to tenant");
   }
 

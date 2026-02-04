@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type Role = "agency_admin" | "tenant_admin" | "tenant_editor";
+export type Role = "agency_admin" | "tenant_admin" | "tenant_editor" | "agency_rm";
 
 export type Membership = {
   tenant_id: string;
@@ -65,9 +65,55 @@ export async function requireUser() {
   }
 }
 
-export async function requireMembership(): Promise<Membership> {
+/**
+ * Fetch all memberships for the current user (e.g. agency_rm can have multiple).
+ */
+export async function getMemberships(): Promise<Membership[]> {
   const user = await requireUser();
   const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("tenant_memberships")
+    .select("tenant_id,role")
+    .eq("user_id", user.id)
+    .order("tenant_id");
+  if (error) {
+    if (error.code === "42P01" || error.code === "42501") {
+      throw new Error(
+        "Database configuration error. Please ensure the tenant_memberships table exists and RLS policies are set up."
+      );
+    }
+    throw error;
+  }
+  return (data ?? []) as Membership[];
+}
+
+/**
+ * Require one membership. For agency_rm (multiple tenants), pass tenantId to get that context.
+ * Without tenantId, returns the single membership for non-RM users, or first membership for agency_rm.
+ */
+export async function requireMembership(tenantId?: string): Promise<Membership> {
+  const user = await requireUser();
+  const supabase = await createSupabaseServerClient();
+
+  if (tenantId) {
+    const { data, error } = await supabase
+      .from("tenant_memberships")
+      .select("tenant_id,role")
+      .eq("user_id", user.id)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (error) {
+      console.error("Error fetching membership:", { code: error.code, message: error.message });
+      if (error.code === "42P01" || error.code === "42501") {
+        throw new Error("Database configuration error. Please ensure the tenant_memberships table exists and RLS policies are set up.");
+      }
+      throw error;
+    }
+    if (!data) {
+      redirect("/admin/login?error=no_membership");
+    }
+    return data as Membership;
+  }
 
   const { data, error } = await supabase
     .from("tenant_memberships")
@@ -76,24 +122,14 @@ export async function requireMembership(): Promise<Membership> {
     .maybeSingle();
 
   if (error) {
-    // Log the full error for debugging
-    console.error("Error fetching membership:", {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-    });
-    // If it's a table/permission error, provide helpful message
+    console.error("Error fetching membership:", { code: error.code, message: error.message });
     if (error.code === "42P01" || error.code === "42501") {
-      throw new Error(
-        "Database configuration error. Please ensure the tenant_memberships table exists and RLS policies are set up."
-      );
+      throw new Error("Database configuration error. Please ensure the tenant_memberships table exists and RLS policies are set up.");
     }
     throw error;
   }
-  
+
   if (!data) {
-    // Authenticated but not provisioned into any tenant.
     redirect("/admin/login?error=no_membership");
   }
 

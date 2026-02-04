@@ -24,6 +24,10 @@ export default async function AdminHome() {
           <Link className="underline" href="/admin/agency">
             Go to Agency dashboard
           </Link>
+        ) : membership.role === "agency_rm" ? (
+          <Link className="underline" href="/admin/rm">
+            Go to RM dashboard
+          </Link>
         ) : (
           <Link className="underline" href="/admin/tenant">
             Go to Tenant dashboard

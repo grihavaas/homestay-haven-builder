@@ -21,6 +21,7 @@ async function listProperties(tenantId: string) {
 export default async function TenantPropertiesPage() {
   const membership = await requireMembership();
   if (membership.role === "agency_admin") {
+    // Agency admins use Agency area for cross-tenant management
     return (
       <div className="mx-auto max-w-3xl p-8">
         <h1 className="text-2xl font-semibold">Properties</h1>
@@ -62,6 +63,8 @@ export default async function TenantPropertiesPage() {
 
       <JSONImportForm tenantId={membership.tenant_id} />
 
+      {/* tenant_editor: edit only, no create */}
+      {membership.role !== "tenant_editor" && (
       <form action={createProperty} className="mt-6 grid gap-2 sm:grid-cols-3">
         <input
           name="name"
@@ -85,6 +88,7 @@ export default async function TenantPropertiesPage() {
           Create
         </button>
       </form>
+      )}
 
       <div className="mt-8 rounded-lg border">
         <div className="grid grid-cols-[1fr_1fr_auto] gap-2 border-b bg-zinc-50 p-3 text-sm font-medium">

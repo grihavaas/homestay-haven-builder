@@ -7,20 +7,9 @@ export async function DELETE(
   { params }: { params: Promise<{ propertyId: string }> }
 ) {
   try {
-    const membership = await requireMembership();
     const { propertyId } = await params;
-
-    // Only agency admins and tenant admins can delete properties
-    if (membership.role !== "tenant_admin" && membership.role !== "agency_admin") {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 403 }
-      );
-    }
-
     const supabase = await createSupabaseServerClient();
 
-    // First, verify the property exists
     const { data: property, error: fetchError } = await supabase
       .from("properties")
       .select("id, tenant_id")
@@ -34,9 +23,13 @@ export async function DELETE(
       );
     }
 
-    // Verify tenant ownership (defense in depth)
-    // Agency admins can delete any property, tenant admins can only delete their tenant's properties
-    if (membership.role !== "agency_admin" && property.tenant_id !== membership.tenant_id) {
+    const membership = await requireMembership(property.tenant_id);
+
+    if (
+      membership.role !== "tenant_admin" &&
+      membership.role !== "agency_admin" &&
+      membership.role !== "agency_rm"
+    ) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }

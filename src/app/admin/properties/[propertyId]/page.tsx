@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { requireMembership } from "@/lib/authz";
+import { requireUser, requireMembership } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PropertyTabs } from "@/components/PropertyTabs";
 import { DeletePropertyButton } from "@/components/DeletePropertyButton";
@@ -38,26 +38,25 @@ export default async function TenantPropertyEditPage({
   params: Promise<{ propertyId: string }>;
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const membership = await requireMembership();
+  await requireUser();
   const { propertyId } = await params;
   const { tab = "basic" } = await searchParams;
-  const property = await getProperty(propertyId);
-
-  // Explicitly verify tenant ownership (defense in depth - RLS should already block this)
-  // Agency admins can access any property, tenant admins can only access their tenant's properties
-  if (membership.role !== "agency_admin" && property.tenant_id !== membership.tenant_id) {
+  let property: Awaited<ReturnType<typeof getProperty>>;
+  try {
+    property = await getProperty(propertyId);
+  } catch {
     return (
       <div className="mx-auto max-w-3xl p-8">
-        <h1 className="text-2xl font-semibold">Access Denied</h1>
-        <p className="mt-2 text-sm text-zinc-600">
-          You do not have access to this property.
-        </p>
+        <h1 className="text-2xl font-semibold">Not Found</h1>
+        <p className="mt-2 text-sm text-zinc-600">Property not found or you do not have access.</p>
         <Link className="mt-4 inline-block underline" href="/admin/properties">
           Back to properties
         </Link>
       </div>
     );
   }
+  // Membership in context for this property's tenant (needed for agency_rm with multiple tenants)
+  const membership = await requireMembership(property.tenant_id);
 
   function renderTab() {
     switch (tab) {
@@ -104,7 +103,9 @@ export default async function TenantPropertyEditPage({
           <Link className="underline" href="/admin/properties">
             Back to properties
           </Link>
-          {(membership.role === "tenant_admin" || membership.role === "agency_admin") && (
+          {(membership.role === "tenant_admin" ||
+            membership.role === "agency_admin" ||
+            membership.role === "agency_rm") && (
             <DeletePropertyButton propertyId={propertyId} propertyName={property.name} />
           )}
         </div>

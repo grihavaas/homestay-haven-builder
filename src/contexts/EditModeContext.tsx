@@ -34,14 +34,16 @@ export function EditModeProvider({ children }: { children: ReactNode }) {
   const { user, membership } = useAuth();
   const { property } = useProperty();
 
-  // User can edit if they're authenticated and have appropriate role
+  // User can edit if they're authenticated and have appropriate role.
+  // agency_rm can edit when current membership tenant matches property's tenant.
   const canEdit =
     !!user &&
     !!membership &&
     !!property &&
     (membership.role === "agency_admin" ||
       membership.role === "tenant_admin" ||
-      membership.role === "tenant_editor") &&
+      membership.role === "tenant_editor" ||
+      membership.role === "agency_rm") &&
     (membership.role === "agency_admin" ||
       membership.tenant_id === property.tenant_id);
 

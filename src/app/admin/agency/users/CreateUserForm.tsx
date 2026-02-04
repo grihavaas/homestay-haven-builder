@@ -127,6 +127,7 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
               required
             >
               <option value="">Select role</option>
+              <option value="agency_rm">Relationship Manager</option>
               <option value="tenant_admin">Tenant Admin</option>
               <option value="tenant_editor">Tenant Editor</option>
             </select>
