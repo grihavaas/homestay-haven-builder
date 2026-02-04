@@ -73,15 +73,17 @@ async function listRMMemberships() {
     .eq("role", "agency_rm")
     .order("tenant_id");
   if (error) throw error;
-  return (data ?? []).map((m) => ({
-    id: m.id,
-    user_id: m.user_id,
-    tenant_id: m.tenant_id,
-    tenant_name:
-      Array.isArray(m.tenants) && m.tenants[0]
-        ? (m.tenants[0] as { name: string }).name
-        : (m.tenants as { name: string } | null)?.name ?? "—",
-  }));
+  return (data ?? []).map((m) => {
+    const t = m.tenants as { name: string } | { name: string }[] | null;
+    const name =
+      t == null ? "—" : Array.isArray(t) ? (t[0]?.name ?? "—") : t.name;
+    return {
+      id: m.id,
+      user_id: m.user_id,
+      tenant_id: m.tenant_id,
+      tenant_name: name,
+    };
+  });
 }
 
 export default async function AgencyUsersPage() {
