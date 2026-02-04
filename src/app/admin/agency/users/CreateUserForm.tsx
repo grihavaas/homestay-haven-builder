@@ -25,12 +25,9 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
     setIsSubmitting(true);
     setError(null);
     try {
-      // Add the phone value from state to the form data
       formData.set("phone", phone);
       await createUserAction(formData);
-      // Reset form
       setPhone("");
-      // Refresh the page to update the user list
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create user");
@@ -39,8 +36,15 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
     }
   };
 
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    await handleSubmit(formData);
+  };
+
   return (
-    <form action={handleSubmit} className="mt-6 space-y-4 rounded-lg border p-4">
+    <form onSubmit={onSubmit} className="mt-6 space-y-4 rounded-lg border p-4" aria-busy={isSubmitting}>
       <h3 className="font-medium">Create User & Assign to Tenant</h3>
       <p className="text-sm text-zinc-600">
         Create a new user account and assign them to a tenant. Provide either
@@ -156,20 +160,25 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-md bg-black px-4 py-2 text-white disabled:opacity-50 flex items-center gap-2"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            "Create User & Assign"
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-md bg-black px-4 py-2 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-[180px] justify-center"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                Creating...
+              </>
+            ) : (
+              "Create User & Assign"
+            )}
+          </button>
+          {isSubmitting && (
+            <span className="text-sm text-zinc-500">Please wait…</span>
           )}
-        </button>
+        </div>
       </fieldset>
     </form>
   );
