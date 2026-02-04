@@ -11,11 +11,13 @@ async function getTenantsForIds(tenantIds: string[]) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("tenants")
-    .select("id,name,primary_contact_email,is_active,created_at")
+    .select("id,name,primary_contact_email,is_active,created_at,is_agency_tenant")
     .in("id", tenantIds)
     .order("name");
   if (error) throw error;
-  return data ?? [];
+  const rows = data ?? [];
+  // Exclude agency tenant so RM dashboard only shows client tenants they can fully manage
+  return rows.filter((t) => !t.is_agency_tenant);
 }
 
 async function getPropertyCountByTenant(tenantIds: string[]) {

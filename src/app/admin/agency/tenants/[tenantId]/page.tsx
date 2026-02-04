@@ -10,7 +10,7 @@ async function getTenant(tenantId: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("tenants")
-    .select("id,name,primary_contact_email,is_active")
+    .select("id,name,primary_contact_email,is_active,is_agency_tenant")
     .eq("id", tenantId)
     .single();
   if (error) throw error;
@@ -95,11 +95,13 @@ export default async function AgencyTenantDetailPage({
           <Link className="underline" href={backHref}>
             Back to tenants
           </Link>
-          <DeleteTenantButton
-            tenantId={tenant.id}
-            tenantName={tenant.name}
-            deleteAction={deleteTenant}
-          />
+          {!(membership.role === "agency_rm" && tenant.is_agency_tenant) && (
+            <DeleteTenantButton
+              tenantId={tenant.id}
+              tenantName={tenant.name}
+              deleteAction={deleteTenant}
+            />
+          )}
         </div>
       </div>
 

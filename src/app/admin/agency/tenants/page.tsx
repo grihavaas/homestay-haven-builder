@@ -10,7 +10,7 @@ async function listTenants() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("tenants")
-    .select("id,name,is_active,created_at")
+    .select("id,name,is_active,created_at,is_agency_tenant")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
@@ -83,19 +83,29 @@ export default async function AgencyTenantsPage() {
     // Continue with empty array if there's an error
   }
   
-  // Create a map of tenant IDs to tenant names for fallback
-  const tenantMap = new Map(tenants.map(t => [t.id, t.name]));
-  
+  // Create a map of tenant IDs to tenant meta (name, is_agency_tenant) for fallback
+  const tenantMeta = new Map(
+    tenants.map((t) => [t.id, { name: t.name, is_agency_tenant: t.is_agency_tenant ?? false }])
+  );
+
   // Group properties by tenant
   const propertiesByTenant = allProperties.reduce((acc, prop: any) => {
     const tenantId = prop.tenant_id;
     if (!tenantId) return acc;
-    
-    // Get tenant info from relation or fallback to map
-    const tenantInfo = prop.tenants 
-      ? { id: prop.tenants.id, name: prop.tenants.name }
-      : { id: tenantId, name: tenantMap.get(tenantId) || 'Unknown Tenant' };
-    
+
+    const meta = tenantMeta.get(tenantId);
+    const tenantInfo = prop.tenants
+      ? {
+          id: prop.tenants.id,
+          name: prop.tenants.name,
+          is_agency_tenant: meta?.is_agency_tenant ?? false,
+        }
+      : {
+          id: tenantId,
+          name: meta?.name ?? "Unknown Tenant",
+          is_agency_tenant: meta?.is_agency_tenant ?? false,
+        };
+
     if (!acc[tenantId]) {
       acc[tenantId] = {
         tenant: tenantInfo,
@@ -104,13 +114,17 @@ export default async function AgencyTenantsPage() {
     }
     acc[tenantId].properties.push(prop);
     return acc;
-  }, {} as Record<string, { tenant: { id: string; name: string }; properties: typeof allProperties }>);
-  
+  }, {} as Record<string, { tenant: { id: string; name: string; is_agency_tenant: boolean }; properties: typeof allProperties }>);
+
   // Also include tenants that have no properties yet
-  tenants.forEach(tenant => {
+  tenants.forEach((tenant) => {
     if (!propertiesByTenant[tenant.id]) {
       propertiesByTenant[tenant.id] = {
-        tenant: { id: tenant.id, name: tenant.name },
+        tenant: {
+          id: tenant.id,
+          name: tenant.name,
+          is_agency_tenant: tenant.is_agency_tenant ?? false,
+        },
         properties: [],
       };
     }
@@ -187,7 +201,7 @@ export default async function AgencyTenantsPage() {
           <div>Actions</div>
         </div>
         <div className="divide-y">
-          {(Object.values(propertiesByTenant) as Array<{ tenant: { id: string; name: string }; properties: typeof allProperties }>)
+          {(Object.values(propertiesByTenant) as Array<{ tenant: { id: string; name: string; is_agency_tenant: boolean }; properties: typeof allProperties }>)
             .sort((a, b) => a.tenant.name.localeCompare(b.tenant.name))
             .map(({ tenant, properties }) => (
             <div key={`tenant-group-${tenant.id}`}>
@@ -202,11 +216,13 @@ export default async function AgencyTenantsPage() {
                     >
                       Tenant details
                     </Link>
-                    <DeleteTenantButton
-                      tenantId={tenant.id}
-                      tenantName={tenant.name}
-                      deleteAction={deleteTenant}
-                    />
+                    {!(membership.role === "agency_rm" && tenant.is_agency_tenant) && (
+                      <DeleteTenantButton
+                        tenantId={tenant.id}
+                        tenantName={tenant.name}
+                        deleteAction={deleteTenant}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
