@@ -145,22 +145,22 @@ export function MountainHero() {
           )}
 
           {isEditMode && (
-            <div className="mb-8">
-              <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+            <div className="mb-8 flex justify-center">
+              <EditButton onClick={() => setShowEditor(true)} label="Edit Main" />
             </div>
           )}
 
-          {/* CTAs - same width on mobile */}
+          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4"
+            className="flex flex-wrap gap-4 justify-center"
           >
-            <Button size="lg" className="flex-1 sm:flex-initial min-w-0 basis-0 sm:basis-auto sm:min-w-48" onClick={() => scrollToSection("#booking")}>
+            <Button size="lg" onClick={() => scrollToSection("#booking")}>
               Reserve Your Retreat
             </Button>
-            <Button variant="heroOutline" size="lg" className="flex-1 sm:flex-initial min-w-0 basis-0 sm:basis-auto sm:min-w-48" onClick={() => scrollToSection("#rooms")}>
+            <Button variant="heroOutline" size="lg" onClick={() => scrollToSection("#rooms")}>
               Explore Accommodations
             </Button>
           </motion.div>

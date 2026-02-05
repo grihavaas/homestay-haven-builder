@@ -142,21 +142,21 @@ export function AdventureHero() {
             </motion.div>
 
             {isEditMode && (
-              <div className="mb-6">
-                <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+              <div className="mb-6 flex justify-center">
+                <EditButton onClick={() => setShowEditor(true)} label="Edit Main" />
               </div>
             )}
 
-            {/* CTAs - same width on mobile */}
+            {/* CTAs */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4"
+              className="flex flex-wrap gap-4"
             >
               <Button 
                 size="lg" 
-                className="flex-1 min-w-0 basis-0 group"
+                className="group"
                 onClick={() => scrollToSection("#booking")}
               >
                 Start Your Adventure
@@ -165,7 +165,6 @@ export function AdventureHero() {
               <Button
                 variant="heroOutline"
                 size="lg"
-                className="flex-1 min-w-0 basis-0"
                 onClick={() => scrollToSection("#rooms")}
               >
                 Explore Rooms

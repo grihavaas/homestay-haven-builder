@@ -154,13 +154,13 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="mb-6"
+              className="mb-6 flex justify-center"
             >
-              <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+              <EditButton onClick={() => setShowEditor(true)} label="Edit Main" />
             </motion.div>
           )}
 
-          {/* CTAs - same width on mobile */}
+          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -170,7 +170,6 @@ export function Hero() {
             <Button
               variant="hero"
               size="xl"
-              className="flex-1 min-w-0 basis-0"
               onClick={() => scrollToSection("#booking")}
             >
               Book Your Stay
@@ -178,7 +177,6 @@ export function Hero() {
             <Button
               variant="heroOutline"
               size="xl"
-              className="flex-1 min-w-0 basis-0"
               onClick={() => scrollToSection("#rooms")}
             >
               Explore Rooms

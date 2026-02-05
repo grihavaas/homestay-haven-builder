@@ -147,22 +147,22 @@ export function BackwaterHero() {
         )}
 
         {isEditMode && (
-          <div className="mb-8">
-            <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+          <div className="mb-8 flex justify-center">
+            <EditButton onClick={() => setShowEditor(true)} label="Edit Main" />
           </div>
         )}
 
-        {/* CTAs - same width on mobile */}
+        {/* CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
-          className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto max-w-md sm:max-w-none mx-auto"
+          className="flex flex-col sm:flex-row gap-4"
         >
-          <Button size="lg" className="flex-1 min-w-0 basis-0 rounded-full px-8" onClick={() => scrollToSection("#booking")}>
+          <Button size="lg" className="rounded-full px-8" onClick={() => scrollToSection("#booking")}>
             Reserve Now
           </Button>
-          <Button variant="outline" size="lg" className="flex-1 min-w-0 basis-0 rounded-full px-8" onClick={() => scrollToSection("#rooms")}>
+          <Button variant="outline" size="lg" className="rounded-full px-8" onClick={() => scrollToSection("#rooms")}>
             View Rooms
           </Button>
         </motion.div>

@@ -115,23 +115,23 @@ export function ForestHero() {
             )}
 
             {isEditMode && (
-              <div className="mb-6">
-                <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+              <div className="mb-6 flex justify-center">
+                <EditButton onClick={() => setShowEditor(true)} label="Edit Main" />
               </div>
             )}
 
-            {/* CTAs - same width on mobile */}
+            {/* CTAs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
               className="flex flex-wrap gap-4"
             >
-              <Button size="lg" className="flex-1 min-w-0 basis-0" onClick={() => scrollToSection("#booking")}>
+              <Button size="lg" onClick={() => scrollToSection("#booking")}>
                 <TreePine className="w-4 h-4 mr-2" />
                 Book Your Escape
               </Button>
-              <Button variant="warmOutline" size="lg" className="flex-1 min-w-0 basis-0" onClick={() => scrollToSection("#rooms")}>
+              <Button variant="warmOutline" size="lg" onClick={() => scrollToSection("#rooms")}>
                 Discover Rooms
               </Button>
             </motion.div>

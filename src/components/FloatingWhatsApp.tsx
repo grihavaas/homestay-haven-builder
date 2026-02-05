@@ -1,13 +1,15 @@
 "use client";
 
 import { useProperty } from "@/contexts/PropertyContext";
+import { useEditMode } from "@/contexts/EditModeContext";
 
 const WHATSAPP_GREEN = "#25D366";
 
 export function FloatingWhatsApp() {
   const { property, loading } = useProperty();
+  const { isEditMode } = useEditMode();
 
-  if (loading || !property) {
+  if (isEditMode || loading || !property) {
     return null;
   }
 
