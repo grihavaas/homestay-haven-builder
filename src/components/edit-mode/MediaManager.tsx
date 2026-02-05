@@ -5,265 +5,308 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useProperty } from "@/contexts/PropertyContext";
 import { Button } from "@/components/ui/button";
-import {
-  X,
-  Upload,
-  Loader2,
-  Trash2,
-  Image as ImageIcon,
-  Home,
-  Bed,
-  User,
-  Grid3X3,
-  Edit2,
-  Check,
-} from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { MediaThumbnailTap } from "@/app/admin/properties/[propertyId]/MediaThumbnailTap";
+import type { MoveDestination } from "@/app/admin/properties/[propertyId]/MediaThumbnailTap";
 
 interface MediaManagerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type MediaCategory = "all" | "hero" | "room_image" | "host_image" | "gallery";
-
-interface EditingMedia {
+type MediaItem = {
   id: string;
+  s3_url: string;
+  alt_text: string | null;
   media_type: string;
   room_id: string | null;
   host_id: string | null;
-}
+  display_order: number | null;
+};
 
 export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
   const { property } = useProperty();
   const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState<MediaCategory>("all");
-  const [mediaType, setMediaType] = useState<string>("gallery");
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
-  const [selectedHost, setSelectedHost] = useState<string>("");
-  const [editingMedia, setEditingMedia] = useState<EditingMedia | null>(null);
-  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadDestination, setUploadDestination] = useState<{
+    mediaType: "hero" | "room_image" | "host_image" | "gallery";
+    roomId?: string | null;
+    hostId?: string | null;
+    displayOrderStart: number;
+    replaceId?: string | null;
+  } | null>(null);
 
   if (!property) return null;
 
-  const allMedia = property.media || [];
+  const allMedia: MediaItem[] = property.media ?? [];
+  const rooms = property.rooms ?? [];
+  const hosts = property.hosts ?? [];
 
-  // Filter media by category
-  const filteredMedia =
-    activeCategory === "all"
-      ? allMedia
-      : allMedia.filter((m: any) => m.media_type === activeCategory);
+  const heroMedia = allMedia.filter((m) => m.media_type === "hero");
+  const roomMedia = allMedia.filter((m) => m.media_type === "room_image");
+  const hostMedia = allMedia.filter((m) => m.media_type === "host_image");
+  const galleryMedia = allMedia.filter(
+    (m) =>
+      m.media_type === "gallery" ||
+      m.media_type === "other" ||
+      m.media_type === "exterior" ||
+      m.media_type === "common_area"
+  );
 
-  const categories: { id: MediaCategory; label: string; icon: React.ReactNode }[] = [
-    { id: "all", label: "All", icon: <Grid3X3 className="w-4 h-4" /> },
-    { id: "hero", label: "Hero", icon: <Home className="w-4 h-4" /> },
-    { id: "room_image", label: "Rooms", icon: <Bed className="w-4 h-4" /> },
-    { id: "host_image", label: "Hosts", icon: <User className="w-4 h-4" /> },
-    { id: "gallery", label: "Gallery", icon: <ImageIcon className="w-4 h-4" /> },
+  const roomMediaByRoom = new Map<string, MediaItem[]>();
+  roomMedia.forEach((m) => {
+    const rid = m.room_id ?? "";
+    if (!roomMediaByRoom.has(rid)) roomMediaByRoom.set(rid, []);
+    roomMediaByRoom.get(rid)!.push(m);
+  });
+  const hostMediaByHost = new Map<string, MediaItem>();
+  hostMedia.forEach((m) => {
+    const hid = m.host_id ?? "";
+    if (!hostMediaByHost.has(hid)) hostMediaByHost.set(hid, m);
+  });
+
+  const supabase = createSupabaseBrowserClient();
+
+  const destinations: MoveDestination[] = [
+    { label: "Main photos", mediaType: "hero" },
+    ...rooms.map((r: { id: string; name: string }) => ({
+      label: `${r.name} photos`,
+      mediaType: "room_image" as const,
+      roomId: r.id,
+    })),
+    ...hosts.map((h: { id: string; name: string }) => ({
+      label: `${h.name} photo`,
+      mediaType: "host_image" as const,
+      hostId: h.id,
+    })),
+    { label: "Gallery", mediaType: "gallery" },
   ];
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const reload = () => window.location.reload();
+
+  async function getNextDisplayOrder(
+    mediaType: string,
+    roomId: string | null,
+    hostId: string | null
+  ): Promise<number> {
+    let query = supabase
+      .from("media")
+      .select("display_order")
+      .eq("property_id", property.id)
+      .eq("media_type", mediaType)
+      .order("display_order", { ascending: false })
+      .limit(1);
+    if (mediaType === "room_image" && roomId) {
+      query = query.eq("room_id", roomId);
+    } else if (mediaType === "host_image" && hostId) {
+      query = query.eq("host_id", hostId);
+    } else {
+      query = query.is("room_id", null).is("host_id", null);
+    }
+    const { data } = await query;
+    const max = data?.[0]?.display_order;
+    return max != null ? max + 1 : 0;
+  }
+
+  async function handleUpload(
+    e: React.ChangeEvent<HTMLInputElement>,
+    dest: {
+      mediaType: "hero" | "room_image" | "host_image" | "gallery";
+      roomId?: string | null;
+      hostId?: string | null;
+      displayOrderStart: number;
+      replaceId?: string | null;
+    }
+  ) {
     const files = e.target.files;
-    if (!files || files.length === 0 || !property) return;
-
-    // Validation for room/host images
-    if (mediaType === "room_image" && !selectedRoom) {
-      toast({
-        title: "Select a room",
-        description: "Please select a room for this image.",
-        variant: "destructive",
-      });
-      return;
+    if (!files || files.length === 0) return;
+    if (dest.replaceId) {
+      await supabase.from("media").delete().eq("id", dest.replaceId);
     }
-
-    if (mediaType === "host_image" && !selectedHost) {
-      toast({
-        title: "Select a host",
-        description: "Please select a host for this image.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setUploading(true);
-
+    let order = dest.displayOrderStart;
+    const fileList = dest.mediaType === "host_image" ? [Array.from(files)[0]].filter(Boolean) : Array.from(files);
     try {
-      const supabase = createSupabaseBrowserClient();
-      let successCount = 0;
-
-      for (const file of Array.from(files)) {
+      for (const file of fileList) {
         if (!file.type.startsWith("image/")) continue;
-
-        // Generate unique filename
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name}`;
         const filePath = `tenant/${property.tenant_id}/property/${property.id}/${fileName}`;
-
-        // Upload to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("media")
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          continue;
-        }
-
-        // Get public URL
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("media").getPublicUrl(uploadData.path);
-
-        // Create media record
-        const { error: dbError } = await supabase.from("media").insert({
+          .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(uploadData.path);
+        await supabase.from("media").insert({
           property_id: property.id,
           tenant_id: property.tenant_id,
-          media_type: mediaType,
-          room_id: mediaType === "room_image" ? selectedRoom : null,
-          host_id: mediaType === "host_image" ? selectedHost : null,
+          media_type: dest.mediaType,
+          room_id: dest.mediaType === "room_image" ? dest.roomId ?? null : null,
+          host_id: dest.mediaType === "host_image" ? dest.hostId ?? null : null,
           s3_url: publicUrl,
           s3_key: uploadData.path,
           alt_text: file.name,
+          display_order: order,
           is_active: true,
-          display_order: 0,
         });
-
-        if (!dbError) {
-          successCount++;
-        }
+        order += 1;
       }
-
-      if (successCount > 0) {
-        toast({
-          title: "Upload complete",
-          description: `${successCount} image(s) uploaded successfully.`,
-        });
-        window.location.reload();
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
+      toast({ title: "Photos added", description: "Your photos have been added." });
+      reload();
+    } catch (err) {
+      console.error(err);
       toast({
         title: "Upload failed",
-        description: "Failed to upload images. Please try again.",
+        description: "Could not add photos. Please try again.",
         variant: "destructive",
       });
     } finally {
       setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      setUploadDestination(null);
+      e.target.value = "";
     }
-  };
+  }
 
-  const handleDelete = async (mediaId: string, s3Key: string) => {
-    if (!confirm("Are you sure you want to delete this image?")) return;
+  async function handleDelete(mediaId: string) {
+    const { error } = await supabase.from("media").delete().eq("id", mediaId);
+    if (error) throw error;
+    toast({ title: "Deleted", description: "Photo removed." });
+    reload();
+  }
 
-    setDeleting(mediaId);
-    try {
-      const supabase = createSupabaseBrowserClient();
+  async function handleMoveTo(mediaId: string, dest: MoveDestination) {
+    const nextOrder = await getNextDisplayOrder(
+      dest.mediaType,
+      dest.roomId ?? null,
+      dest.hostId ?? null
+    );
+    const updateData: Record<string, unknown> = {
+      media_type: dest.mediaType,
+      display_order: nextOrder,
+      room_id: dest.mediaType === "room_image" ? dest.roomId ?? null : null,
+      host_id: dest.mediaType === "host_image" ? dest.hostId ?? null : null,
+    };
+    if (dest.mediaType !== "room_image") updateData.room_id = null;
+    if (dest.mediaType !== "host_image") updateData.host_id = null;
+    const { error } = await supabase.from("media").update(updateData).eq("id", mediaId);
+    if (error) throw error;
+    toast({ title: "Moved", description: "Photo moved." });
+    reload();
+  }
 
-      // Delete from storage
-      if (s3Key) {
-        await supabase.storage.from("media").remove([s3Key]);
-      }
+  async function handleUpdateOrder(mediaId: string, newOrder: number) {
+    const { error } = await supabase.from("media").update({ display_order: newOrder }).eq("id", mediaId);
+    if (error) throw error;
+  }
 
-      // Delete from database
-      const { error } = await supabase.from("media").delete().eq("id", mediaId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Deleted",
-        description: "Image deleted successfully.",
-      });
-      window.location.reload();
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast({
-        title: "Delete failed",
-        description: "Failed to delete image. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleting(null);
-    }
-  };
-
-  const handleStartEdit = (media: any) => {
-    setEditingMedia({
-      id: media.id,
-      media_type: media.media_type,
-      room_id: media.room_id || "",
-      host_id: media.host_id || "",
+  function startAddPhotos(
+    destination: { mediaType: "hero" | "room_image" | "host_image" | "gallery"; roomId?: string | null; hostId?: string | null },
+    displayOrderStart: number,
+    replaceId?: string | null
+  ) {
+    setUploadDestination({
+      ...destination,
+      displayOrderStart,
+      replaceId: replaceId ?? undefined,
     });
-  };
+    setTimeout(() => fileInputRef.current?.click(), 0);
+  }
 
-  const handleSaveEdit = async () => {
-    if (!editingMedia) return;
+  function Section({
+    title,
+    items,
+    addLabel,
+    destination,
+    replaceId,
+    showReorder,
+  }: {
+    title: string;
+    items: MediaItem[];
+    addLabel: string;
+    destination: {
+      mediaType: "hero" | "room_image" | "host_image" | "gallery";
+      roomId?: string | null;
+      hostId?: string | null;
+    };
+    replaceId?: string | null;
+    showReorder: boolean;
+  }) {
+    const sorted = [...items].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
 
-    setSaving(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-
-      const updateData: any = {
-        media_type: editingMedia.media_type,
-        room_id: editingMedia.media_type === "room_image" && editingMedia.room_id
-          ? editingMedia.room_id
-          : null,
-        host_id: editingMedia.media_type === "host_image" && editingMedia.host_id
-          ? editingMedia.host_id
-          : null,
-      };
-
-      const { error } = await supabase
-        .from("media")
-        .update(updateData)
-        .eq("id", editingMedia.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Updated",
-        description: "Image category updated successfully.",
-      });
-      setEditingMedia(null);
-      window.location.reload();
-    } catch (error) {
-      console.error("Update error:", error);
-      toast({
-        title: "Update failed",
-        description: "Failed to update image. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingMedia(null);
-  };
-
-  // Get room/host name for display
-  const getRoomName = (roomId: string) => {
-    return property.rooms?.find((r: any) => r.id === roomId)?.name || "Unknown";
-  };
-
-  const getHostName = (hostId: string) => {
-    return property.hosts?.find((h: any) => h.id === hostId)?.name || "Unknown";
-  };
+    return (
+      <section className="rounded-lg border border-zinc-200 bg-white p-4">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={uploading}
+            onClick={() => startAddPhotos(destination, sorted.length, replaceId)}
+          >
+            {uploading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              addLabel
+            )}
+          </Button>
+        </div>
+        {sorted.length === 0 ? (
+          <p className="text-xs text-zinc-500 py-2">No photos yet.</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {sorted.map((item, index) => (
+              <MediaThumbnailTap
+                key={item.id}
+                id={item.id}
+                src={item.s3_url}
+                alt={item.alt_text ?? "Photo"}
+                onMoveTo={handleMoveTo}
+                onDelete={handleDelete}
+                destinations={destinations}
+                showReorder={showReorder}
+                onMoveUp={
+                  index > 0
+                    ? () => {
+                        const prev = sorted[index - 1];
+                        handleUpdateOrder(item.id, prev.display_order ?? index - 1)
+                          .then(() => handleUpdateOrder(prev.id, item.display_order ?? index))
+                          .then(reload)
+                          .catch((err) => {
+                            console.error(err);
+                            toast({ title: "Failed to reorder", variant: "destructive" });
+                          });
+                      }
+                    : undefined
+                }
+                onMoveDown={
+                  index < sorted.length - 1
+                    ? () => {
+                        const next = sorted[index + 1];
+                        handleUpdateOrder(item.id, next.display_order ?? index + 1)
+                          .then(() => handleUpdateOrder(next.id, item.display_order ?? index))
+                          .then(reload)
+                          .catch((err) => {
+                            console.error(err);
+                            toast({ title: "Failed to reorder", variant: "destructive" });
+                          });
+                      }
+                    : undefined
+                }
+                canMoveUp={index > 0}
+                canMoveDown={index < sorted.length - 1}
+                onAfterAction={reload}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -271,8 +314,6 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
             onClick={onClose}
             className="fixed inset-0 bg-black/50 z-50"
           />
-
-          {/* Panel */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -280,317 +321,79 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-background z-50 shadow-xl flex flex-col"
           >
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Media Library</h2>
+              <h2 className="text-lg font-semibold">Photos</h2>
               <Button variant="ghost" size="icon" onClick={onClose}>
                 <X className="w-5 h-5" />
               </Button>
             </div>
-
-            {/* Category Tabs */}
-            <div className="flex gap-1 p-4 border-b overflow-x-auto">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
-                    activeCategory === cat.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted hover:bg-muted/80"
-                  )}
-                >
-                  {cat.icon}
-                  {cat.label}
-                  <span className="text-xs opacity-70">
-                    (
-                    {cat.id === "all"
-                      ? allMedia.length
-                      : allMedia.filter((m: any) => m.media_type === cat.id).length}
-                    )
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            {/* Upload Section */}
-            <div className="p-4 border-b bg-muted/30">
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground block mb-1">
-                      Image Type
-                    </label>
-                    <select
-                      value={mediaType}
-                      onChange={(e) => setMediaType(e.target.value)}
-                      className="w-full text-sm border rounded-md px-2 py-1.5"
-                      disabled={uploading}
-                    >
-                      <option value="hero">Hero</option>
-                      <option value="room_image">Room Image</option>
-                      <option value="host_image">Host Image</option>
-                      <option value="gallery">Gallery</option>
-                      <option value="exterior">Exterior</option>
-                      <option value="common_area">Common Area</option>
-                    </select>
-                  </div>
-
-                  {mediaType === "room_image" && (
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground block mb-1">
-                        Room
-                      </label>
-                      <select
-                        value={selectedRoom}
-                        onChange={(e) => setSelectedRoom(e.target.value)}
-                        className="w-full text-sm border rounded-md px-2 py-1.5"
-                        disabled={uploading}
-                      >
-                        <option value="">Select room...</option>
-                        {property.rooms?.map((room: any) => (
-                          <option key={room.id} value={room.id}>
-                            {room.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {mediaType === "host_image" && (
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground block mb-1">
-                        Host
-                      </label>
-                      <select
-                        value={selectedHost}
-                        onChange={(e) => setSelectedHost(e.target.value)}
-                        className="w-full text-sm border rounded-md px-2 py-1.5"
-                        disabled={uploading}
-                      >
-                        <option value="">Select host...</option>
-                        {property.hosts?.map((host: any) => (
-                          <option key={host.id} value={host.id}>
-                            {host.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Images
-                    </>
-                  )}
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleUpload}
-                  className="hidden"
-                />
-              </div>
-            </div>
-
-            {/* Media Grid */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {filteredMedia.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                  <ImageIcon className="w-12 h-12 mb-3 opacity-30" />
-                  <p className="text-sm">No images in this category</p>
-                </div>
+            <p className="px-4 pb-3 text-sm text-muted-foreground">
+              Add photos by section. Tap a photo to move or delete it.
+            </p>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <Section
+                title="Main photos"
+                items={heroMedia}
+                addLabel="Add photos"
+                destination={{ mediaType: "hero" }}
+                showReorder={true}
+              />
+              {rooms.length === 0 ? (
+                <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                  <p className="text-sm text-zinc-600">Add rooms in the admin to add room photos.</p>
+                </section>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {filteredMedia.map((media: any) => {
-                    const isEditing = editingMedia?.id === media.id;
-
-                    return (
-                      <div
-                        key={media.id}
-                        className={cn(
-                          "relative rounded-lg overflow-hidden bg-muted group",
-                          isEditing && "ring-2 ring-primary"
-                        )}
-                      >
-                        {/* Image */}
-                        <div className="aspect-square">
-                          <img
-                            src={media.s3_url}
-                            alt={media.alt_text || "Media"}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-
-                        {/* Edit Form Overlay */}
-                        {isEditing && editingMedia ? (
-                          <div className="absolute inset-0 bg-black/80 p-3 flex flex-col">
-                            <div className="flex-1 space-y-2">
-                              <div>
-                                <label className="text-xs text-white/70 block mb-1">Type</label>
-                                <select
-                                  value={editingMedia.media_type}
-                                  onChange={(e) =>
-                                    setEditingMedia({
-                                      ...editingMedia,
-                                      media_type: e.target.value,
-                                    })
-                                  }
-                                  className="w-full text-xs border rounded px-2 py-1"
-                                >
-                                  <option value="hero">Hero</option>
-                                  <option value="room_image">Room</option>
-                                  <option value="host_image">Host</option>
-                                  <option value="gallery">Gallery</option>
-                                  <option value="exterior">Exterior</option>
-                                  <option value="common_area">Common Area</option>
-                                </select>
-                              </div>
-
-                              {editingMedia.media_type === "room_image" && (
-                                <div>
-                                  <label className="text-xs text-white/70 block mb-1">Room</label>
-                                  <select
-                                    value={editingMedia.room_id || ""}
-                                    onChange={(e) =>
-                                      setEditingMedia({
-                                        ...editingMedia,
-                                        room_id: e.target.value,
-                                      })
-                                    }
-                                    className="w-full text-xs border rounded px-2 py-1"
-                                  >
-                                    <option value="">Select room...</option>
-                                    {property.rooms?.map((room: any) => (
-                                      <option key={room.id} value={room.id}>
-                                        {room.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-
-                              {editingMedia.media_type === "host_image" && (
-                                <div>
-                                  <label className="text-xs text-white/70 block mb-1">Host</label>
-                                  <select
-                                    value={editingMedia.host_id || ""}
-                                    onChange={(e) =>
-                                      setEditingMedia({
-                                        ...editingMedia,
-                                        host_id: e.target.value,
-                                      })
-                                    }
-                                    className="w-full text-xs border rounded px-2 py-1"
-                                  >
-                                    <option value="">Select host...</option>
-                                    {property.hosts?.map((host: any) => (
-                                      <option key={host.id} value={host.id}>
-                                        {host.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="flex gap-2 mt-2">
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                className="flex-1 h-7 text-xs"
-                                onClick={handleCancelEdit}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="flex-1 h-7 text-xs"
-                                onClick={handleSaveEdit}
-                                disabled={saving}
-                              >
-                                {saving ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  <>
-                                    <Check className="w-3 h-3 mr-1" />
-                                    Save
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {/* Type badge */}
-                            <div className="absolute top-1 left-1 right-1 flex flex-wrap gap-1">
-                              <span className="px-1.5 py-0.5 text-[10px] font-medium bg-black/60 text-white rounded">
-                                {media.media_type === "room_image"
-                                  ? "Room"
-                                  : media.media_type === "host_image"
-                                  ? "Host"
-                                  : media.media_type}
-                              </span>
-                              {media.room_id && (
-                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/80 text-white rounded truncate max-w-[80px]">
-                                  {getRoomName(media.room_id)}
-                                </span>
-                              )}
-                              {media.host_id && (
-                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/80 text-white rounded truncate max-w-[80px]">
-                                  {getHostName(media.host_id)}
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Action buttons */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                              <Button
-                                variant="secondary"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleStartEdit(media)}
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleDelete(media.id, media.s3_key)}
-                                disabled={deleting === media.id}
-                              >
-                                {deleting === media.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="w-4 h-4" />
-                                )}
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                rooms.map((room: { id: string; name: string }) => (
+                  <Section
+                    key={room.id}
+                    title={`${room.name} photos`}
+                    items={roomMediaByRoom.get(room.id) ?? []}
+                    addLabel="Add photos"
+                    destination={{ mediaType: "room_image", roomId: room.id }}
+                    showReorder={true}
+                  />
+                ))
               )}
+              {hosts.length === 0 ? (
+                <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                  <p className="text-sm text-zinc-600">Add hosts in the admin to add host photos.</p>
+                </section>
+              ) : (
+                hosts.map((host: { id: string; name: string }) => {
+                  const item = hostMediaByHost.get(host.id) ?? null;
+                  return (
+                    <Section
+                      key={host.id}
+                      title={`${host.name} photo`}
+                      items={item ? [item] : []}
+                      addLabel={item ? "Change photo" : "Add photo"}
+                      destination={{ mediaType: "host_image", hostId: host.id }}
+                      replaceId={item?.id ?? null}
+                      showReorder={false}
+                    />
+                  );
+                })
+              )}
+              <Section
+                title="Gallery"
+                items={galleryMedia}
+                addLabel="Add photos"
+                destination={{ mediaType: "gallery" }}
+                showReorder={true}
+              />
             </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (uploadDestination) {
+                  handleUpload(e, uploadDestination);
+                }
+              }}
+            />
           </motion.div>
         </>
       )}

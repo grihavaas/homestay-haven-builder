@@ -34,6 +34,7 @@ export function MediaThumbnailTap({
   onMoveDown?: () => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
+  onAfterAction?: () => void;
 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -41,12 +42,14 @@ export function MediaThumbnailTap({
   const [showMoveTo, setShowMoveTo] = useState(false);
   const router = useRouter();
 
+  const afterAction = onAfterAction ?? (() => router.refresh());
+
   async function handleMoveTo(dest: MoveDestination) {
     setMenuOpen(false);
     setShowMoveTo(false);
     try {
       await onMoveTo(id, dest);
-      router.refresh();
+      afterAction();
     } catch (err) {
       console.error(err);
       alert("Failed to move. Please try again.");
@@ -57,7 +60,7 @@ export function MediaThumbnailTap({
     setMenuOpen(false);
     try {
       await onDelete(id);
-      router.refresh();
+      afterAction();
     } catch (err) {
       console.error(err);
       alert("Failed to delete. Please try again.");
