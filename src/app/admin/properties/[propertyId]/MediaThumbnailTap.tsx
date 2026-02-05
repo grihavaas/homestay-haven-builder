@@ -22,6 +22,7 @@ export function MediaThumbnailTap({
   onMoveDown,
   canMoveUp,
   canMoveDown,
+  onAfterAction,
 }: {
   id: string;
   src: string;
