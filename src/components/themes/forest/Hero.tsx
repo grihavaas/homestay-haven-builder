@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, TreePine, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,30 @@ import { EditButton } from "@/components/edit-mode/EditableSection";
 import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
+const HERO_ROTATE_MS = 5000;
+
 export function ForestHero() {
   const { property, loading } = useProperty();
   const { isEditMode } = useEditMode();
   const [showEditor, setShowEditor] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (loading || !property) {
     return null;
   }
-  
-  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+
+  const heroImages = property.media?.filter((m: any) => m.media_type === "hero").map((m: any) => m.s3_url) || [];
+  const galleryImages = property.media?.filter((m: any) => m.media_type === "gallery").map((m: any) => m.s3_url) || [];
+  const allImages =
+    heroImages.length > 0 ? heroImages : galleryImages.length > 0 ? galleryImages : [heroImage];
+
+  useEffect(() => {
+    if (allImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }, HERO_ROTATE_MS);
+    return () => clearInterval(interval);
+  }, [allImages.length]);
   const avgRating = property.review_sources?.length > 0
     ? property.review_sources.reduce((sum: number, r: any) => sum + (r.stars || 0), 0) / property.review_sources.length
     : 0;
@@ -41,21 +55,14 @@ export function ForestHero() {
           <div className="absolute bottom-40 right-10 w-48 h-48 bg-secondary/10 rounded-full blur-3xl" />
           
           <div className="container px-8 lg:px-16 py-20 relative z-10">
-            <div className="relative inline-block">
-              <motion.h1
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-foreground mb-6 leading-tight"
-              >
-                {property.name}
-              </motion.h1>
-              {isEditMode && (
-                <div className="absolute -right-12 top-1/2 -translate-y-1/2">
-                  <EditButton onClick={() => setShowEditor(true)} label="Edit" />
-                </div>
-              )}
-            </div>
+            <motion.h1
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl md:text-5xl lg:text-6xl font-serif font-semibold text-foreground mb-6 leading-tight"
+            >
+              {property.name}
+            </motion.h1>
 
             {property.tagline && (
               <motion.p
@@ -107,25 +114,31 @@ export function ForestHero() {
               </motion.div>
             )}
 
-            {/* CTAs */}
+            {isEditMode && (
+              <div className="mb-6">
+                <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+              </div>
+            )}
+
+            {/* CTAs - same width on mobile */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
               className="flex flex-wrap gap-4"
             >
-              <Button size="lg" onClick={() => scrollToSection("#booking")}>
+              <Button size="lg" className="flex-1 min-w-0 basis-0" onClick={() => scrollToSection("#booking")}>
                 <TreePine className="w-4 h-4 mr-2" />
                 Book Your Escape
               </Button>
-              <Button variant="warmOutline" size="lg" onClick={() => scrollToSection("#rooms")}>
+              <Button variant="warmOutline" size="lg" className="flex-1 min-w-0 basis-0" onClick={() => scrollToSection("#rooms")}>
                 Discover Rooms
               </Button>
             </motion.div>
           </div>
         </div>
 
-        {/* Right: Full-height image */}
+        {/* Right: Full-height image carousel */}
         <div className="relative order-1 lg:order-2 min-h-[50vh] lg:min-h-screen">
           <motion.div
             initial={{ opacity: 0, scale: 1.1 }}
@@ -133,14 +146,36 @@ export function ForestHero() {
             transition={{ delay: 0.2, duration: 0.8 }}
             className="absolute inset-0"
           >
-            <img
-              src={heroMedia}
-              alt={property.name}
-              className="w-full h-full object-cover"
-            />
+            {allImages.map((image: string, index: number) => (
+              <motion.img
+                key={image}
+                src={image}
+                alt={property.name}
+                className="absolute inset-0 w-full h-full object-cover"
+                initial={{ opacity: 0 }}
+                animate={{
+                  opacity: index === currentImageIndex ? 1 : 0,
+                  scale: index === currentImageIndex ? 1 : 1.05,
+                }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+              />
+            ))}
             <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-background/20" />
+            {allImages.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {allImages.map((_: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === currentImageIndex ? "w-8 bg-primary" : "w-2 bg-primary/40 hover:bg-primary/60"
+                    }`}
+                    aria-label={`Go to image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </motion.div>
-
         </div>
       </div>
 

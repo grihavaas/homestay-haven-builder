@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, Anchor } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,30 @@ import { EditButton } from "@/components/edit-mode/EditableSection";
 import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
+const HERO_ROTATE_MS = 5000;
+
 export function BackwaterHero() {
   const { property, loading } = useProperty();
   const { isEditMode } = useEditMode();
   const [showEditor, setShowEditor] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (loading || !property) {
     return null;
   }
-  
-  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+
+  const heroImages = property.media?.filter((m: any) => m.media_type === "hero").map((m: any) => m.s3_url) || [];
+  const galleryImages = property.media?.filter((m: any) => m.media_type === "gallery").map((m: any) => m.s3_url) || [];
+  const allImages =
+    heroImages.length > 0 ? heroImages : galleryImages.length > 0 ? galleryImages : [heroImage];
+
+  useEffect(() => {
+    if (allImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }, HERO_ROTATE_MS);
+    return () => clearInterval(interval);
+  }, [allImages.length]);
   const avgRating = property.review_sources?.length > 0
     ? property.review_sources.reduce((sum: number, r: any) => sum + (r.stars || 0), 0) / property.review_sources.length
     : 0;
@@ -34,13 +48,36 @@ export function BackwaterHero() {
     <section id="hero" className="relative min-h-screen overflow-hidden">
       {/* Layered, flowing background - Backwater minimal style */}
       <div className="absolute inset-0">
-        <img
-          src={heroMedia}
-          alt={property.name}
-          className="w-full h-full object-cover"
-        />
+        {allImages.map((image: string, index: number) => (
+          <motion.img
+            key={image}
+            src={image}
+            alt={property.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: index === currentImageIndex ? 1 : 0,
+              scale: index === currentImageIndex ? 1 : 1.05,
+            }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+          />
+        ))}
         {/* Minimal gradient for text readability */}
         <div className="absolute inset-0 bg-black/20" />
+        {allImages.length > 1 && (
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {allImages.map((_: string, index: number) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentImageIndex ? "w-8 bg-primary-foreground" : "w-2 bg-primary-foreground/40 hover:bg-primary-foreground/60"
+                }`}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Minimal centered content */}
@@ -56,21 +93,14 @@ export function BackwaterHero() {
         </motion.div>
 
         {/* Main title - elegant, spacious */}
-        <div className="relative inline-block">
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-foreground mb-6 tracking-tight"
-          >
-            {property.name}
-          </motion.h1>
-          {isEditMode && (
-            <div className="absolute -right-12 top-1/2 -translate-y-1/2">
-              <EditButton onClick={() => setShowEditor(true)} label="Edit" />
-            </div>
-          )}
-        </div>
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-4xl md:text-6xl lg:text-7xl font-serif font-light text-foreground mb-6 tracking-tight"
+        >
+          {property.name}
+        </motion.h1>
 
         {property.tagline && (
           <motion.p
@@ -116,17 +146,23 @@ export function BackwaterHero() {
           </motion.div>
         )}
 
-        {/* CTAs - minimal, rounded */}
+        {isEditMode && (
+          <div className="mb-8">
+            <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+          </div>
+        )}
+
+        {/* CTAs - same width on mobile */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
-          className="flex flex-col sm:flex-row gap-4"
+          className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto max-w-md sm:max-w-none mx-auto"
         >
-          <Button size="lg" className="rounded-full px-8" onClick={() => scrollToSection("#booking")}>
+          <Button size="lg" className="flex-1 min-w-0 basis-0 rounded-full px-8" onClick={() => scrollToSection("#booking")}>
             Reserve Now
           </Button>
-          <Button variant="outline" size="lg" className="rounded-full px-8" onClick={() => scrollToSection("#rooms")}>
+          <Button variant="outline" size="lg" className="flex-1 min-w-0 basis-0 rounded-full px-8" onClick={() => scrollToSection("#rooms")}>
             View Rooms
           </Button>
         </motion.div>

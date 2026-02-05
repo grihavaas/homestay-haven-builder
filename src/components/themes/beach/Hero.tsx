@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,30 @@ import { EditButton } from "@/components/edit-mode/EditableSection";
 import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
+const HERO_ROTATE_MS = 5000;
+
 export function BeachHero() {
   const { property, loading } = useProperty();
   const { isEditMode } = useEditMode();
   const [showEditor, setShowEditor] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (loading || !property) {
     return null;
   }
-  
-  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+
+  const heroImages = property.media?.filter((m: any) => m.media_type === "hero").map((m: any) => m.s3_url) || [];
+  const galleryImages = property.media?.filter((m: any) => m.media_type === "gallery").map((m: any) => m.s3_url) || [];
+  const allImages =
+    heroImages.length > 0 ? heroImages : galleryImages.length > 0 ? galleryImages : [heroImage];
+
+  useEffect(() => {
+    if (allImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }, HERO_ROTATE_MS);
+    return () => clearInterval(interval);
+  }, [allImages.length]);
   const avgRating = property.review_sources?.length > 0
     ? property.review_sources.reduce((sum: number, r: any) => sum + (r.stars || 0), 0) / property.review_sources.length
     : 0;
@@ -34,34 +48,50 @@ export function BeachHero() {
     <section id="hero" className="relative min-h-screen">
       {/* Full-width horizontal hero - Beach style */}
       <div className="absolute inset-0">
-        <img
-          src={heroMedia}
-          alt={property.name}
-          className="w-full h-full object-cover"
-        />
+        {allImages.map((image: string, index: number) => (
+          <motion.img
+            key={image}
+            src={image}
+            alt={property.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: index === currentImageIndex ? 1 : 0,
+              scale: index === currentImageIndex ? 1 : 1.05,
+            }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+          />
+        ))}
         {/* Minimal overlay for text readability */}
         <div className="absolute inset-0 bg-black/10" />
+        {allImages.length > 1 && (
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {allImages.map((_: string, index: number) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentImageIndex ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/60"
+                }`}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Content positioned at bottom - horizontal flow */}
       <div className="absolute bottom-0 left-0 right-0 z-10">
         <div className="container mx-auto px-4 pb-16">
           <div className="bg-background/80 backdrop-blur-xl rounded-3xl p-8 md:p-12 shadow-elevated max-w-4xl">
-            <div className="relative inline-block">
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-4xl md:text-6xl font-serif font-semibold text-foreground mb-3"
-              >
-                {property.name}
-              </motion.h1>
-              {isEditMode && (
-                <div className="absolute -right-12 top-1/2 -translate-y-1/2">
-                  <EditButton onClick={() => setShowEditor(true)} label="Edit" />
-                </div>
-              )}
-            </div>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-4xl md:text-6xl font-serif font-semibold text-foreground mb-3"
+            >
+              {property.name}
+            </motion.h1>
 
             {property.tagline && (
               <motion.p
@@ -98,17 +128,23 @@ export function BeachHero() {
               )}
             </motion.div>
 
-            {/* CTAs - horizontal layout */}
+            {isEditMode && (
+              <div className="mb-6">
+                <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+              </div>
+            )}
+
+            {/* CTAs - same width on mobile */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="flex flex-wrap gap-4"
             >
-              <Button size="lg" onClick={() => scrollToSection("#booking")}>
+              <Button size="lg" className="flex-1 min-w-0 basis-0" onClick={() => scrollToSection("#booking")}>
                 Book Your Stay
               </Button>
-              <Button variant="outline" size="lg" onClick={() => scrollToSection("#rooms")}>
+              <Button variant="outline" size="lg" className="flex-1 min-w-0 basis-0" onClick={() => scrollToSection("#rooms")}>
                 View Rooms
               </Button>
             </motion.div>

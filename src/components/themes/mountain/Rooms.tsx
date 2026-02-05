@@ -7,6 +7,7 @@ import { useEditMode } from "@/contexts/EditModeContext";
 import { EditButton } from "@/components/edit-mode/EditableSection";
 import { RoomEditor } from "@/components/edit-mode/editors/RoomEditor";
 import { RoomFeaturesSection } from "@/components/homestay/RoomFeaturesSection";
+import { RoomImageCarousel } from "@/components/homestay/RoomImageCarousel";
 
 import roomDeluxe from "@/assets/room-deluxe.jpg";
 
@@ -57,7 +58,10 @@ export function MountainRooms() {
         {/* Stacked vertical cards with layered effect - Mountain style */}
         <div className="space-y-6 md:space-y-8">
           {property.rooms.map((room: any, index: number) => {
-            const roomImage = property.media?.find((m: any) => m.room_id === room.id && m.media_type === 'room_image')?.s3_url || roomDeluxe;
+            const roomImages = (property.media?.filter((m: any) => m.room_id === room.id && m.media_type === "room_image") ?? [])
+              .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((m: any) => m.s3_url);
+            const allRoomImages = roomImages.length > 0 ? roomImages : [roomDeluxe];
             const currentPricing = room.pricing?.find((p: any) => {
               const today = new Date();
               const validFrom = p.valid_from ? new Date(p.valid_from) : null;
@@ -80,10 +84,11 @@ export function MountainRooms() {
                   {/* Large image - 3 columns */}
                   <div className="md:col-span-3 relative overflow-hidden">
                     <div className="relative w-full h-64 md:h-96 lg:h-[28rem]">
-                      <img
-                        src={roomImage}
+                      <RoomImageCarousel
+                        images={allRoomImages}
                         alt={room.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="w-full h-full"
+                        imageClassName="transition-transform duration-700 group-hover:scale-105"
                       />
                       {/* Subtle overlay */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background/10" />

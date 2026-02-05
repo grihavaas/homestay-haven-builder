@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, MapPin, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,30 @@ import { EditButton } from "@/components/edit-mode/EditableSection";
 import { HeroEditor } from "@/components/edit-mode/editors/HeroEditor";
 import heroImage from "@/assets/hero-homestay.jpg";
 
+const HERO_ROTATE_MS = 5000;
+
 export function AdventureHero() {
   const { property, loading } = useProperty();
   const { isEditMode } = useEditMode();
   const [showEditor, setShowEditor] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (loading || !property) {
     return null;
   }
-  
-  const heroMedia = property.media?.find((m: any) => m.media_type === 'hero' || m.media_type === 'gallery')?.s3_url || heroImage;
+
+  const heroImages = property.media?.filter((m: any) => m.media_type === "hero").map((m: any) => m.s3_url) || [];
+  const galleryImages = property.media?.filter((m: any) => m.media_type === "gallery").map((m: any) => m.s3_url) || [];
+  const allImages =
+    heroImages.length > 0 ? heroImages : galleryImages.length > 0 ? galleryImages : [heroImage];
+
+  useEffect(() => {
+    if (allImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }, HERO_ROTATE_MS);
+    return () => clearInterval(interval);
+  }, [allImages.length]);
   const avgRating = property.review_sources?.length > 0
     ? property.review_sources.reduce((sum: number, r: any) => sum + (r.stars || 0), 0) / property.review_sources.length
     : 0;
@@ -34,13 +48,36 @@ export function AdventureHero() {
     <section id="hero" className="relative min-h-screen overflow-hidden">
       {/* Dynamic diagonal layout - Adventure style */}
       <div className="absolute inset-0">
-        <img
-          src={heroMedia}
-          alt={property.name}
-          className="w-full h-full object-cover"
-        />
+        {allImages.map((image: string, index: number) => (
+          <motion.img
+            key={image}
+            src={image}
+            alt={property.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: index === currentImageIndex ? 1 : 0,
+              scale: index === currentImageIndex ? 1 : 1.05,
+            }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+          />
+        ))}
         {/* Minimal overlay for text readability */}
         <div className="absolute inset-0 bg-black/20" />
+        {allImages.length > 1 && (
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {allImages.map((_: string, index: number) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentImageIndex ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/60"
+                }`}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Content with diagonal energy */}
@@ -48,25 +85,18 @@ export function AdventureHero() {
         <div className="container mx-auto px-4">
           <div className="max-w-2xl">
             {/* Bold headline */}
-            <div className="relative inline-block">
-              <motion.h1
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-4 leading-none drop-shadow-lg"
-              >
-                {property.name.split(' ').map((word: string, i: number) => (
-                  <span key={i} className="block">
-                    {word}
-                  </span>
-                ))}
-              </motion.h1>
-              {isEditMode && (
-                <div className="absolute -right-12 top-8">
-                  <EditButton onClick={() => setShowEditor(true)} label="Edit" />
-                </div>
-              )}
-            </div>
+            <motion.h1
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-4 leading-none drop-shadow-lg"
+            >
+              {property.name.split(' ').map((word: string, i: number) => (
+                <span key={i} className="block">
+                  {word}
+                </span>
+              ))}
+            </motion.h1>
 
             {/* Tagline with accent */}
             {property.tagline && (
@@ -111,16 +141,22 @@ export function AdventureHero() {
               )}
             </motion.div>
 
-            {/* Action-oriented CTAs */}
+            {isEditMode && (
+              <div className="mb-6">
+                <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+              </div>
+            )}
+
+            {/* CTAs - same width on mobile */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="flex flex-wrap gap-4"
+              className="flex flex-col sm:flex-row gap-4"
             >
               <Button 
                 size="lg" 
-                className="group"
+                className="flex-1 min-w-0 basis-0 group"
                 onClick={() => scrollToSection("#booking")}
               >
                 Start Your Adventure
@@ -129,6 +165,7 @@ export function AdventureHero() {
               <Button
                 variant="heroOutline"
                 size="lg"
+                className="flex-1 min-w-0 basis-0"
                 onClick={() => scrollToSection("#rooms")}
               >
                 Explore Rooms

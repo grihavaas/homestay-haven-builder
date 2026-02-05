@@ -7,6 +7,7 @@ import { useEditMode } from "@/contexts/EditModeContext";
 import { EditButton } from "@/components/edit-mode/EditableSection";
 import { RoomEditor } from "@/components/edit-mode/editors/RoomEditor";
 import { RoomFeaturesSection } from "@/components/homestay/RoomFeaturesSection";
+import { RoomImageCarousel } from "@/components/homestay/RoomImageCarousel";
 
 import roomDeluxe from "@/assets/room-deluxe.jpg";
 
@@ -58,7 +59,10 @@ export function BeachRooms() {
         {/* Grid layout for rooms - Beach style */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {property.rooms.map((room: any, index: number) => {
-            const roomImage = property.media?.find((m: any) => m.room_id === room.id && m.media_type === 'room_image')?.s3_url || roomDeluxe;
+            const roomImages = (property.media?.filter((m: any) => m.room_id === room.id && m.media_type === "room_image") ?? [])
+              .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((m: any) => m.s3_url);
+            const allRoomImages = roomImages.length > 0 ? roomImages : [roomDeluxe];
             const currentPricing = room.pricing?.find((p: any) => {
               const today = new Date();
               const validFrom = p.valid_from ? new Date(p.valid_from) : null;
@@ -79,10 +83,11 @@ export function BeachRooms() {
               <div className="bg-background rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-shadow duration-300 h-full flex flex-col">
                 {/* Image */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
-                    src={roomImage}
+                  <RoomImageCarousel
+                    images={allRoomImages}
                     alt={room.name}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    className="w-full h-full"
+                    imageClassName="transition-transform duration-500 group-hover:scale-105"
                   />
                   {room.view_type && (
                     <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm rounded-full px-3 py-1">

@@ -7,6 +7,7 @@ import { useEditMode } from "@/contexts/EditModeContext";
 import { EditButton } from "@/components/edit-mode/EditableSection";
 import { RoomEditor } from "@/components/edit-mode/editors/RoomEditor";
 import { RoomFeaturesSection } from "./RoomFeaturesSection";
+import { RoomImageCarousel } from "./RoomImageCarousel";
 
 import roomDeluxe from "@/assets/room-deluxe.jpg";
 
@@ -52,9 +53,11 @@ export function Rooms() {
         {/* Rooms Grid */}
         <div className="space-y-12">
           {property.rooms.map((room: any, index: number) => {
-            // Get room image from media
-            // Schema: media has s3_url and media_type (hero, gallery, room_image, video, host_image)
-            const roomImage = property.media?.find((m: any) => m.room_id === room.id && m.media_type === 'room_image')?.s3_url || roomDeluxe;
+            // Get all room images from media (carousel)
+            const roomImages = (property.media?.filter((m: any) => m.room_id === room.id && m.media_type === "room_image") ?? [])
+              .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((m: any) => m.s3_url);
+            const allRoomImages = roomImages.length > 0 ? roomImages : [roomDeluxe];
             // Get current pricing (most recent valid pricing)
             const currentPricing = room.pricing?.find((p: any) => {
               const today = new Date();
@@ -78,10 +81,11 @@ export function Rooms() {
               {/* Image */}
               <div className={`${index % 2 === 1 ? "lg:order-2" : ""}`}>
                 <div className="relative rounded-2xl overflow-hidden shadow-elevated group">
-                  <img
-                    src={roomImage}
+                  <RoomImageCarousel
+                    images={allRoomImages}
                     alt={room.name}
-                    className="w-full aspect-[4/3] object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="aspect-[4/3] w-full"
+                    imageClassName="transition-transform duration-700 group-hover:scale-105"
                   />
                   {/* Price Badge */}
                   {price && (

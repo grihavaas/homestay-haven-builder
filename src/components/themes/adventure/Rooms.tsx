@@ -7,6 +7,7 @@ import { useEditMode } from "@/contexts/EditModeContext";
 import { EditButton } from "@/components/edit-mode/EditableSection";
 import { RoomEditor } from "@/components/edit-mode/editors/RoomEditor";
 import { RoomFeaturesSection } from "@/components/homestay/RoomFeaturesSection";
+import { RoomImageCarousel } from "@/components/homestay/RoomImageCarousel";
 
 import roomDeluxe from "@/assets/room-deluxe.jpg";
 
@@ -65,7 +66,10 @@ export function AdventureRooms() {
         {/* Dynamic staggered grid with accent borders - Adventure style */}
         <div className="space-y-6">
           {property.rooms.map((room: any, index: number) => {
-            const roomImage = property.media?.find((m: any) => m.room_id === room.id && m.media_type === 'room_image')?.s3_url || roomDeluxe;
+            const roomImages = (property.media?.filter((m: any) => m.room_id === room.id && m.media_type === "room_image") ?? [])
+              .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((m: any) => m.s3_url);
+            const allRoomImages = roomImages.length > 0 ? roomImages : [roomDeluxe];
             const currentPricing = room.pricing?.find((p: any) => {
               const today = new Date();
               const validFrom = p.valid_from ? new Date(p.valid_from) : null;
@@ -90,10 +94,10 @@ export function AdventureRooms() {
                 <div className="grid md:grid-cols-3 gap-0">
                   {/* Image with diagonal overlay */}
                   <div className={`relative md:col-span-1 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
-                    <img
-                      src={roomImage}
+                    <RoomImageCarousel
+                      images={allRoomImages}
                       alt={room.name}
-                      className="w-full h-48 md:h-full object-cover"
+                      className="w-full h-48 md:h-full"
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent" />
                     {/* Price badge - bold */}

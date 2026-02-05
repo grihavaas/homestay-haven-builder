@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemedContent } from "@/components/ThemedContent";
+import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { getCurrentHostname } from "@/lib/hostname";
 import { isAdminHost } from "@/lib/tenant";
 import Link from "next/link";
@@ -46,6 +47,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <ThemedContent />
+      <FloatingWhatsApp />
     </div>
   );
 }

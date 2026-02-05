@@ -6,6 +6,7 @@ import { useEditMode } from "@/contexts/EditModeContext";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProperty } from "@/contexts/PropertyContext";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface EditModeToggleProps {
@@ -14,28 +15,26 @@ interface EditModeToggleProps {
 }
 
 export function EditModeToggle({ onThemeClick, onMediaClick }: EditModeToggleProps) {
-  const { isEditMode, canEdit, toggleEditMode } = useEditMode();
-  const { user, membership, loading: authLoading } = useAuth();
+  const { isEditMode, canEdit, toggleEditMode, setEditMode } = useEditMode();
+  const { user, membership } = useAuth();
   const { property } = useProperty();
 
   const handleLogout = async () => {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    window.location.reload();
+    setEditMode(false);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      window.location.reload();
+    } catch (err) {
+      console.error("Logout error:", err);
+      toast({
+        title: "Logout failed",
+        description: "Could not sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
-
-  // Debug: Log auth state (remove in production)
-  console.log("[EditModeToggle] Auth state:", {
-    authLoading,
-    hasUser: !!user,
-    userId: user?.id,
-    userEmail: user?.email,
-    hasMembership: !!membership,
-    membershipRole: membership?.role,
-    membershipTenantId: membership?.tenant_id,
-    propertyTenantId: property?.tenant_id,
-    canEdit,
-  });
 
   if (!canEdit) {
     return null;

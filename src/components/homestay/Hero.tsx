@@ -114,21 +114,14 @@ export function Hero() {
           )}
 
           {/* Main Heading */}
-          <div className="relative inline-block">
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-4xl md:text-6xl lg:text-7xl font-serif font-semibold text-primary-foreground mb-4 leading-tight"
-            >
-              {property.name}
-            </motion.h1>
-            {isEditMode && (
-              <div className="absolute -right-16 top-1/2 -translate-y-1/2">
-                <EditButton onClick={() => setShowEditor(true)} label="Edit" />
-              </div>
-            )}
-          </div>
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-4xl md:text-6xl lg:text-7xl font-serif font-semibold text-primary-foreground mb-4 leading-tight"
+          >
+            {property.name}
+          </motion.h1>
 
           {/* Tagline */}
           {property.tagline && (
@@ -148,14 +141,26 @@ export function Hero() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="flex items-center gap-2 text-primary-foreground/80 mb-8"
+              className="flex items-center gap-2 text-primary-foreground/80 mb-4"
             >
               <MapPin className="w-5 h-5" />
               <span>{[property.city, property.state].filter(Boolean).join(", ")}</span>
             </motion.div>
           )}
 
-          {/* CTAs */}
+          {/* Edit Hero - below banner text */}
+          {isEditMode && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mb-6"
+            >
+              <EditButton onClick={() => setShowEditor(true)} label="Edit hero" />
+            </motion.div>
+          )}
+
+          {/* CTAs - same width on mobile */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -165,6 +170,7 @@ export function Hero() {
             <Button
               variant="hero"
               size="xl"
+              className="flex-1 min-w-0 basis-0"
               onClick={() => scrollToSection("#booking")}
             >
               Book Your Stay
@@ -172,6 +178,7 @@ export function Hero() {
             <Button
               variant="heroOutline"
               size="xl"
+              className="flex-1 min-w-0 basis-0"
               onClick={() => scrollToSection("#rooms")}
             >
               Explore Rooms

@@ -7,6 +7,7 @@ import { useEditMode } from "@/contexts/EditModeContext";
 import { EditButton } from "@/components/edit-mode/EditableSection";
 import { RoomEditor } from "@/components/edit-mode/editors/RoomEditor";
 import { RoomFeaturesSection } from "@/components/homestay/RoomFeaturesSection";
+import { RoomImageCarousel } from "@/components/homestay/RoomImageCarousel";
 
 import roomDeluxe from "@/assets/room-deluxe.jpg";
 
@@ -59,7 +60,10 @@ export function BackwaterRooms() {
         {/* Clean, minimal grid with generous spacing - Backwater style */}
         <div className="grid md:grid-cols-3 gap-8">
           {property.rooms.map((room: any, index: number) => {
-            const roomImage = property.media?.find((m: any) => m.room_id === room.id && m.media_type === 'room_image')?.s3_url || roomDeluxe;
+            const roomImages = (property.media?.filter((m: any) => m.room_id === room.id && m.media_type === "room_image") ?? [])
+              .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((m: any) => m.s3_url);
+            const allRoomImages = roomImages.length > 0 ? roomImages : [roomDeluxe];
             const currentPricing = room.pricing?.find((p: any) => {
               const today = new Date();
               const validFrom = p.valid_from ? new Date(p.valid_from) : null;
@@ -81,10 +85,11 @@ export function BackwaterRooms() {
                 {/* Circular-ish image container */}
                 <div className="relative p-6 pb-0">
                   <div className="relative aspect-square rounded-2xl overflow-hidden">
-                    <img
-                      src={roomImage}
+                    <RoomImageCarousel
+                      images={allRoomImages}
                       alt={room.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full"
+                      imageClassName="transition-transform duration-700 group-hover:scale-105"
                     />
                   </div>
                   {/* View badge - floating */}
