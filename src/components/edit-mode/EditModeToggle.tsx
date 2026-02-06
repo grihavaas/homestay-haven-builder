@@ -3,10 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Pencil, Check, Palette, Image, LogOut } from "lucide-react";
 import { useEditMode } from "@/contexts/EditModeContext";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProperty } from "@/contexts/PropertyContext";
-import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface EditModeToggleProps {
@@ -19,21 +17,14 @@ export function EditModeToggle({ onThemeClick, onMediaClick }: EditModeTogglePro
   const { user, membership } = useAuth();
   const { property } = useProperty();
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setEditMode(false);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      window.location.reload();
-    } catch (err) {
-      console.error("Logout error:", err);
-      toast({
-        title: "Logout failed",
-        description: "Could not sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
+    // POST to server logout route so session cookie is cleared (required for SSR)
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/admin/logout";
+    document.body.appendChild(form);
+    form.submit();
   };
 
   if (!canEdit) {
