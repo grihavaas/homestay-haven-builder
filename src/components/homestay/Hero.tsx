@@ -148,7 +148,7 @@ export function Hero() {
             </motion.div>
           )}
 
-          {/* Edit Hero - below banner text */}
+          {/* Edit main - below banner text */}
           {isEditMode && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
