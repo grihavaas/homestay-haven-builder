@@ -45,7 +45,7 @@ export default function HomePage() {
 
   // Show property website for customer domains
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       <ThemedContent />
       <FloatingWhatsApp />
     </div>
