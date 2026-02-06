@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+
+const SWIPE_THRESHOLD_PX = 50;
 
 type RoomImageCarouselProps = {
   images: string[];
@@ -26,6 +28,7 @@ export function RoomImageCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
   const allImages = images.length > 0 ? images : [];
 
   if (allImages.length === 0) {
@@ -51,6 +54,19 @@ export function RoomImageCarousel({
 
   const lightboxNext = () => {
     setLightboxIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const handleLightboxTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleLightboxTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current == null || allImages.length <= 1) return;
+    const endX = e.changedTouches[0].clientX;
+    const delta = endX - touchStartX.current;
+    if (delta > SWIPE_THRESHOLD_PX) lightboxPrev();
+    else if (delta < -SWIPE_THRESHOLD_PX) lightboxNext();
+    touchStartX.current = null;
   };
 
   return (
@@ -140,16 +156,34 @@ export function RoomImageCarousel({
       {/* Lightbox */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent
-          className="max-w-[95vw] w-full max-h-[95vh] h-full p-0 gap-0 border-0 bg-black/95 overflow-hidden"
+          className="max-w-[95vw] w-full max-h-[95vh] h-full p-0 gap-0 border-0 bg-black/95 overflow-hidden [&>button]:hidden"
           onPointerDownOutside={(e) => e.stopPropagation()}
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">{alt} – full size view</DialogTitle>
-          <div className="relative flex items-center justify-center min-h-[70vh] w-full p-4">
+
+          {/* Close button - top right */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-3 top-3 z-20 h-10 w-10 rounded-full bg-white/20 text-white hover:bg-white/30 border-0"
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+
+          <div
+            className="relative flex items-center justify-center min-h-[70vh] w-full p-4 touch-none"
+            onTouchStart={handleLightboxTouchStart}
+            onTouchEnd={handleLightboxTouchEnd}
+          >
             <img
               src={allImages[lightboxIndex]}
               alt={alt}
-              className="max-w-full max-h-[85vh] w-auto h-auto object-contain rounded"
+              className="max-w-full max-h-[85vh] w-auto h-auto object-contain rounded select-none pointer-events-none"
+              draggable={false}
             />
 
             {allImages.length > 1 && (
