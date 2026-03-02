@@ -189,6 +189,7 @@ export function AdminSidebar({ role, memberships, userEmail, tenants }: Props) {
         <p className="text-xs text-zinc-500 truncate" title={userEmail}>
           {userEmail}
         </p>
+        <p className="text-xs text-zinc-400 mt-0.5">{role.replace("_", " ")}</p>
         <form action="/admin/logout" method="POST" className="mt-2">
           <button
             type="submit"
