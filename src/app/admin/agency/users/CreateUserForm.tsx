@@ -45,11 +45,11 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
 
   return (
     <form onSubmit={onSubmit} className="mt-6 space-y-4 rounded-lg border p-4" aria-busy={isSubmitting}>
-      <h3 className="font-medium">Create User & Assign to Tenant</h3>
+      <h3 className="font-medium">Create User & Assign to Customer</h3>
       <p className="text-sm text-zinc-600">
-        Create a new user account and assign them to a tenant. Provide either
-        email or phone (or both). If the user already exists, they will just
-        be assigned to the tenant.
+        Create a new user and assign them to a customer. If the user already exists, they are
+        assigned to the selected customer (same user can be assigned to multiple customers via
+        &quot;Assign to another customer&quot; below).
       </p>
 
       {error && (
@@ -109,13 +109,13 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <div className="text-sm font-medium">Tenant</div>
+            <div className="text-sm font-medium">Customer</div>
             <select
               name="tenant_id"
               className="mt-1 w-full rounded-md border px-3 py-2 disabled:opacity-50"
               required
             >
-              <option value="">Select tenant</option>
+              <option value="">Select customer</option>
               {tenants.map((tenant) => (
                 <option key={tenant.id} value={tenant.id}>
                   {tenant.name}
@@ -131,9 +131,10 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
               required
             >
               <option value="">Select role</option>
+              <option value="agency_admin">Agency Admin</option>
               <option value="agency_rm">Relationship Manager</option>
-              <option value="tenant_admin">Tenant Admin</option>
-              <option value="tenant_editor">Tenant Editor</option>
+              <option value="tenant_admin">Customer Admin</option>
+              <option value="tenant_editor">Customer Editor</option>
             </select>
           </label>
         </div>
@@ -172,7 +173,7 @@ export function CreateUserForm({ tenants, createUserAction }: CreateUserFormProp
                 Creating...
               </>
             ) : (
-              "Create User & Assign"
+              "Create User & Assign to Customer"
             )}
           </button>
           {isSubmitting && (

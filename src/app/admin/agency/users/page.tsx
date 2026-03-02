@@ -7,34 +7,15 @@ import { AdminHeader } from "@/components/AdminHeader";
 import { CreateUserForm } from "./CreateUserForm";
 import { UserList } from "./UserList";
 
+/** All auth users with display info (for dropdowns and names). */
 async function listAllUsers() {
-  const supabase = await createSupabaseServerClient();
   const adminClient = createSupabaseAdminClient();
-
-  // Get all memberships
-  const { data: memberships, error } = await supabase
-    .from("tenant_memberships")
-    .select("id,user_id,tenant_id,role,created_at,tenants(name)")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-
-  // Get all Supabase users
   const { data: usersData } = await adminClient.auth.admin.listUsers();
   const allUsers = usersData?.users ?? [];
-
-  // Create a map of user_id to membership
-  const membershipMap: Record<string, typeof memberships[0]> = {};
-  (memberships ?? []).forEach((m) => {
-    membershipMap[m.user_id] = m;
-  });
-
-  // Build unified user list
   return allUsers.map((user) => {
-    const membership = membershipMap[user.id];
     const firstName = user.user_metadata?.first_name || "";
     const lastName = user.user_metadata?.last_name || "";
     const fullName = [firstName, lastName].filter(Boolean).join(" ");
-
     return {
       id: user.id,
       user_id: user.id,
@@ -44,13 +25,27 @@ async function listAllUsers() {
       last_name: lastName,
       displayName: fullName || user.email || user.phone || user.id.substring(0, 8) + "...",
       created_at: user.created_at,
-      // Membership info (may be null if unassigned)
-      membership_id: membership?.id || null,
-      tenant_id: membership?.tenant_id || null,
-      tenant_name: Array.isArray(membership?.tenants)
-        ? membership.tenants[0]?.name
-        : (membership?.tenants as any)?.name || null,
-      role: membership?.role || null,
+    };
+  });
+}
+
+/** All membership rows (one per user–customer–role). Same user can appear in multiple rows. */
+async function listAllMemberships() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("tenant_memberships")
+    .select("id,user_id,tenant_id,role,created_at,tenants(name)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((m) => {
+    const t = m.tenants as { name: string } | { name: string }[] | null;
+    const tenant_name = t == null ? "—" : Array.isArray(t) ? (t[0]?.name ?? "—") : t.name;
+    return {
+      id: m.id,
+      user_id: m.user_id,
+      tenant_id: m.tenant_id,
+      tenant_name,
+      role: m.role,
     };
   });
 }
@@ -98,9 +93,10 @@ export default async function AgencyUsersPage() {
     );
   }
 
-  const [users, tenants, rmMemberships] = await Promise.all([
+  const [users, tenants, memberships, rmMemberships] = await Promise.all([
     listAllUsers(),
     listTenants(),
+    listAllMemberships(),
     listRMMemberships(),
   ]);
 
@@ -263,11 +259,12 @@ export default async function AgencyUsersPage() {
 
     if (error) {
       if (error.code === "23505") {
-        // Already exists, update
+        // Same (user_id, tenant_id) already exists — update role only
         const { error: updateError } = await supabase
           .from("tenant_memberships")
-          .update({ role, tenant_id: tenantId })
-          .eq("user_id", userId);
+          .update({ role })
+          .eq("user_id", userId)
+          .eq("tenant_id", tenantId);
         if (updateError) throw updateError;
       } else {
         throw error;
@@ -297,13 +294,13 @@ export default async function AgencyUsersPage() {
       <section className="mt-10">
         <h2 className="text-lg font-semibold">Relationship managers</h2>
         <p className="mt-1 text-sm text-zinc-600">
-          RMs assigned to tenants. Remove to unassign from that tenant. Add via the form above (role
-          = Relationship Manager).
+          RMs assigned to customers. Remove to unassign from that customer. Same user can be
+          assigned to multiple customers.
         </p>
         <div className="mt-3 rounded-lg border">
           <div className="grid grid-cols-[1fr_1fr_auto] gap-2 border-b bg-zinc-50 p-3 text-sm font-medium">
             <div>RM</div>
-            <div>Tenant</div>
+            <div>Customer</div>
             <div>Action</div>
           </div>
           <div className="divide-y">
@@ -335,8 +332,10 @@ export default async function AgencyUsersPage() {
 
       <UserList
         users={users}
+        memberships={memberships}
         tenants={tenants}
         currentUserId={user.id}
+        userDisplayMap={userDisplayMap}
         deleteAction={deleteMembership}
         assignAction={assignTenant}
       />
