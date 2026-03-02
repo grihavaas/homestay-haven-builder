@@ -33,18 +33,18 @@ export default async function AgencyPropertyDomainsPage({
 }: {
   params: Promise<{ propertyId: string }>;
 }) {
-  const membership = await requireMembership();
-  if (membership.role !== "agency_admin") {
+  const { propertyId } = await params;
+  const property = await getProperty(propertyId);
+  const membership = await requireMembership(property.tenant_id);
+  const canAccess = membership.role === "agency_admin" || membership.role === "agency_rm";
+  if (!canAccess) {
     return (
-      <div className="mx-auto max-w-3xl p-8">
+      <div>
         <h1 className="text-2xl font-semibold">Domains</h1>
         <p className="mt-2 text-sm text-zinc-600">Access denied.</p>
       </div>
     );
   }
-
-  const { propertyId } = await params;
-  const property = await getProperty(propertyId);
   const domains = await listDomains(propertyId);
 
   async function addDomain(formData: FormData) {
