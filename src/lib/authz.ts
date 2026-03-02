@@ -115,11 +115,14 @@ export async function requireMembership(tenantId?: string): Promise<Membership> 
     return data as Membership;
   }
 
+  // User may have multiple memberships (e.g. agency_rm). Don't use .single()/.maybeSingle()
+  // or PostgREST returns PGRST116 when rows > 1. Fetch one row and use it.
   const { data, error } = await supabase
     .from("tenant_memberships")
     .select("tenant_id,role")
     .eq("user_id", user.id)
-    .maybeSingle();
+    .order("tenant_id")
+    .limit(1);
 
   if (error) {
     console.error("Error fetching membership:", { code: error.code, message: error.message });
@@ -129,9 +132,10 @@ export async function requireMembership(tenantId?: string): Promise<Membership> 
     throw error;
   }
 
-  if (!data) {
+  const membership = (data ?? [])[0];
+  if (!membership) {
     redirect("/admin/login?error=no_membership");
   }
 
-  return data as Membership;
+  return membership as Membership;
 }

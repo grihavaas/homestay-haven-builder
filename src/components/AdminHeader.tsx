@@ -23,7 +23,7 @@ export function AdminHeader({ title }: { title?: string }) {
               href="/admin/agency/tenants"
               className="text-zinc-300 hover:text-white"
             >
-              Tenants
+              Customers
             </Link>
             <Link
               href="/admin/agency/users"

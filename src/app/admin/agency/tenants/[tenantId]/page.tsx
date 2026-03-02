@@ -40,7 +40,7 @@ export default async function AgencyTenantDetailPage({
   if (!canAccess) {
     return (
       <div className="mx-auto max-w-3xl p-8">
-        <h1 className="text-2xl font-semibold">Tenant</h1>
+        <h1 className="text-2xl font-semibold">Customer</h1>
         <p className="mt-2 text-sm text-zinc-600">Access denied.</p>
       </div>
     );
@@ -93,7 +93,7 @@ export default async function AgencyTenantDetailPage({
         </div>
         <div className="flex items-center gap-3">
           <Link className="underline" href={backHref}>
-            Back to tenants
+            Back to customers
           </Link>
           {!(membership.role === "agency_rm" && tenant.is_agency_tenant) && (
             <DeleteTenantButton

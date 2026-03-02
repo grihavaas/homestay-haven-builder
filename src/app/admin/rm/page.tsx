@@ -86,18 +86,18 @@ export default async function RMDashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-8">
-      <AdminHeader title="Managed Tenants" />
+      <AdminHeader title="Customers" />
 
-      <h1 className="text-2xl font-semibold">Managed tenants</h1>
+      <h1 className="text-2xl font-semibold">Customers</h1>
       <p className="mt-1 text-sm text-zinc-600">
-        Tenants you manage. Create a tenant, then open it to add properties and data.
+        Customers you manage. Create a customer, then open it to add properties and data.
       </p>
 
       <form action={createTenant} className="mt-6 grid gap-2 rounded-lg border p-4 sm:grid-cols-2">
-        <h2 className="text-sm font-medium sm:col-span-2">Create tenant</h2>
+        <h2 className="text-sm font-medium sm:col-span-2">Create customer</h2>
         <input
           name="name"
-          placeholder="Tenant name"
+          placeholder="Customer name"
           className="rounded-md border px-3 py-2"
           required
         />
@@ -117,13 +117,13 @@ export default async function RMDashboardPage() {
           className="rounded-md border px-3 py-2"
         />
         <button className="rounded-md bg-black px-3 py-2 text-white sm:col-span-2 sm:justify-self-start">
-          Create tenant
+          Create customer
         </button>
       </form>
 
       <div className="mt-8 rounded-lg border">
         <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 border-b bg-zinc-50 p-3 text-sm font-medium">
-          <div>Tenant</div>
+          <div>Customer</div>
           <div>Properties</div>
           <div>Actions</div>
           <div />
@@ -166,7 +166,7 @@ export default async function RMDashboardPage() {
             </div>
           ))}
           {tenants.length === 0 ? (
-            <div className="p-3 text-sm text-zinc-600">No tenants yet. Create one above.</div>
+            <div className="p-3 text-sm text-zinc-600">No customers yet. Create one above.</div>
           ) : null}
         </div>
       </div>

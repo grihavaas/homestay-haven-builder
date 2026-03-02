@@ -18,7 +18,7 @@ export default async function AgencyDashboard() {
     <div className="mx-auto max-w-3xl p-8">
       <AdminHeader title="Agency Dashboard" />
       <p className="mt-2 text-sm text-zinc-600">
-        Manage tenants, users, properties, and domains.
+        Manage customers, users, properties, and domains.
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -26,9 +26,9 @@ export default async function AgencyDashboard() {
           href="/admin/agency/tenants"
           className="rounded-lg border p-4 hover:bg-zinc-50"
         >
-          <h2 className="font-semibold">Tenants</h2>
+          <h2 className="font-semibold">Customers</h2>
           <p className="mt-1 text-sm text-zinc-600">
-            Manage tenant organizations and their properties
+            Manage customer organizations and their properties
           </p>
         </Link>
 

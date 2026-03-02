@@ -30,11 +30,13 @@ export async function getCurrentUser(): Promise<User | null> {
 export async function getMembership(userId: string): Promise<Membership | null> {
   try {
     const supabase = createSupabaseBrowserClient();
+    // User may have multiple memberships; .maybeSingle() would throw PGRST116. Use limit(1).
     const { data, error } = await supabase
       .from("tenant_memberships")
       .select("tenant_id,role")
       .eq("user_id", userId)
-      .maybeSingle();
+      .order("tenant_id")
+      .limit(1);
 
     if (error) {
       if (error.message?.includes('aborted') || error.message?.includes('AbortError')) {
@@ -49,7 +51,8 @@ export async function getMembership(userId: string): Promise<Membership | null> 
       throw error;
     }
 
-    return data as Membership | null;
+    const row = (data ?? [])[0];
+    return row ? (row as Membership) : null;
   } catch (err) {
     if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('aborted'))) {
       return null;

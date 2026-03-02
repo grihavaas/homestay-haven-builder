@@ -30,7 +30,7 @@ export default async function AdminHome() {
           </Link>
         ) : (
           <Link className="underline" href="/admin/tenant">
-            Go to Tenant dashboard
+            Go to Customer dashboard
           </Link>
         )}
 

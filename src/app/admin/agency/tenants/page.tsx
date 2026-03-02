@@ -67,7 +67,7 @@ export default async function AgencyTenantsPage() {
   if (!canAccess) {
     return (
       <div className="mx-auto max-w-3xl p-8">
-        <h1 className="text-2xl font-semibold">Tenants</h1>
+        <h1 className="text-2xl font-semibold">Customers</h1>
         <p className="mt-2 text-sm text-zinc-600">Access denied.</p>
       </div>
     );
@@ -102,7 +102,7 @@ export default async function AgencyTenantsPage() {
         }
       : {
           id: tenantId,
-          name: meta?.name ?? "Unknown Tenant",
+          name: meta?.name ?? "Unknown Customer",
           is_agency_tenant: meta?.is_agency_tenant ?? false,
         };
 
@@ -158,21 +158,21 @@ export default async function AgencyTenantsPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-8">
-      <AdminHeader title="Tenants" />
+      <AdminHeader title="Customers" />
 
       <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
-        <p className="font-medium text-blue-900">Creating a tenant:</p>
+        <p className="font-medium text-blue-900">Creating a customer:</p>
         <p className="mt-1 text-blue-800">
-          This creates the tenant organization. To give someone access, go to{" "}
+          This creates the customer organization. To give someone access, go to{" "}
           <Link href="/admin/agency/users" className="underline">User Management</Link>{" "}
-          where you can create users and assign them to this tenant.
+          where you can create users and assign them to this customer.
         </p>
       </div>
 
       <form action={createTenant} className="mt-6 flex gap-2">
         <input
           name="name"
-          placeholder="Tenant name"
+          placeholder="Customer name"
           className="flex-1 rounded-md border px-3 py-2"
           required
         />
@@ -182,13 +182,13 @@ export default async function AgencyTenantsPage() {
           className="flex-1 rounded-md border px-3 py-2"
         />
         <button className="rounded-md bg-black px-3 py-2 text-white">
-          Create Tenant
+          Create customer
         </button>
       </form>
 
       {allProperties.length > 0 && (
         <div className="mt-4 text-xs text-zinc-500">
-          Found {allProperties.length} property{allProperties.length !== 1 ? 'ies' : ''} across {Object.keys(propertiesByTenant).length} tenant{Object.keys(propertiesByTenant).length !== 1 ? 's' : ''}
+          Found {allProperties.length} property{allProperties.length !== 1 ? 'ies' : ''} across {Object.keys(propertiesByTenant).length} customer{Object.keys(propertiesByTenant).length !== 1 ? 's' : ''}
         </div>
       )}
       
@@ -214,7 +214,7 @@ export default async function AgencyTenantsPage() {
                       href={`/admin/agency/tenants/${tenant.id}`}
                       className="text-xs text-blue-600 hover:text-blue-800 underline"
                     >
-                      Tenant details
+                      Customer details
                     </Link>
                     {!(membership.role === "agency_rm" && tenant.is_agency_tenant) && (
                       <DeleteTenantButton
@@ -272,7 +272,7 @@ export default async function AgencyTenantsPage() {
           ))}
           {Object.keys(propertiesByTenant).length === 0 ? (
             <div className="p-3 text-sm text-zinc-600">
-              No tenants or properties found.
+              No customers or properties found.
             </div>
           ) : null}
         </div>
