@@ -37,8 +37,17 @@ export default async function AdminAuthenticatedLayout({
     redirect("/admin/login?error=no_membership");
   }
 
-  // Determine primary role (first membership)
-  const primary = memberships[0];
+  // Determine primary role — prioritize agency roles over tenant roles
+  const rolePriority: Record<string, number> = {
+    agency_admin: 0,
+    agency_rm: 1,
+    tenant_admin: 2,
+    tenant_editor: 3,
+  };
+  const sorted = [...memberships].sort(
+    (a, b) => (rolePriority[a.role] ?? 9) - (rolePriority[b.role] ?? 9),
+  );
+  const primary = sorted[0];
   const role = primary.role as Role;
 
   // Build tenant list for sidebar
