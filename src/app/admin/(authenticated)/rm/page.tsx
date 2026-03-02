@@ -3,8 +3,7 @@ import { revalidatePath } from "next/cache";
 
 import { getMemberships, requireUser } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { AdminHeader } from "@/components/AdminHeader";
-import { DeleteTenantButton } from "@/app/admin/agency/tenants/DeleteTenantButton";
+import { DeleteTenantButton } from "@/app/admin/(authenticated)/agency/tenants/DeleteTenantButton";
 
 async function getTenantsForIds(tenantIds: string[]) {
   if (tenantIds.length === 0) return [];
@@ -15,9 +14,7 @@ async function getTenantsForIds(tenantIds: string[]) {
     .in("id", tenantIds)
     .order("name");
   if (error) throw error;
-  const rows = data ?? [];
-  // Exclude agency tenant so RM dashboard only shows client tenants they can fully manage
-  return rows.filter((t) => !t.is_agency_tenant);
+  return (data ?? []).filter((t) => !t.is_agency_tenant);
 }
 
 async function getPropertyCountByTenant(tenantIds: string[]) {
@@ -42,17 +39,18 @@ export default async function RMDashboardPage() {
 
   if (memberships.every((m) => m.role !== "agency_rm")) {
     return (
-      <div className="mx-auto max-w-3xl p-8">
-        <AdminHeader />
+      <div>
         <h1 className="text-2xl font-semibold">RM Dashboard</h1>
-        <p className="mt-2 text-sm text-zinc-600">Access denied. Relationship managers only.</p>
+        <p className="mt-2 text-sm text-zinc-600">Access denied.</p>
       </div>
     );
   }
 
   const tenantIds = memberships.filter((m) => m.role === "agency_rm").map((m) => m.tenant_id);
-  const tenants = await getTenantsForIds(tenantIds);
-  const propertyCounts = await getPropertyCountByTenant(tenantIds);
+  const [tenants, propertyCounts] = await Promise.all([
+    getTenantsForIds(tenantIds),
+    getPropertyCountByTenant(tenantIds),
+  ]);
 
   async function createTenant(formData: FormData) {
     "use server";
@@ -77,7 +75,6 @@ export default async function RMDashboardPage() {
     "use server";
     const tenantId = String(formData.get("tenantId"));
     if (!tenantId) return;
-
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.from("tenants").delete().eq("id", tenantId);
     if (error) throw error;
@@ -85,78 +82,93 @@ export default async function RMDashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <AdminHeader title="Customers" />
-
-      <h1 className="text-2xl font-semibold">Customers</h1>
-      <p className="mt-1 text-sm text-zinc-600">
-        Customers you manage. Create a customer, then open it to add properties and data.
+    <div>
+      <h1 className="text-2xl font-semibold">My Customers</h1>
+      <p className="mt-1 text-sm text-zinc-500">
+        {tenants.length} customer{tenants.length !== 1 ? "s" : ""} you manage.
+        Create a customer, then open it to add properties.
       </p>
 
-      <form action={createTenant} className="mt-6 grid gap-2 rounded-lg border p-4 sm:grid-cols-2">
-        <h2 className="text-sm font-medium sm:col-span-2">Create customer</h2>
-        <input
-          name="name"
-          placeholder="Customer name"
-          className="rounded-md border px-3 py-2"
-          required
-        />
-        <input
-          name="primary_contact_name"
-          placeholder="Primary contact name (optional)"
-          className="rounded-md border px-3 py-2"
-        />
-        <input
-          name="primary_contact_email"
-          placeholder="Primary contact email (optional)"
-          className="rounded-md border px-3 py-2"
-        />
-        <input
-          name="primary_contact_phone"
-          placeholder="Primary contact phone (optional)"
-          className="rounded-md border px-3 py-2"
-        />
-        <button className="rounded-md bg-black px-3 py-2 text-white sm:col-span-2 sm:justify-self-start">
+      {/* Create customer form */}
+      <form action={createTenant} className="mt-6 rounded-lg border bg-white p-4">
+        <h3 className="text-sm font-medium text-zinc-700">Add customer</h3>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <input
+            name="name"
+            placeholder="Customer name"
+            className="rounded-md border px-3 py-2 text-sm"
+            required
+          />
+          <input
+            name="primary_contact_name"
+            placeholder="Contact name (optional)"
+            className="rounded-md border px-3 py-2 text-sm"
+          />
+          <input
+            name="primary_contact_email"
+            placeholder="Contact email (optional)"
+            type="email"
+            className="rounded-md border px-3 py-2 text-sm"
+          />
+          <input
+            name="primary_contact_phone"
+            placeholder="Contact phone (optional)"
+            className="rounded-md border px-3 py-2 text-sm"
+          />
+        </div>
+        <button className="mt-3 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
           Create customer
         </button>
       </form>
 
-      <div className="mt-8 rounded-lg border">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 border-b bg-zinc-50 p-3 text-sm font-medium">
+      {/* Customer list */}
+      <div className="mt-6 rounded-lg border bg-white">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 border-b bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-600">
           <div>Customer</div>
           <div>Properties</div>
-          <div>Actions</div>
-          <div />
+          <div>Status</div>
+          <div></div>
         </div>
         <div className="divide-y">
           {tenants.map((tenant) => (
             <div
               key={tenant.id}
-              className="grid grid-cols-[1fr_auto_auto_auto] gap-2 p-3 text-sm items-center"
+              className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-4 py-3 text-sm items-center"
             >
               <div>
-                <div className="font-medium">{tenant.name}</div>
-                <div className="mt-1 font-mono text-xs text-zinc-500">{tenant.id}</div>
+                <Link
+                  href={`/admin/agency/tenants/${tenant.id}`}
+                  className="font-medium text-zinc-900 hover:text-blue-600"
+                >
+                  {tenant.name}
+                </Link>
                 {tenant.primary_contact_email && (
-                  <div className="mt-1 text-xs text-zinc-600">{tenant.primary_contact_email}</div>
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    {tenant.primary_contact_email}
+                  </p>
                 )}
               </div>
-              <div className="text-zinc-600">{propertyCounts[tenant.id] ?? 0}</div>
+              <div className="text-zinc-600 tabular-nums">
+                {propertyCounts[tenant.id] ?? 0}
+              </div>
+              <div>
+                {tenant.is_active ? (
+                  <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                    Active
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                    Inactive
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <Link
                   href={`/admin/agency/tenants/${tenant.id}`}
-                  className="text-blue-600 hover:underline"
+                  className="text-xs text-blue-600 hover:underline"
                 >
                   Manage
                 </Link>
-                <Link
-                  href={`/admin/agency/tenants/${tenant.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  Properties
-                </Link>
-              </div>
-              <div>
                 <DeleteTenantButton
                   tenantId={tenant.id}
                   tenantName={tenant.name}
@@ -165,9 +177,11 @@ export default async function RMDashboardPage() {
               </div>
             </div>
           ))}
-          {tenants.length === 0 ? (
-            <div className="p-3 text-sm text-zinc-600">No customers yet. Create one above.</div>
-          ) : null}
+          {tenants.length === 0 && (
+            <div className="px-4 py-6 text-center text-sm text-zinc-500">
+              No customers yet. Create one above.
+            </div>
+          )}
         </div>
       </div>
     </div>

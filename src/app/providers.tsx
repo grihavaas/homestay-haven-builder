@@ -8,6 +8,7 @@ import { EditModeProvider } from "@/contexts/EditModeContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { IdleTimeout } from "@/components/IdleTimeout";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
+          <IdleTimeout />
           <PropertyProvider>
             <ThemeProvider>
               <EditModeProvider>

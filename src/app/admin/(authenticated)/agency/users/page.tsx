@@ -3,7 +3,6 @@ import { revalidatePath } from "next/cache";
 import { requireMembership, requireUser } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { AdminHeader } from "@/components/AdminHeader";
 import { CreateUserForm } from "./CreateUserForm";
 import { UserList } from "./UserList";
 
@@ -286,8 +285,8 @@ export default async function AgencyUsersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <AdminHeader title="User Management" />
+    <div>
+      <h1 className="text-2xl font-semibold">User Management</h1>
 
       <CreateUserForm tenants={tenants} createUserAction={createUserAndMembership} />
 

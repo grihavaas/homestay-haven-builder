@@ -89,20 +89,39 @@ export default async function TenantPropertyEditPage({
     }
   }
 
+  // Build breadcrumb based on role
+  const backHref =
+    membership.role === "agency_admin"
+      ? `/admin/agency/tenants/${property.tenant_id}`
+      : membership.role === "agency_rm"
+        ? `/admin/agency/tenants/${property.tenant_id}`
+        : "/admin/properties";
+  const backLabel =
+    membership.role === "agency_admin" || membership.role === "agency_rm"
+      ? "Customer"
+      : "Properties";
+
   return (
-    <div className="mx-auto max-w-6xl p-8">
-      <div className="flex items-baseline justify-between">
+    <div>
+      {/* Breadcrumb */}
+      <nav className="text-sm text-zinc-500 mb-4">
+        <Link href={backHref} className="hover:text-zinc-700">
+          {backLabel}
+        </Link>
+        <span className="mx-2">/</span>
+        <span className="text-zinc-900">{property.name}</span>
+      </nav>
+
+      <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{property.name}</h1>
-          <div className="mt-1 font-mono text-xs text-zinc-500">{property.id}</div>
-          <div className="mt-1 text-sm text-zinc-600">
-            Slug: <span className="font-mono">{property.slug}</span>
-          </div>
+          <p className="mt-1 text-sm text-zinc-500">
+            <span className="font-mono">{property.slug}</span>
+            {property.city && ` \u00B7 ${property.city}`}
+            {property.country && `, ${property.country}`}
+          </p>
         </div>
-        <div className="flex items-center gap-4">
-          <Link className="underline" href="/admin/properties">
-            Back to properties
-          </Link>
+        <div className="flex items-center gap-3">
           {(membership.role === "tenant_admin" ||
             membership.role === "agency_admin" ||
             membership.role === "agency_rm") && (
