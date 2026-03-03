@@ -50,7 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light" suppressHydrationWarning>
-      <body className="antialiased bg-white text-zinc-900">
+      <body className="antialiased">
         <Providers>{children}</Providers>
         <Analytics />
       </body>
