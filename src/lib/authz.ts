@@ -109,10 +109,23 @@ export async function requireMembership(tenantId?: string): Promise<Membership> 
       }
       throw error;
     }
-    if (!data) {
-      redirect("/admin/login?error=no_membership");
+    if (data) {
+      return data as Membership;
     }
-    return data as Membership;
+    // No direct membership on this tenant — check if user is agency_admin
+    // (agency_admin has access to all tenants but only has a row on the agency tenant)
+    const { data: anyMembership, error: anyErr } = await supabase
+      .from("tenant_memberships")
+      .select("tenant_id,role")
+      .eq("user_id", user.id)
+      .eq("role", "agency_admin")
+      .limit(1);
+    if (anyErr) throw anyErr;
+    if (anyMembership && anyMembership.length > 0) {
+      // Return a synthetic membership so callers see agency_admin role with the requested tenant
+      return { tenant_id: tenantId, role: "agency_admin" } as Membership;
+    }
+    redirect("/admin/login?error=no_membership");
   }
 
   // User may have multiple memberships (e.g. agency_rm). Don't use .single()/.maybeSingle()
