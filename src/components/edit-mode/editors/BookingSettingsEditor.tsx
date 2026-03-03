@@ -20,7 +20,7 @@ interface BookingSettingsEditorProps {
 }
 
 export function BookingSettingsEditor({ isOpen, onClose }: BookingSettingsEditorProps) {
-  const { property } = useProperty();
+  const { property, refreshProperty } = useProperty();
   const [saving, setSaving] = useState(false);
   const [showCancellation, setShowCancellation] = useState(false);
   const [formData, setFormData] = useState({
@@ -106,7 +106,7 @@ export function BookingSettingsEditor({ isOpen, onClose }: BookingSettingsEditor
       });
 
       // Refresh the page to show updated data
-      window.location.reload();
+      await refreshProperty();
     } catch (error) {
       console.error("Error saving:", error);
       toast({

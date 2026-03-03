@@ -20,7 +20,7 @@ interface HeroEditorProps {
 type MediaItem = { id: string; s3_url: string; media_type: string; display_order: number | null };
 
 export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
-  const { property } = useProperty();
+  const { property, refreshProperty } = useProperty();
   const [saving, setSaving] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [formData, setFormData] = useState({ name: "", tagline: "" });
@@ -145,7 +145,7 @@ export function HeroEditor({ isOpen, onClose }: HeroEditorProps) {
       setSaving(false);
       toast({ title: "Changes saved.", description: "Your updates have been saved." });
       onClose();
-      window.location.reload();
+      await refreshProperty();
     } catch (err) {
       clearSaveTimeout();
       setSaving(false);

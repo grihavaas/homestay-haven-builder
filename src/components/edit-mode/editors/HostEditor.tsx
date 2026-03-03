@@ -34,7 +34,7 @@ interface HostEditorProps {
 }
 
 export function HostEditor({ isOpen, onClose, host }: HostEditorProps) {
-  const { property } = useProperty();
+  const { property, refreshProperty } = useProperty();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -114,7 +114,7 @@ export function HostEditor({ isOpen, onClose, host }: HostEditorProps) {
       });
 
       // Refresh the page to show updated data
-      window.location.reload();
+      await refreshProperty();
     } catch (error) {
       console.error("Error saving:", error);
       toast({

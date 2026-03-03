@@ -20,7 +20,7 @@ interface AboutEditorProps {
 }
 
 export function AboutEditor({ isOpen, onClose }: AboutEditorProps) {
-  const { property } = useProperty();
+  const { property, refreshProperty } = useProperty();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     property_history: "",
@@ -59,7 +59,7 @@ export function AboutEditor({ isOpen, onClose }: AboutEditorProps) {
       });
 
       // Refresh the page to show updated data
-      window.location.reload();
+      await refreshProperty();
     } catch (error) {
       console.error("Error saving:", error);
       toast({
