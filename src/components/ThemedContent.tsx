@@ -45,7 +45,8 @@ export function ThemedContent() {
   const { currentTheme } = useTheme();
   const { property, loading, error } = useProperty();
   const { isEditMode } = useEditMode();
-  const [showThemeEditor, setShowThemeEditor] = useState(false);
+  const [showLayoutEditor, setShowLayoutEditor] = useState(false);
+  const [showColorsEditor, setShowColorsEditor] = useState(false);
   const [showMediaManager, setShowMediaManager] = useState(false);
   
   if (loading) {
@@ -161,10 +162,12 @@ export function ThemedContent() {
       <HouseRules />
       <Footer />
       <EditModeToggle
-        onThemeClick={() => setShowThemeEditor(true)}
+        onLayoutClick={() => setShowLayoutEditor(true)}
+        onColorsClick={() => setShowColorsEditor(true)}
         onMediaClick={() => setShowMediaManager(true)}
       />
-      <ThemeEditor isOpen={showThemeEditor} onClose={() => setShowThemeEditor(false)} />
+      <ThemeEditor isOpen={showLayoutEditor} onClose={() => setShowLayoutEditor(false)} mode="layout" />
+      <ThemeEditor isOpen={showColorsEditor} onClose={() => setShowColorsEditor(false)} mode="palette" />
       <MediaManager isOpen={showMediaManager} onClose={() => setShowMediaManager(false)} />
     </>
   );

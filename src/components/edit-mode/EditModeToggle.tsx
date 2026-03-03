@@ -1,18 +1,19 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Pencil, Check, Palette, Image, LogOut } from "lucide-react";
+import { Pencil, Check, Palette, LayoutGrid, Image, LogOut } from "lucide-react";
 import { useEditMode } from "@/contexts/EditModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProperty } from "@/contexts/PropertyContext";
 import { cn } from "@/lib/utils";
 
 interface EditModeToggleProps {
-  onThemeClick?: () => void;
+  onLayoutClick?: () => void;
+  onColorsClick?: () => void;
   onMediaClick?: () => void;
 }
 
-export function EditModeToggle({ onThemeClick, onMediaClick }: EditModeToggleProps) {
+export function EditModeToggle({ onLayoutClick, onColorsClick, onMediaClick }: EditModeToggleProps) {
   const { isEditMode, canEdit, toggleEditMode, setEditMode } = useEditMode();
   const { user, membership } = useAuth();
   const { property } = useProperty();
@@ -66,19 +67,35 @@ export function EditModeToggle({ onThemeClick, onMediaClick }: EditModeTogglePro
           </motion.button>
         )}
 
-        {/* Theme button - only visible in edit mode */}
-        {isEditMode && onThemeClick && (
+        {/* Colors button - only visible in edit mode */}
+        {isEditMode && onColorsClick && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={onThemeClick}
+            onClick={onColorsClick}
             className="flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-white text-slate-900 hover:bg-slate-100 transition-colors"
           >
             <Palette className="w-5 h-5" />
-            <span className="text-sm font-medium">Theme</span>
+            <span className="text-sm font-medium">Colors</span>
+          </motion.button>
+        )}
+
+        {/* Layout button - only visible in edit mode */}
+        {isEditMode && onLayoutClick && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onLayoutClick}
+            className="flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-white text-slate-900 hover:bg-slate-100 transition-colors"
+          >
+            <LayoutGrid className="w-5 h-5" />
+            <span className="text-sm font-medium">Layout</span>
           </motion.button>
         )}
 
