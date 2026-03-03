@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import type { Host } from "./HostsList";
 import { LanguageTagInput } from "./LanguageTagInput";
+import { toast } from "@/hooks/use-toast";
 
 interface HostRowProps {
   host: Host;
@@ -35,11 +36,16 @@ export function HostRow({
       <div className="p-3">
         <form
           action={async (formData: FormData) => {
-            formData.append("hostId", host.id);
-            formData.set("languages", JSON.stringify(languages));
-            await updateHost(formData);
-            onEdit(null);
-            router.refresh();
+            try {
+              formData.append("hostId", host.id);
+              formData.set("languages", JSON.stringify(languages));
+              await updateHost(formData);
+              onEdit(null);
+              router.refresh();
+            } catch (err) {
+              console.error("Save error:", err);
+              toast({ title: "Error", description: "Failed to update host. Please try again.", variant: "destructive" });
+            }
           }}
           className="space-y-4"
         >

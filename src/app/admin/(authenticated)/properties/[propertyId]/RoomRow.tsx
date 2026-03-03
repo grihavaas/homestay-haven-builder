@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { Room } from "./RoomsList";
+import { toast } from "@/hooks/use-toast";
 
 interface BedConfiguration {
   id: string;
@@ -49,10 +50,15 @@ export function RoomRow({
       <div className="p-3">
         <form
           action={async (formData: FormData) => {
-            formData.append("roomId", room.id);
-            await updateRoom(formData);
-            onEdit(null);
-            router.refresh();
+            try {
+              formData.append("roomId", room.id);
+              await updateRoom(formData);
+              onEdit(null);
+              router.refresh();
+            } catch (err) {
+              console.error("Save error:", err);
+              toast({ title: "Error", description: "Failed to update room. Please try again.", variant: "destructive" });
+            }
           }}
           className="space-y-4"
         >
@@ -174,9 +180,14 @@ export function RoomRow({
                       {bed.is_extra_bed && " (Extra Bed)"}
                     </span>
                     <form action={async (formData: FormData) => {
-                      formData.append("bedId", bed.id);
-                      await deleteBed(formData);
-                      router.refresh();
+                      try {
+                        formData.append("bedId", bed.id);
+                        await deleteBed(formData);
+                        router.refresh();
+                      } catch (err) {
+                        console.error("Delete error:", err);
+                        toast({ title: "Error", description: "Failed to remove bed. Please try again.", variant: "destructive" });
+                      }
                     }} className="inline">
                       <button
                         type="submit"
@@ -192,9 +203,14 @@ export function RoomRow({
               <p className="text-xs text-zinc-500">No beds configured</p>
             )}
             <form action={async (formData: FormData) => {
-              formData.append("roomId", room.id);
-              await addBed(formData);
-              router.refresh();
+              try {
+                formData.append("roomId", room.id);
+                await addBed(formData);
+                router.refresh();
+              } catch (err) {
+                console.error("Save error:", err);
+                toast({ title: "Error", description: "Failed to add bed. Please try again.", variant: "destructive" });
+              }
             }} className="flex gap-2">
               <select
                 name="bed_type"
@@ -237,9 +253,14 @@ export function RoomRow({
             <h5 className="text-sm font-semibold">Room Amenities</h5>
             <form
               action={async (formData: FormData) => {
-                formData.append("roomId", room.id);
-                await updateRoomAmenities(formData);
-                router.refresh();
+                try {
+                  formData.append("roomId", room.id);
+                  await updateRoomAmenities(formData);
+                  router.refresh();
+                } catch (err) {
+                  console.error("Save error:", err);
+                  toast({ title: "Error", description: "Failed to update amenities. Please try again.", variant: "destructive" });
+                }
               }}
             >
               <input type="hidden" name="roomId" value={room.id} />

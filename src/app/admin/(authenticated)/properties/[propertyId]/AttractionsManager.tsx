@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 interface Attraction {
   id: string;
@@ -55,35 +56,55 @@ export function AttractionsManager({
   const [editingProximityId, setEditingProximityId] = useState<string | null>(null);
 
   async function handleAttractionSubmit(formData: FormData) {
-    await createAttraction(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowAttractionForm(false);
-    });
+    try {
+      await createAttraction(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowAttractionForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add attraction. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleProximitySubmit(formData: FormData) {
-    await createProximity(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowProximityForm(false);
-    });
+    try {
+      await createProximity(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowProximityForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add proximity point. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleAttractionUpdate(formData: FormData) {
-    await updateAttraction(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingAttractionId(null);
-    });
+    try {
+      await updateAttraction(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingAttractionId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update attraction. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleProximityUpdate(formData: FormData) {
-    await updateProximity(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingProximityId(null);
-    });
+    try {
+      await updateProximity(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingProximityId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update proximity point. Please try again.", variant: "destructive" });
+    }
   }
 
   return (

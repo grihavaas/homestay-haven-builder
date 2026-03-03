@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 export function ReviewsForm({ 
   createReview,
@@ -105,10 +106,15 @@ export function ReviewsForm({
             e.preventDefault();
             const form = e.currentTarget.closest("form");
             if (form) {
-              const formData = new FormData(form);
-              await createReview(formData);
-              onOpenChange(false);
-              router.refresh();
+              try {
+                const formData = new FormData(form);
+                await createReview(formData);
+                onOpenChange(false);
+                router.refresh();
+              } catch (err) {
+                console.error("Save error:", err);
+                toast({ title: "Error", description: "Failed to add review source. Please try again.", variant: "destructive" });
+              }
             }
           }}
         >

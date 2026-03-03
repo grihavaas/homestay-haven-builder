@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 interface Room {
   id: string;
@@ -46,19 +47,29 @@ export function PromotionsManager({
   const [editingOfferId, setEditingOfferId] = useState<string | null>(null);
 
   async function handleCreateSubmit(formData: FormData) {
-    await createOffer(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowForm(false);
-    });
+    try {
+      await createOffer(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add offer. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleUpdateSubmit(formData: FormData) {
-    await updateOffer(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingOfferId(null);
-    });
+    try {
+      await updateOffer(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingOfferId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update offer. Please try again.", variant: "destructive" });
+    }
   }
 
   return (

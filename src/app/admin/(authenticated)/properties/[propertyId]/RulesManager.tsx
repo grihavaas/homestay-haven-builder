@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 interface Rule {
   id: string;
@@ -33,19 +34,29 @@ export function RulesManager({
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
 
   async function handleCreateSubmit(formData: FormData) {
-    await createRule(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowForm(false);
-    });
+    try {
+      await createRule(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add rule. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleUpdateSubmit(formData: FormData) {
-    await updateRule(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingRuleId(null);
-    });
+    try {
+      await updateRule(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingRuleId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update rule. Please try again.", variant: "destructive" });
+    }
   }
 
   return (

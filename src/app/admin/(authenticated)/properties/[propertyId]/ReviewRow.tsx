@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { Review } from "./ReviewsList";
+import { toast } from "@/hooks/use-toast";
 
 interface ReviewRowProps {
   review: Review;
@@ -25,10 +26,15 @@ export function ReviewRow({
       <div className="p-3">
         <form
           action={async (formData: FormData) => {
-            formData.append("reviewId", review.id);
-            await updateReview(formData);
-            onEdit(null);
-            router.refresh();
+            try {
+              formData.append("reviewId", review.id);
+              await updateReview(formData);
+              onEdit(null);
+              router.refresh();
+            } catch (err) {
+              console.error("Save error:", err);
+              toast({ title: "Error", description: "Failed to update review. Please try again.", variant: "destructive" });
+            }
           }}
           className="space-y-4"
         >

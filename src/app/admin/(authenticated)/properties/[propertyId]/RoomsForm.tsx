@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 export function RoomsForm({ 
   createRoom,
@@ -137,10 +138,15 @@ export function RoomsForm({
             e.preventDefault();
             const form = e.currentTarget.closest("form");
             if (form) {
-              const formData = new FormData(form);
-              await createRoom(formData);
-              onOpenChange(false);
-              router.refresh();
+              try {
+                const formData = new FormData(form);
+                await createRoom(formData);
+                onOpenChange(false);
+                router.refresh();
+              } catch (err) {
+                console.error("Save error:", err);
+                toast({ title: "Error", description: "Failed to create room. Please try again.", variant: "destructive" });
+              }
             }
           }}
         >

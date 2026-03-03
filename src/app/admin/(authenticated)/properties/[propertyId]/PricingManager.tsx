@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 interface Room {
   id: string;
@@ -45,19 +46,29 @@ export function PricingManager({
   const [editingPricingId, setEditingPricingId] = useState<string | null>(null);
 
   async function handleCreateSubmit(formData: FormData) {
-    await createPricing(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowForm(false);
-    });
+    try {
+      await createPricing(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add pricing. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleUpdateSubmit(formData: FormData) {
-    await updatePricing(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingPricingId(null);
-    });
+    try {
+      await updatePricing(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingPricingId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update pricing. Please try again.", variant: "destructive" });
+    }
   }
 
   const getRoomName = (roomId: string) => {

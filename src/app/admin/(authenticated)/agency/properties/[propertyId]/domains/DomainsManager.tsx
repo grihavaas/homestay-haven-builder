@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 interface Domain {
   id: string;
@@ -38,12 +39,17 @@ export function DomainsManager({
   }
 
   async function handleUpdateSubmit(formData: FormData) {
-    await updateDomain(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingDomainId(null);
-      setEditingDomain(null);
-    });
+    try {
+      await updateDomain(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingDomainId(null);
+        setEditingDomain(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update domain. Please try again.", variant: "destructive" });
+    }
   }
 
   const [deletingDomainId, setDeletingDomainId] = useState<string | null>(null);
@@ -53,11 +59,16 @@ export function DomainsManager({
   }
 
   async function confirmDelete(formData: FormData) {
-    await deleteDomain(formData);
-    startTransition(() => {
-      router.refresh();
-      setDeletingDomainId(null);
-    });
+    try {
+      await deleteDomain(formData);
+      startTransition(() => {
+        router.refresh();
+        setDeletingDomainId(null);
+      });
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast({ title: "Error", description: "Failed to delete domain. Please try again.", variant: "destructive" });
+    }
   }
 
   function cancelDelete() {

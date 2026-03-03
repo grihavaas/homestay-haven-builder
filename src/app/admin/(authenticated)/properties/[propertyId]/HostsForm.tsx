@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { LanguageTagInput } from "./LanguageTagInput";
 import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export function HostsForm({ 
   createHost,
@@ -144,12 +145,17 @@ export function HostsForm({
             e.preventDefault();
             const form = e.currentTarget.closest("form");
             if (form) {
-              const formData = new FormData(form);
-              formData.set("languages", JSON.stringify(languages));
-              await createHost(formData);
-              setLanguages([]);
-              onOpenChange(false);
-              router.refresh();
+              try {
+                const formData = new FormData(form);
+                formData.set("languages", JSON.stringify(languages));
+                await createHost(formData);
+                setLanguages([]);
+                onOpenChange(false);
+                router.refresh();
+              } catch (err) {
+                console.error("Save error:", err);
+                toast({ title: "Error", description: "Failed to add host. Please try again.", variant: "destructive" });
+              }
             }
           }}
         >

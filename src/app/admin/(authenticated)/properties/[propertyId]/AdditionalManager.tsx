@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 interface Feature {
   id: string;
@@ -85,67 +86,107 @@ export function AdditionalManager({
   const [editingCTAId, setEditingCTAId] = useState<string | null>(null);
 
   async function handleFeatureSubmit(formData: FormData) {
-    await createFeature(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowFeatureForm(false);
-    });
+    try {
+      await createFeature(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowFeatureForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add feature. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleSocialSubmit(formData: FormData) {
-    await createSocialLink(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowSocialForm(false);
-    });
+    try {
+      await createSocialLink(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowSocialForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add social link. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handlePaymentSubmit(formData: FormData) {
-    await createPaymentMethod(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowPaymentForm(false);
-    });
+    try {
+      await createPaymentMethod(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowPaymentForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add payment method. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleCTASubmit(formData: FormData) {
-    await createCTA(formData);
-    startTransition(() => {
-      router.refresh();
-      setShowCTAForm(false);
-    });
+    try {
+      await createCTA(formData);
+      startTransition(() => {
+        router.refresh();
+        setShowCTAForm(false);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to add CTA. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleFeatureUpdate(formData: FormData) {
-    await updateFeature(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingFeatureId(null);
-    });
+    try {
+      await updateFeature(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingFeatureId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update feature. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleSocialUpdate(formData: FormData) {
-    await updateSocialLink(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingSocialId(null);
-    });
+    try {
+      await updateSocialLink(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingSocialId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update social link. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handlePaymentUpdate(formData: FormData) {
-    await updatePaymentMethod(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingPaymentId(null);
-    });
+    try {
+      await updatePaymentMethod(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingPaymentId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update payment method. Please try again.", variant: "destructive" });
+    }
   }
 
   async function handleCTAUpdate(formData: FormData) {
-    await updateCTA(formData);
-    startTransition(() => {
-      router.refresh();
-      setEditingCTAId(null);
-    });
+    try {
+      await updateCTA(formData);
+      startTransition(() => {
+        router.refresh();
+        setEditingCTAId(null);
+      });
+    } catch (err) {
+      console.error("Save error:", err);
+      toast({ title: "Error", description: "Failed to update CTA. Please try again.", variant: "destructive" });
+    }
   }
 
   return (
