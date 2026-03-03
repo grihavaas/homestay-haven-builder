@@ -7,8 +7,8 @@ import { useProperty } from "@/contexts/PropertyContext";
 import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { MediaThumbnailTap } from "@/app/admin/properties/[propertyId]/MediaThumbnailTap";
-import type { MoveDestination } from "@/app/admin/properties/[propertyId]/MediaThumbnailTap";
+import { MediaThumbnailTap } from "@/app/admin/(authenticated)/properties/[propertyId]/MediaThumbnailTap";
+import type { MoveDestination } from "@/app/admin/(authenticated)/properties/[propertyId]/MediaThumbnailTap";
 
 interface MediaManagerProps {
   isOpen: boolean;

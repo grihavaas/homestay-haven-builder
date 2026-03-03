@@ -235,6 +235,10 @@ function LoginForm() {
           Your account does not have a tenant membership yet. Ask the agency
           admin to provision you.
         </p>
+      ) : errorParam === "idle_timeout" ? (
+        <p className="mt-2 text-sm text-amber-700">
+          You were signed out due to inactivity. Please sign in again.
+        </p>
       ) : null}
 
       {error ? <p className="mt-2 text-sm text-red-700">{error}</p> : null}

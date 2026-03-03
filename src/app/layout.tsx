@@ -15,6 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title: "Homestay CMS",
       description: "Manage your homestay property and content.",
+      icons: { icon: "/favicon.svg" },
     };
   }
 
@@ -27,6 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title,
       description,
+      icons: { icon: "/favicon.svg" },
       openGraph: {
         title: meta.name,
         description: meta.description?.substring(0, 160) ?? description,
@@ -37,6 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Homestay",
     description: "Experience authentic hospitality",
+    icons: { icon: "/favicon.svg" },
   };
 }
 
