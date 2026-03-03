@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Users, Maximize, Leaf, ArrowRight } from "lucide-react";
+import { Users, Maximize, Leaf, ArrowRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useEditMode } from "@/contexts/EditModeContext";
@@ -105,14 +105,6 @@ export function ForestRooms() {
 
                 {/* Content overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                  {/* View tag */}
-                  {room.view_type && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/20 backdrop-blur-sm text-primary-foreground text-xs rounded-full mb-4">
-                      <Leaf className="w-3 h-3" />
-                      {room.view_type}
-                    </span>
-                  )}
-
                   <div className="relative inline-block">
                     <h3 className="text-2xl md:text-3xl font-serif font-semibold text-primary-foreground mb-2">
                       {room.name}
@@ -142,7 +134,13 @@ export function ForestRooms() {
                   )}
 
                   {/* Stats */}
-                  <div className="flex gap-4 text-primary-foreground/70 text-sm mb-4">
+                  <div className="flex flex-wrap gap-4 text-primary-foreground/70 text-sm mb-4">
+                    {room.view_type && (
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-4 h-4" />
+                        {room.view_type}
+                      </span>
+                    )}
                     {room.max_guests && (
                       <span className="flex items-center gap-1">
                         <Users className="w-4 h-4" />

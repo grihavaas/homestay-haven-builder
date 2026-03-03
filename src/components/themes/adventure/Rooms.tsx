@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Users, Maximize, Zap, ChevronRight } from "lucide-react";
+import { Users, Maximize, Zap, ChevronRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useEditMode } from "@/contexts/EditModeContext";
@@ -119,11 +119,6 @@ export function AdventureRooms() {
                   <div className={`p-6 md:col-span-2 ${index % 2 === 1 ? 'md:order-1' : ''}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        {room.view_type && (
-                          <span className="text-xs uppercase tracking-wider text-primary font-bold">
-                            {room.view_type}
-                          </span>
-                        )}
                         <div className="relative inline-block">
                           <h3 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
                             {room.name}
@@ -155,7 +150,13 @@ export function AdventureRooms() {
                     )}
 
                     {/* Stats in bold strip */}
-                    <div className="flex gap-6 mb-6 py-3 border-y border-border">
+                    <div className="flex flex-wrap gap-6 mb-6 py-3 border-y border-border">
+                      {room.view_type && (
+                        <div className="flex items-center gap-2">
+                          <Eye className="w-5 h-5 text-primary" />
+                          <span className="text-sm font-medium">{room.view_type}</span>
+                        </div>
+                      )}
                       {room.max_guests && (
                         <div className="flex items-center gap-2">
                           <Users className="w-5 h-5 text-primary" />

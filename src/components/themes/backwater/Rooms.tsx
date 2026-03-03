@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Users, Maximize, Anchor } from "lucide-react";
+import { Users, Maximize, Anchor, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useEditMode } from "@/contexts/EditModeContext";
@@ -92,12 +92,6 @@ export function BackwaterRooms() {
                       imageClassName="transition-transform duration-700 group-hover:scale-105"
                     />
                   </div>
-                  {/* View badge - floating */}
-                  {room.view_type && (
-                    <div className="absolute top-8 right-8 bg-background/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-soft">
-                      <span className="text-xs text-muted-foreground">{room.view_type}</span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Content - clean and spacious */}
@@ -132,6 +126,12 @@ export function BackwaterRooms() {
 
                   {/* Minimal stats */}
                   <div className="flex justify-center gap-8 text-sm text-muted-foreground mb-6">
+                    {room.view_type && (
+                      <div className="flex flex-col items-center">
+                        <Eye className="w-4 h-4 text-primary mb-1" />
+                        <span>{room.view_type}</span>
+                      </div>
+                    )}
                     {room.max_guests && (
                       <div className="flex flex-col items-center">
                         <Users className="w-4 h-4 text-primary mb-1" />
