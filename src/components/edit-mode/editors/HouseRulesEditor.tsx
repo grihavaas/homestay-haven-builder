@@ -27,7 +27,7 @@ interface Rule {
 }
 
 export function HouseRulesEditor({ isOpen, onClose }: HouseRulesEditorProps) {
-  const { property } = useProperty();
+  const { property, refreshProperty } = useProperty();
   const [saving, setSaving] = useState(false);
   const [rules, setRules] = useState<Rule[]>([]);
 
@@ -116,7 +116,7 @@ export function HouseRulesEditor({ isOpen, onClose }: HouseRulesEditorProps) {
         description: "House rules updated successfully.",
       });
 
-      window.location.reload();
+      await refreshProperty();
     } catch (error) {
       console.error("Error saving:", error);
       toast({

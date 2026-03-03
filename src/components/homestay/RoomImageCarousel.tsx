@@ -156,9 +156,7 @@ export function RoomImageCarousel({
       {/* Lightbox */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent
-          className="max-w-[95vw] w-full max-h-[95vh] h-full p-0 gap-0 border-0 bg-black/95 overflow-hidden [&>button]:hidden"
-          onPointerDownOutside={(e) => e.stopPropagation()}
-          onInteractOutside={(e) => e.preventDefault()}
+          className="max-w-[95vw] w-full max-h-[95vh] h-full p-0 gap-0 border-0 bg-black/95 overflow-hidden [&>button:last-child]:hidden"
         >
           <DialogTitle className="sr-only">{alt} – full size view</DialogTitle>
 

@@ -32,7 +32,7 @@ interface ReviewSource {
 const COMMON_SITES = ["Google", "Booking.com", "TripAdvisor", "Airbnb", "MakeMyTrip", "Goibibo"];
 
 export function ReviewsEditor({ isOpen, onClose }: ReviewsEditorProps) {
-  const { property } = useProperty();
+  const { property, refreshProperty } = useProperty();
   const [saving, setSaving] = useState(false);
   const [sources, setSources] = useState<ReviewSource[]>([]);
 
@@ -138,7 +138,7 @@ export function ReviewsEditor({ isOpen, onClose }: ReviewsEditorProps) {
         description: "Review sources updated successfully.",
       });
 
-      window.location.reload();
+      await refreshProperty();
     } catch (error) {
       console.error("Error saving:", error);
       toast({

@@ -26,7 +26,7 @@ type MediaItem = {
 };
 
 export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
-  const { property } = useProperty();
+  const { property, refreshProperty } = useProperty();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadDestination, setUploadDestination] = useState<{
@@ -83,7 +83,7 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
     { label: "Gallery", mediaType: "gallery" },
   ];
 
-  const reload = () => window.location.reload();
+  const reload = () => refreshProperty();
 
   async function getNextDisplayOrder(
     mediaType: string,
