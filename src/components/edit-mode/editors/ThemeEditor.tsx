@@ -84,7 +84,7 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose} title="Appearance">
+    <BottomSheet isOpen={isOpen} onClose={handleClose} title="Appearance" className="!bg-white !text-zinc-900">
       <div className="space-y-6">
         {/* Layout section */}
         <BottomSheetField label="Layout">
@@ -96,21 +96,21 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
                 onClick={() => handleThemeSelect(theme.id)}
                 className={`relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
                   selectedTheme === theme.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
+                    ? "border-zinc-900 bg-zinc-100"
+                    : "border-zinc-200 hover:border-zinc-400"
                 }`}
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-foreground">
+                  <div className="font-medium text-sm text-zinc-900">
                     {theme.name}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-zinc-500">
                     {theme.tagline}
                   </div>
                 </div>
                 {selectedTheme === theme.id && (
-                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 text-primary-foreground" />
+                  <div className="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-white" />
                   </div>
                 )}
               </motion.button>
@@ -128,22 +128,22 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
                 onClick={() => handlePaletteSelect(palette.id)}
                 className={`relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
                   selectedPalette === palette.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
+                    ? "border-zinc-900 bg-zinc-100"
+                    : "border-zinc-200 hover:border-zinc-400"
                 }`}
               >
                 <div
-                  className="w-8 h-8 rounded-full flex-shrink-0"
+                  className="w-8 h-8 rounded-full flex-shrink-0 ring-1 ring-zinc-200"
                   style={{ background: palette.previewGradient }}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-foreground truncate">
+                  <div className="font-medium text-sm text-zinc-900 truncate">
                     {palette.name}
                   </div>
                 </div>
                 {selectedPalette === palette.id && (
-                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 text-primary-foreground" />
+                  <div className="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-white" />
                   </div>
                 )}
               </motion.button>
@@ -151,11 +151,11 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
           </div>
         </BottomSheetField>
 
-        <BottomSheetActions>
-          <Button variant="outline" onClick={handleClose} className="flex-1">
+        <BottomSheetActions className="!bg-white">
+          <Button variant="outline" onClick={handleClose} className="flex-1 !bg-white !text-zinc-900 !border-zinc-300">
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="flex-1">
+          <Button onClick={handleSave} disabled={saving} className="flex-1 !bg-zinc-900 !text-white">
             {saving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
