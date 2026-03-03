@@ -7,7 +7,8 @@ export function normalizeHostname(hostHeader: string | null): string | null {
 
 export function isAdminHost(hostname: string | null): boolean {
   if (!hostname) return false;
-  // Read directly from process.env for Next.js
-  const adminHost = process.env.NEXT_PUBLIC_ADMIN_HOST || "localhost";
-  return hostname === adminHost.toLowerCase();
+  const adminHosts = (process.env.NEXT_PUBLIC_ADMIN_HOST || "localhost")
+    .split(",")
+    .map((h) => h.trim().toLowerCase());
+  return adminHosts.includes(hostname);
 }
