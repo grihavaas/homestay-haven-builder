@@ -18,9 +18,10 @@ import { themeList, paletteList, ThemeId, PaletteId, defaultPaletteForTheme } fr
 interface ThemeEditorProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: "layout" | "palette";
 }
 
-export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
+export function ThemeEditor({ isOpen, onClose, mode = "layout" }: ThemeEditorProps) {
   const { property, refreshProperty } = useProperty();
   const { currentTheme, setTheme, currentPalette, setPalette } = useTheme();
 
@@ -84,10 +85,10 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose} title="Appearance" className="!bg-white !text-zinc-900">
+    <BottomSheet isOpen={isOpen} onClose={handleClose} title={mode === "palette" ? "Color Palette" : mode === "layout" ? "Layout" : "Appearance"} className="!bg-white !text-zinc-900">
       <div className="space-y-6">
         {/* Layout section */}
-        <BottomSheetField label="Layout">
+        {mode !== "palette" && <BottomSheetField label="Layout">
           <div className="grid grid-cols-1 gap-2">
             {themeList.map((theme) => (
               <motion.button
@@ -116,10 +117,10 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
               </motion.button>
             ))}
           </div>
-        </BottomSheetField>
+        </BottomSheetField>}
 
         {/* Palette section */}
-        <BottomSheetField label="Color Palette">
+        {mode !== "layout" && <BottomSheetField label="Color Palette">
           <div className="grid grid-cols-2 gap-2">
             {paletteList.map((palette) => (
               <motion.button
@@ -149,7 +150,7 @@ export function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
               </motion.button>
             ))}
           </div>
-        </BottomSheetField>
+        </BottomSheetField>}
 
         <BottomSheetActions className="!bg-white">
           <Button variant="outline" onClick={handleClose} className="flex-1 !bg-white !text-zinc-900 !border-zinc-300">
