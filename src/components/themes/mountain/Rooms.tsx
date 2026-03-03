@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Users, Maximize, Bed } from "lucide-react";
+import { Users, Maximize, Bed, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useEditMode } from "@/contexts/EditModeContext";
@@ -92,12 +92,6 @@ export function MountainRooms() {
                       />
                       {/* Subtle overlay */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background/10" />
-                      {/* View type badge */}
-                      {room.view_type && (
-                        <div className="absolute top-4 left-4 px-3 py-1.5 bg-primary/95 backdrop-blur-sm text-primary-foreground text-xs font-bold uppercase rounded-md shadow-soft">
-                          {room.view_type}
-                        </div>
-                      )}
                       {/* Price badge on image */}
                       {price && (
                         <div className="absolute top-4 right-4 bg-background/95 backdrop-blur-sm rounded-lg px-4 py-2 shadow-soft">
@@ -146,8 +140,17 @@ export function MountainRooms() {
                         </div>
                       )}
 
-                      {/* Quick Stats - Balanced 2-column layout */}
+                      {/* Quick Stats - Balanced layout */}
                       <div className="grid grid-cols-2 gap-3 mb-6">
+                        {room.view_type && (
+                          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border/50">
+                            <Eye className="w-4 h-4 text-primary flex-shrink-0" />
+                            <div>
+                              <span className="text-xs text-muted-foreground block">View</span>
+                              <span className="font-bold text-sm text-foreground">{room.view_type}</span>
+                            </div>
+                          </div>
+                        )}
                         {room.max_guests && (
                           <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border/50">
                             <Users className="w-4 h-4 text-primary flex-shrink-0" />

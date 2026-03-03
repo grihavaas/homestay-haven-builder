@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Users, Maximize } from "lucide-react";
+import { Users, Maximize, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useEditMode } from "@/contexts/EditModeContext";
@@ -101,12 +101,6 @@ export function Rooms() {
                       </div>
                     </div>
                   )}
-                  {/* View Badge */}
-                  {room.view_type && (
-                    <div className="absolute bottom-4 left-4 bg-charcoal/80 backdrop-blur-sm rounded-full px-3 py-1 text-primary-foreground text-sm">
-                      {room.view_type}
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -140,6 +134,12 @@ export function Rooms() {
 
                 {/* Room Details */}
                 <div className="flex flex-wrap gap-6 mb-6">
+                  {room.view_type && (
+                    <div className="flex items-center gap-2 text-foreground">
+                      <Eye className="w-5 h-5 text-primary" />
+                      <span className="text-sm">{room.view_type}</span>
+                    </div>
+                  )}
                   {room.max_guests && (
                     <div className="flex items-center gap-2 text-foreground">
                       <Users className="w-5 h-5 text-primary" />

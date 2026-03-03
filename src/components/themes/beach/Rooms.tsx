@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Users, Maximize, ArrowRight } from "lucide-react";
+import { Users, Maximize, ArrowRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useEditMode } from "@/contexts/EditModeContext";
@@ -89,11 +89,6 @@ export function BeachRooms() {
                     className="w-full h-full"
                     imageClassName="transition-transform duration-500 group-hover:scale-105"
                   />
-                  {room.view_type && (
-                    <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-sm rounded-full px-3 py-1">
-                      <span className="text-xs text-muted-foreground font-medium">{room.view_type}</span>
-                    </div>
-                  )}
                   {/* Price badge on image */}
                   {price && (
                     <div className="absolute top-4 right-4 bg-background/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-soft">
@@ -142,6 +137,12 @@ export function BeachRooms() {
 
                   {/* Quick stats */}
                   <div className="flex flex-wrap gap-4 text-sm mb-4">
+                    {room.view_type && (
+                      <span className="flex items-center gap-1.5 text-foreground">
+                        <Eye className="w-4 h-4 text-primary" />
+                        <span>{room.view_type}</span>
+                      </span>
+                    )}
                     {room.max_guests && (
                       <span className="flex items-center gap-1.5 text-foreground">
                         <Users className="w-4 h-4 text-primary" />
