@@ -180,7 +180,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div data-admin className="min-h-screen flex items-center justify-center bg-zinc-50">
+    <div data-admin className="min-h-screen flex items-center justify-center bg-zinc-50 text-zinc-900">
       <Suspense fallback={
         <div className="mx-auto max-w-md p-8">
           <h1 className="text-2xl font-semibold">Reset Password</h1>
