@@ -60,8 +60,8 @@ export function ThemeEditor({ isOpen, onClose, mode = "layout" }: ThemeEditorPro
         description: "Layout and palette updated.",
       });
 
-      await refreshProperty();
       onClose();
+      refreshProperty();
     } catch (error: any) {
       console.error("Error saving theme:", error);
       toast({
@@ -85,7 +85,7 @@ export function ThemeEditor({ isOpen, onClose, mode = "layout" }: ThemeEditorPro
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose} title={mode === "palette" ? "Color Palette" : mode === "layout" ? "Layout" : "Appearance"} transparent className="!bg-white/80 backdrop-blur-xl !text-zinc-900">
+    <BottomSheet isOpen={isOpen} onClose={handleClose} title={mode === "palette" ? "Color Palette" : mode === "layout" ? "Layout" : "Appearance"} transparent className="!bg-white/60 backdrop-blur-xl !text-zinc-900">
       <div className="space-y-6">
         {/* Layout section */}
         {mode !== "palette" && <BottomSheetField label="Layout">
@@ -152,7 +152,7 @@ export function ThemeEditor({ isOpen, onClose, mode = "layout" }: ThemeEditorPro
           </div>
         </BottomSheetField>}
 
-        <BottomSheetActions className="!bg-white/80 backdrop-blur-xl">
+        <BottomSheetActions className="!bg-white/60 backdrop-blur-xl">
           <Button variant="outline" onClick={handleClose} className="flex-1 !bg-white !text-zinc-900 !border-zinc-300">
             Cancel
           </Button>
