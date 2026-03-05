@@ -451,7 +451,7 @@ function LoginForm() {
 
 export default function AdminLoginPage() {
   return (
-    <div data-admin className="min-h-screen flex items-center justify-center bg-zinc-50">
+    <div data-admin className="min-h-screen flex items-center justify-center bg-zinc-50 text-zinc-900">
       <Suspense fallback={<div className="mx-auto max-w-md p-8">Loading...</div>}>
         <LoginForm />
       </Suspense>

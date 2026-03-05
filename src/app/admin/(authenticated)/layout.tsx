@@ -65,7 +65,7 @@ export default async function AdminAuthenticatedLayout({
   const userEmail = user.email || user.phone || "Unknown";
 
   return (
-    <div data-admin className="min-h-screen bg-zinc-50">
+    <div data-admin className="min-h-screen bg-zinc-50 text-zinc-900">
       <AdminSidebar
         role={role}
         memberships={memberships}
