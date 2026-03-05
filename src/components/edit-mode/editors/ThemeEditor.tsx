@@ -85,7 +85,7 @@ export function ThemeEditor({ isOpen, onClose, mode = "layout" }: ThemeEditorPro
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose} title={mode === "palette" ? "Color Palette" : mode === "layout" ? "Layout" : "Appearance"} className="!bg-white !text-zinc-900">
+    <BottomSheet isOpen={isOpen} onClose={handleClose} title={mode === "palette" ? "Color Palette" : mode === "layout" ? "Layout" : "Appearance"} transparent className="!bg-white/80 backdrop-blur-xl !text-zinc-900">
       <div className="space-y-6">
         {/* Layout section */}
         {mode !== "palette" && <BottomSheetField label="Layout">
@@ -152,7 +152,7 @@ export function ThemeEditor({ isOpen, onClose, mode = "layout" }: ThemeEditorPro
           </div>
         </BottomSheetField>}
 
-        <BottomSheetActions className="!bg-white">
+        <BottomSheetActions className="!bg-white/80 backdrop-blur-xl">
           <Button variant="outline" onClick={handleClose} className="flex-1 !bg-white !text-zinc-900 !border-zinc-300">
             Cancel
           </Button>

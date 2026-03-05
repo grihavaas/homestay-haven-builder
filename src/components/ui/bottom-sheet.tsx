@@ -11,6 +11,7 @@ interface BottomSheetProps {
   title?: string;
   children: React.ReactNode;
   className?: string;
+  transparent?: boolean;
 }
 
 export function BottomSheet({
@@ -19,6 +20,7 @@ export function BottomSheet({
   title,
   children,
   className,
+  transparent = false,
 }: BottomSheetProps) {
   const sheetRef = React.useRef<HTMLDivElement>(null);
 
@@ -65,7 +67,7 @@ export function BottomSheet({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-50"
+            className={cn("fixed inset-0 z-50", transparent ? "bg-black/20" : "bg-black/50")}
             onClick={onClose}
           />
 
