@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export async function BasicInfoTab({ property }: { property: any }) {
   async function save(formData: FormData) {
@@ -290,9 +291,7 @@ export async function BasicInfoTab({ property }: { property: any }) {
         </label>
       </div>
 
-      <button className="rounded-md bg-black px-4 py-2 text-white">
-        Save
-      </button>
+      <SubmitButton pendingText="Saving...">Save</SubmitButton>
     </form>
   );
 }

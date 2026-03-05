@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import type { Room } from "./RoomsList";
 import { toast } from "@/hooks/use-toast";
+import { SubmitButton } from "@/components/SubmitButton";
 
 interface BedConfiguration {
   id: string;
@@ -189,12 +190,7 @@ export function RoomRow({
                         toast({ title: "Error", description: "Failed to remove bed. Please try again.", variant: "destructive" });
                       }
                     }} className="inline">
-                      <button
-                        type="submit"
-                        className="text-xs text-red-600 hover:underline"
-                      >
-                        Remove
-                      </button>
+                      <SubmitButton variant="ghost" pendingText="...">Remove</SubmitButton>
                     </form>
                   </div>
                 ))}
@@ -239,12 +235,7 @@ export function RoomRow({
                 <input name="is_extra_bed" type="checkbox" />
                 Extra
               </label>
-              <button
-                type="submit"
-                className="rounded-md bg-zinc-800 px-3 py-1 text-xs text-white"
-              >
-                Add Bed
-              </button>
+              <SubmitButton variant="small" pendingText="Adding...">Add Bed</SubmitButton>
             </form>
           </div>
 
@@ -295,22 +286,12 @@ export function RoomRow({
                   </div>
                 ))}
               </div>
-              <button
-                type="submit"
-                className="mt-3 rounded-md bg-zinc-800 px-3 py-1 text-xs text-white"
-              >
-                Save Amenities
-              </button>
+              <SubmitButton variant="small" pendingText="Saving..." className="mt-3">Save Amenities</SubmitButton>
             </form>
           </div>
 
           <div className="flex gap-2">
-            <button
-              type="submit"
-              className="rounded-md bg-black px-4 py-2 text-sm text-white"
-            >
-              Save Changes
-            </button>
+            <SubmitButton pendingText="Saving...">Save Changes</SubmitButton>
             <button
               type="button"
               onClick={() => onEdit(null)}
@@ -350,12 +331,7 @@ export function RoomRow({
           </button>
           <form action={deleteRoom}>
             <input type="hidden" name="roomId" value={room.id} />
-            <button
-              type="submit"
-              className="text-xs text-red-600 hover:underline"
-            >
-              Delete
-            </button>
+            <SubmitButton variant="ghost" pendingText="...">Delete</SubmitButton>
           </form>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 import { AttractionsManager } from "./AttractionsManager";
 
 async function listAttractions(propertyId: string) {
@@ -186,12 +187,7 @@ export async function AttractionsTab({
                 Enable this to display the nearby attractions section on the public website
               </div>
             </div>
-            <button
-              type="submit"
-              className="text-xs bg-zinc-100 hover:bg-zinc-200 text-zinc-900 px-3 py-1 rounded"
-            >
-              Save
-            </button>
+            <SubmitButton variant="small" pendingText="Saving...">Save</SubmitButton>
           </label>
         </form>
       </div>

@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 import { AdditionalManager } from "./AdditionalManager";
 
 async function listFeatures(propertyId: string) {
@@ -318,12 +319,7 @@ export async function AdditionalTab({
               </div>
             </div>
           </label>
-          <button
-            type="submit"
-            className="mt-2 rounded-md bg-black px-4 py-2 text-white text-sm"
-          >
-            Save Feature Settings
-          </button>
+          <SubmitButton pendingText="Saving..." className="mt-2">Save Feature Settings</SubmitButton>
         </form>
       </div>
 

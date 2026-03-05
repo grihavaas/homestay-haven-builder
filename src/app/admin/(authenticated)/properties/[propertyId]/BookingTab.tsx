@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 import { DepositSection } from "./DepositSection";
 
 async function getBookingSettings(propertyId: string) {
@@ -248,9 +249,7 @@ export async function BookingTab({
           />
         </label>
 
-        <button className="rounded-md bg-black px-4 py-2 text-white">
-          Save Settings
-        </button>
+        <SubmitButton pendingText="Saving...">Save Settings</SubmitButton>
       </form>
     </div>
   );

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 
 import { getMemberships, requireUser } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 import { DeleteTenantButton } from "@/app/admin/(authenticated)/agency/tenants/DeleteTenantButton";
 
 async function getTenantsForIds(tenantIds: string[]) {
@@ -116,9 +117,7 @@ export default async function RMDashboardPage() {
             className="rounded-md border px-3 py-2 text-sm"
           />
         </div>
-        <button className="mt-3 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-          Create customer
-        </button>
+        <SubmitButton pendingText="Creating..." className="mt-3">Create customer</SubmitButton>
       </form>
 
       {/* Customer list */}

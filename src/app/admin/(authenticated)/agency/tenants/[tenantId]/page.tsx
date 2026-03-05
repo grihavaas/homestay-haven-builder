@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { requireMembership } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { DeleteTenantButton } from "../DeleteTenantButton";
 
@@ -211,9 +212,7 @@ export default async function AgencyTenantDetailPage({
               required
             />
           </div>
-          <button className="mt-3 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-            Create property
-          </button>
+          <SubmitButton pendingText="Creating..." className="mt-3">Create property</SubmitButton>
         </form>
 
         <div className="mt-4 rounded-lg border bg-white">

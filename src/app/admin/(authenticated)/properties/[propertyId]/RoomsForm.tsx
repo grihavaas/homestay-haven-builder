@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
+import { useActionWithTimeout } from "@/hooks/use-action-with-timeout";
+import { Loader2 } from "lucide-react";
 
 export function RoomsForm({ 
   createRoom,
@@ -13,6 +15,7 @@ export function RoomsForm({
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
+  const { isSubmitting, execute } = useActionWithTimeout();
 
   if (!isOpen) {
     return (
@@ -133,24 +136,27 @@ export function RoomsForm({
       <div className="flex gap-2">
         <button
           type="submit"
-          className="rounded-md bg-black px-4 py-2 text-white"
+          disabled={isSubmitting}
+          className="rounded-md bg-black px-4 py-2 text-white disabled:opacity-50"
           onClick={async (e) => {
             e.preventDefault();
             const form = e.currentTarget.closest("form");
             if (form) {
-              try {
-                const formData = new FormData(form);
-                await createRoom(formData);
-                onOpenChange(false);
-                router.refresh();
-              } catch (err) {
-                console.error("Save error:", err);
-                toast({ title: "Error", description: "Failed to create room. Please try again.", variant: "destructive" });
-              }
+              await execute(async () => {
+                try {
+                  const formData = new FormData(form);
+                  await createRoom(formData);
+                  onOpenChange(false);
+                  router.refresh();
+                } catch (err) {
+                  console.error("Save error:", err);
+                  toast({ title: "Error", description: "Failed to create room. Please try again.", variant: "destructive" });
+                }
+              });
             }
           }}
         >
-          Create Room
+          {isSubmitting ? <><Loader2 className="inline w-4 h-4 animate-spin mr-1 align-text-bottom" />Creating...</> : "Create Room"}
         </button>
         <button
           type="button"

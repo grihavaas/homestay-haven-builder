@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CreateUserForm } from "./CreateUserForm";
 import { UserList } from "./UserList";
+import { SubmitButton } from "@/components/SubmitButton";
 
 /** All auth users with display info (for dropdowns and names). */
 async function listAllUsers() {
@@ -315,12 +316,7 @@ export default async function AgencyUsersPage() {
                   <div>{m.tenant_name}</div>
                   <form action={deleteMembershipForm} className="inline">
                     <input type="hidden" name="membershipId" value={m.id} />
-                    <button
-                      type="submit"
-                      className="text-xs text-red-600 hover:underline"
-                    >
-                      Remove
-                    </button>
+                    <SubmitButton variant="ghost" pendingText="...">Remove</SubmitButton>
                   </form>
                 </div>
               ))
