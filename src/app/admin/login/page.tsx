@@ -451,8 +451,10 @@ function LoginForm() {
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className="mx-auto max-w-md p-8">Loading...</div>}>
-      <LoginForm />
-    </Suspense>
+    <div data-admin className="min-h-screen flex items-center justify-center bg-zinc-50">
+      <Suspense fallback={<div className="mx-auto max-w-md p-8">Loading...</div>}>
+        <LoginForm />
+      </Suspense>
+    </div>
   );
 }
