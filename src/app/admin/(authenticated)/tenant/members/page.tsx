@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireMembership } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 async function getTenantName(tenantId: string) {
@@ -101,12 +102,7 @@ export default async function TenantMembersPage() {
                 {m.role !== "tenant_admin" && (
                   <form action={removeMember} className="inline">
                     <input type="hidden" name="membershipId" value={m.id} />
-                    <button
-                      type="submit"
-                      className="text-xs text-red-600 hover:underline"
-                    >
-                      Remove
-                    </button>
+                    <SubmitButton variant="ghost" pendingText="...">Remove</SubmitButton>
                   </form>
                 )}
               </div>

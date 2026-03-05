@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export function DeleteTenantButton({
   tenantId,
@@ -19,12 +20,7 @@ export function DeleteTenantButton({
         <span className="text-xs text-red-600">Delete {tenantName}?</span>
         <form action={deleteAction} className="inline">
           <input type="hidden" name="tenantId" value={tenantId} />
-          <button
-            type="submit"
-            className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
-          >
-            Confirm
-          </button>
+          <SubmitButton variant="destructive" pendingText="Deleting...">Confirm</SubmitButton>
         </form>
         <button
           type="button"

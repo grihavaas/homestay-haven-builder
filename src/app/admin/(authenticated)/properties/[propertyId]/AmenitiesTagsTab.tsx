@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 
 async function getStandardAmenities() {
   const supabase = await createSupabaseServerClient();
@@ -150,9 +151,7 @@ export async function AmenitiesTagsTab({
               </div>
             ))}
           </div>
-          <button className="mt-4 rounded-md bg-black px-4 py-2 text-white">
-            Save Amenities
-          </button>
+          <SubmitButton pendingText="Saving..." className="mt-4">Save Amenities</SubmitButton>
         </form>
       </div>
 
@@ -186,9 +185,7 @@ export async function AmenitiesTagsTab({
               </div>
             ))}
           </div>
-          <button className="mt-4 rounded-md bg-black px-4 py-2 text-white">
-            Save Tags
-          </button>
+          <SubmitButton pendingText="Saving..." className="mt-4">Save Tags</SubmitButton>
         </form>
       </div>
     </div>

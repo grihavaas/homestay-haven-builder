@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import type { Host } from "./HostsList";
 import { LanguageTagInput } from "./LanguageTagInput";
 import { toast } from "@/hooks/use-toast";
+import { SubmitButton } from "@/components/SubmitButton";
 
 interface HostRowProps {
   host: Host;
@@ -157,12 +158,7 @@ export function HostRow({
             />
           </label>
           <div className="flex gap-2">
-            <button
-              type="submit"
-              className="rounded-md bg-black px-4 py-2 text-sm text-white"
-            >
-              Save Changes
-            </button>
+            <SubmitButton pendingText="Saving...">Save Changes</SubmitButton>
             <button
               type="button"
               onClick={() => onEdit(null)}
@@ -212,12 +208,7 @@ export function HostRow({
           </button>
           <form action={deleteHost}>
             <input type="hidden" name="hostId" value={host.id} />
-            <button
-              type="submit"
-              className="text-xs text-red-600 hover:underline"
-            >
-              Delete
-            </button>
+            <SubmitButton variant="ghost" pendingText="...">Delete</SubmitButton>
           </form>
         </div>
       </div>

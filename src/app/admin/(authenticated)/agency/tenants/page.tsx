@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireMembership } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 import { DeleteTenantButton } from "./DeleteTenantButton";
 
 async function listTenants() {
@@ -97,9 +98,7 @@ export default async function AgencyTenantsPage() {
             type="email"
             className="flex-1 rounded-md border px-3 py-2 text-sm"
           />
-          <button className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-            Create
-          </button>
+          <SubmitButton pendingText="Creating...">Create</SubmitButton>
         </div>
       </form>
 

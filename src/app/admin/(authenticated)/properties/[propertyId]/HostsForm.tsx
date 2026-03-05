@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { LanguageTagInput } from "./LanguageTagInput";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useActionWithTimeout } from "@/hooks/use-action-with-timeout";
+import { Loader2 } from "lucide-react";
 
 export function HostsForm({ 
   createHost,
@@ -16,6 +18,7 @@ export function HostsForm({
 }) {
   const router = useRouter();
   const [languages, setLanguages] = useState<string[]>([]);
+  const { isSubmitting, execute } = useActionWithTimeout();
 
   if (!isOpen) {
     return (
@@ -140,26 +143,29 @@ export function HostsForm({
       <div className="flex gap-2">
         <button
           type="submit"
-          className="rounded-md bg-black px-4 py-2 text-white"
+          disabled={isSubmitting}
+          className="rounded-md bg-black px-4 py-2 text-white disabled:opacity-50"
           onClick={async (e) => {
             e.preventDefault();
             const form = e.currentTarget.closest("form");
             if (form) {
-              try {
-                const formData = new FormData(form);
-                formData.set("languages", JSON.stringify(languages));
-                await createHost(formData);
-                setLanguages([]);
-                onOpenChange(false);
-                router.refresh();
-              } catch (err) {
-                console.error("Save error:", err);
-                toast({ title: "Error", description: "Failed to add host. Please try again.", variant: "destructive" });
-              }
+              await execute(async () => {
+                try {
+                  const formData = new FormData(form);
+                  formData.set("languages", JSON.stringify(languages));
+                  await createHost(formData);
+                  setLanguages([]);
+                  onOpenChange(false);
+                  router.refresh();
+                } catch (err) {
+                  console.error("Save error:", err);
+                  toast({ title: "Error", description: "Failed to add host. Please try again.", variant: "destructive" });
+                }
+              });
             }
           }}
         >
-          Add Host
+          {isSubmitting ? <><Loader2 className="inline w-4 h-4 animate-spin mr-1 align-text-bottom" />Adding...</> : "Add Host"}
         </button>
         <button
           type="button"

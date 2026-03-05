@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireMembership } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { SubmitButton } from "@/components/SubmitButton";
 import { JSONImportForm } from "@/components/JSONImportForm";
 
 async function listProperties(tenantId: string) {
@@ -88,9 +89,7 @@ export default async function TenantPropertiesPage() {
               required
             />
           </div>
-          <button className="mt-3 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-            Create
-          </button>
+          <SubmitButton pendingText="Creating..." className="mt-3">Create</SubmitButton>
         </form>
       )}
 
