@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SubmitButton } from "@/components/SubmitButton";
-import { AttractionsManager } from "./AttractionsManager";
+import { AttractionsManager } from "@/components/property-forms/AttractionsManager";
 
 async function listAttractions(propertyId: string) {
   const supabase = await createSupabaseServerClient();

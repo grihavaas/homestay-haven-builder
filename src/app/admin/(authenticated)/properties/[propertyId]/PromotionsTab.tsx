@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SubmitButton } from "@/components/SubmitButton";
-import { PromotionsManager } from "./PromotionsManager";
+import { PromotionsManager } from "@/components/property-forms/PromotionsManager";
 
 async function listRooms(propertyId: string) {
   const supabase = await createSupabaseServerClient();

@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Users,
   Building2,
+  Compass,
   LogOut,
   Menu,
   X,
@@ -54,6 +55,11 @@ function getNavItems(
         href: "/admin/agency/users",
         icon: <Users className="w-4 h-4" />,
       },
+      {
+        label: "My Discoveries",
+        href: "/admin/agency/discoveries",
+        icon: <Compass className="w-4 h-4" />,
+      },
     ];
   }
 
@@ -67,6 +73,11 @@ function getNavItems(
           label: t.name,
           href: `/admin/agency/tenants/${t.id}`,
         })),
+      },
+      {
+        label: "My Discoveries",
+        href: "/admin/agency/discoveries",
+        icon: <Compass className="w-4 h-4" />,
       },
     ];
   }

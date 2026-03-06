@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { RulesManager } from "./RulesManager";
+import { RulesManager } from "@/components/property-forms/RulesManager";
 
 async function listRules(propertyId: string) {
   const supabase = await createSupabaseServerClient();

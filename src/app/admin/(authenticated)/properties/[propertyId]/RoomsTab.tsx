@@ -2,7 +2,7 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { RoomsManager } from "./RoomsManager";
+import { RoomsManager } from "@/components/property-forms/RoomsManager";
 
 async function listRooms(propertyId: string) {
   const supabase = await createSupabaseServerClient();

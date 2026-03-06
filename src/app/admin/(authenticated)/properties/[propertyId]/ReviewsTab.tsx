@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { ReviewsManager } from "./ReviewsManager";
+import { ReviewsManager } from "@/components/property-forms/ReviewsManager";
 
 async function listReviewSources(propertyId: string) {
   const supabase = await createSupabaseServerClient();

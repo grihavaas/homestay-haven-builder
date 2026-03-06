@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { HostsManager } from "./HostsManager";
+import { HostsManager } from "@/components/property-forms/HostsManager";
 
 async function listHosts(propertyId: string) {
   const supabase = await createSupabaseServerClient();

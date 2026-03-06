@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SubmitButton } from "@/components/SubmitButton";
-import { AdditionalManager } from "./AdditionalManager";
+import { AdditionalManager } from "@/components/property-forms/AdditionalManager";
 
 async function listFeatures(propertyId: string) {
   const supabase = await createSupabaseServerClient();
