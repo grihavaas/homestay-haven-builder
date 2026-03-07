@@ -290,23 +290,14 @@ export function DiscoveryEditor({
 
   // Attractions & Proximity
   const attractions = withIds(data.nearby_attractions || []);
-  const proximity = withIds(
-    (data.proximity_info || []).map((p) => ({
-      name: p.landmark_name,
-      type: "",
-      distance: p.distance_km ?? 0,
-      distance_unit: "km" as const,
-      description: p.distance_text,
-      transportation_info: p.travel_time || "",
-      ...p,
-    })),
-  );
+  const proximity = withIds(data.proximity_info || []);
   const createAttraction = async (formData: FormData) => {
     const item = {
       id: crypto.randomUUID(),
       name: String(formData.get("name") ?? ""),
       type: String(formData.get("type") ?? "") || undefined,
-      distance_km: Number(formData.get("distance")) || undefined,
+      distance: Number(formData.get("distance")) || undefined,
+      distance_unit: String(formData.get("distance_unit") ?? "km") || undefined,
       description: String(formData.get("description") ?? "") || undefined,
     };
     setData((prev) => ({
@@ -325,7 +316,8 @@ export function DiscoveryEditor({
               ...a,
               name: String(formData.get("name") ?? ""),
               type: String(formData.get("type") ?? "") || undefined,
-              distance_km: Number(formData.get("distance")) || undefined,
+              distance: Number(formData.get("distance")) || undefined,
+              distance_unit: String(formData.get("distance_unit") ?? "km") || undefined,
               description: String(formData.get("description") ?? "") || undefined,
             }
           : a,
@@ -346,11 +338,10 @@ export function DiscoveryEditor({
   const createProximity = async (formData: FormData) => {
     const item = {
       id: crypto.randomUUID(),
-      landmark_name: String(formData.get("name") ?? ""),
-      distance_text: String(formData.get("description") ?? ""),
-      distance_km: Number(formData.get("distance")) || undefined,
-      travel_time: String(formData.get("transportation_info") ?? "") || undefined,
-      transport_mode: String(formData.get("transport_mode") ?? "") || undefined,
+      point_of_interest: String(formData.get("name") ?? ""),
+      description: String(formData.get("description") ?? ""),
+      distance: Number(formData.get("distance")) || undefined,
+      distance_unit: String(formData.get("distance_unit") ?? "km") || undefined,
     };
     setData((prev) => ({
       ...prev,
@@ -366,10 +357,10 @@ export function DiscoveryEditor({
         (p as Record<string, unknown>).id === id
           ? {
               ...p,
-              landmark_name: String(formData.get("name") ?? ""),
-              distance_text: String(formData.get("description") ?? ""),
-              distance_km: Number(formData.get("distance")) || undefined,
-              travel_time: String(formData.get("transportation_info") ?? "") || undefined,
+              point_of_interest: String(formData.get("name") ?? ""),
+              description: String(formData.get("description") ?? ""),
+              distance: Number(formData.get("distance")) || undefined,
+              distance_unit: String(formData.get("distance_unit") ?? "km") || undefined,
             }
           : p,
       ),

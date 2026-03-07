@@ -40,7 +40,7 @@ export function DeleteJobButton({ jobId }: { jobId: string }) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete failed discovery?</AlertDialogTitle>
+          <AlertDialogTitle>Delete discovery?</AlertDialogTitle>
           <AlertDialogDescription>
             This will permanently delete the crawl job and all associated data. This action cannot be undone.
           </AlertDialogDescription>
