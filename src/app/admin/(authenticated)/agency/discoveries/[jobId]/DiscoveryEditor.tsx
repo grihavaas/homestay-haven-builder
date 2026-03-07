@@ -17,6 +17,7 @@ import { PromotionsManager } from "@/components/property-forms/PromotionsManager
 import { RulesManager } from "@/components/property-forms/RulesManager";
 import { AdditionalManager } from "@/components/property-forms/AdditionalManager";
 import { DiscoveryImages } from "./DiscoveryImages";
+import { DiscoveryVisionDebug } from "./DiscoveryVisionDebug";
 import { ImportToTenantDialog } from "./ImportToTenantDialog";
 
 type Tenant = { id: string; name: string };
@@ -759,6 +760,8 @@ export function DiscoveryEditor({
             deleteOffer={deleteOffer}
           />
         );
+      case "vision-debug":
+        return <DiscoveryVisionDebug jobId={jobId} />;
       case "additional":
         return (
           <AdditionalManager

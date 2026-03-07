@@ -13,6 +13,7 @@ const tabs = [
   { id: "attractions", label: "Nearby Attractions" },
   { id: "promotions", label: "Promotions" },
   { id: "additional", label: "Additional Info" },
+  { id: "vision-debug", label: "Vision Debug" },
 ];
 
 export function DiscoveryTabs({
