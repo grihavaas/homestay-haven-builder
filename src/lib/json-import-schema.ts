@@ -36,6 +36,7 @@ const hostSchema = z.object({
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
   response_time: z.string().optional(),
+  languages: z.array(z.string()).optional(),
 });
 
 // Review Source Schema
@@ -48,19 +49,20 @@ const reviewSourceSchema = z.object({
 
 // Proximity Info Schema
 const proximityInfoSchema = z.object({
-  landmark_name: z.string().min(1, "Landmark name is required"),
-  distance_text: z.string().min(1, "Distance text is required"),
-  distance_km: z.number().positive("Distance must be positive").optional(),
-  travel_time: z.string().optional(),
-  transport_mode: z.string().optional(),
+  point_of_interest: z.string().min(1, "Point of interest is required"),
+  distance: z.number().positive("Distance must be positive").optional(),
+  distance_unit: z.string().optional(),
+  description: z.string().optional(),
 });
 
 // Nearby Attraction Schema
 const nearbyAttractionSchema = z.object({
   name: z.string().min(1, "Attraction name is required"),
   type: z.string().optional(),
-  distance_km: z.number().positive("Distance must be positive").optional(),
+  distance: z.number().positive("Distance must be positive").optional(),
+  distance_unit: z.string().optional(),
   description: z.string().optional(),
+  transportation_info: z.string().optional(),
 });
 
 // Property Feature Schema
@@ -162,6 +164,20 @@ export const propertyImportSchema = z.object({
     website: z.string().url("Invalid website URL").optional(),
     meta_title: z.string().optional(),
     meta_description: z.string().optional(),
+    meta_keywords: z.string().optional(),
+    og_title: z.string().optional(),
+    og_description: z.string().optional(),
+    og_image_url: z.string().optional(),
+    languages_spoken: z.array(z.string()).optional(),
+    property_history: z.string().optional(),
+    local_culture: z.string().optional(),
+    seasonal_information: z.string().optional(),
+    accessibility_info: z.string().optional(),
+    feature_nearby_attractions: z.boolean().optional(),
+    feature_property_features: z.boolean().optional(),
+    feature_additional_info: z.boolean().optional(),
+    feature_seo_elements: z.boolean().optional(),
+    feature_dynamic_content: z.boolean().optional(),
     check_in_time: z.string().optional(),
     check_out_time: z.string().optional(),
     year_built: z.number().int().min(1800).max(new Date().getFullYear(), "Invalid year").optional(),

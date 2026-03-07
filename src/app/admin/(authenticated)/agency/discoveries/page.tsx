@@ -173,7 +173,7 @@ export default async function DiscoveriesPage() {
                   )}
                 </div>
                 <div>
-                  {job.status === "failed" && (
+                  {(job.status === "failed" || membership.role === "agency_admin") && (
                     <DeleteJobButton jobId={job.jobId} />
                   )}
                 </div>

@@ -77,6 +77,20 @@ export async function importPropertyFromJSON(
         email: propertyData.email || null,
         meta_title: propertyData.meta_title || null,
         meta_description: propertyData.meta_description || null,
+        meta_keywords: propertyData.meta_keywords || null,
+        og_title: propertyData.og_title || null,
+        og_description: propertyData.og_description || null,
+        og_image_url: propertyData.og_image_url || null,
+        languages_spoken: propertyData.languages_spoken || null,
+        property_history: propertyData.property_history || null,
+        local_culture: propertyData.local_culture || null,
+        seasonal_information: propertyData.seasonal_information || null,
+        accessibility_info: propertyData.accessibility_info || null,
+        feature_nearby_attractions: propertyData.feature_nearby_attractions ?? false,
+        feature_property_features: propertyData.feature_property_features ?? false,
+        feature_additional_info: propertyData.feature_additional_info ?? false,
+        feature_seo_elements: propertyData.feature_seo_elements ?? false,
+        feature_dynamic_content: propertyData.feature_dynamic_content ?? false,
         is_active: true,
         is_published: false,
       })
@@ -199,8 +213,18 @@ export async function importPropertyFromJSON(
         if (hostError) {
           console.error(`Error inserting host "${host.name}":`, hostError);
           errors.push(`Host "${host.name}": ${hostError.message}`);
-        } else {
+        } else if (hostRecord) {
           importStats.hosts++;
+
+          // Insert host languages
+          if (host.languages && Array.isArray(host.languages)) {
+            for (const language of host.languages) {
+              await supabase.from("host_languages").insert({
+                host_id: hostRecord.id,
+                language,
+              });
+            }
+          }
         }
       }
     }
@@ -228,10 +252,10 @@ export async function importPropertyFromJSON(
         const { error: proxError } = await supabase.from("proximity_info").insert({
           property_id: propertyId,
           tenant_id: tenantId,
-          point_of_interest: prox.landmark_name,
-          distance: prox.distance_km || null,
-          distance_unit: "km",
-          description: prox.distance_text || null,
+          point_of_interest: prox.point_of_interest,
+          distance: prox.distance || null,
+          distance_unit: prox.distance_unit || "km",
+          description: prox.description || null,
         });
 
         if (!proxError) importStats.proximityInfo++;
@@ -248,10 +272,10 @@ export async function importPropertyFromJSON(
             tenant_id: tenantId,
             name: attraction.name,
             type: attraction.type || null,
-            distance: attraction.distance_km || null,
-            distance_unit: "km",
+            distance: attraction.distance || null,
+            distance_unit: attraction.distance_unit || "km",
             description: attraction.description || null,
-            transportation_info: null,
+            transportation_info: attraction.transportation_info || null,
             display_order: 0,
           });
 
