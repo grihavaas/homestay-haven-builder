@@ -16,6 +16,7 @@ import { AttractionsManager } from "@/components/property-forms/AttractionsManag
 import { PromotionsManager } from "@/components/property-forms/PromotionsManager";
 import { RulesManager } from "@/components/property-forms/RulesManager";
 import { AdditionalManager } from "@/components/property-forms/AdditionalManager";
+import { DiscoveryImages } from "./DiscoveryImages";
 import { ImportToTenantDialog } from "./ImportToTenantDialog";
 
 type Tenant = { id: string; name: string };
@@ -650,6 +651,19 @@ export function DiscoveryEditor({
             updateRoomAmenities={updateRoomAmenities}
           />
         );
+      case "images":
+        return (
+          <DiscoveryImages
+            jobId={jobId}
+            images={data.images || []}
+            rooms={(data.rooms || []).map((r) => ({ name: r.name }))}
+            onChange={(images: NonNullable<typeof data.images>) => {
+              setData((prev) => ({ ...prev, images }));
+              markDirty();
+            }}
+            disabled={isImported}
+          />
+        );
       case "pricing":
         return (
           <PricingManager
@@ -815,6 +829,7 @@ export function DiscoveryEditor({
         <ImportToTenantDialog
           jobId={jobId}
           tenants={tenants}
+          images={data.images || []}
           onClose={() => setImportDialogOpen(false)}
           onImported={() => router.refresh()}
         />
