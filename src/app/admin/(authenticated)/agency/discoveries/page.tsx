@@ -2,6 +2,8 @@ import Link from "next/link";
 import { requireUser, requireMembership } from "@/lib/authz";
 import { env } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { NewDiscoveryDialog } from "./NewDiscoveryDialog";
+import { DeleteJobButton } from "./DeleteJobButton";
 
 type CrawlJob = {
   jobId: string;
@@ -69,26 +71,32 @@ export default async function DiscoveriesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">My Discoveries</h1>
-      <p className="mt-1 text-sm text-zinc-600">
-        Crawled property listings ready for review and import.
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">My Discoveries</h1>
+          <p className="mt-1 text-sm text-zinc-600">
+            Crawled property listings ready for review and import.
+          </p>
+        </div>
+        <NewDiscoveryDialog />
+      </div>
 
       {jobs.length === 0 ? (
         <p className="mt-8 text-sm text-zinc-500">No discoveries yet.</p>
       ) : (
         <div className="mt-6 rounded-lg border">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 border-b bg-zinc-50 p-3 text-sm font-medium text-zinc-700">
+          <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 border-b bg-zinc-50 p-3 text-sm font-medium text-zinc-700">
             <div>Property</div>
             <div>Status</div>
             <div>Created</div>
             <div>Imported</div>
+            <div></div>
           </div>
           <div className="divide-y">
             {jobs.map((job) => (
               <div
                 key={job.jobId}
-                className="grid grid-cols-[1fr_auto_auto_auto] gap-4 p-3 text-sm items-center"
+                className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 p-3 text-sm items-center"
               >
                 <div>
                   {job.status === "completed" ? (
@@ -120,6 +128,11 @@ export default async function DiscoveriesPage() {
                     </span>
                   ) : (
                     <span className="text-zinc-400 text-xs">—</span>
+                  )}
+                </div>
+                <div>
+                  {job.status === "failed" && (
+                    <DeleteJobButton jobId={job.jobId} />
                   )}
                 </div>
               </div>
