@@ -2,6 +2,12 @@ import Link from "next/link";
 import { requireUser, requireMembership } from "@/lib/authz";
 import { env } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { NewDiscoveryDialog } from "./NewDiscoveryDialog";
 import { DeleteJobButton } from "./DeleteJobButton";
 
@@ -10,7 +16,14 @@ type CrawlJob = {
   userId?: string;
   status: "pending" | "running" | "completed" | "failed";
   listingUrls: string[];
+  propertyName?: string;
   importSummary?: string;
+  llmUsage?: {
+    extraction?: { model?: string; total_tokens?: number };
+    import_summary?: { total_tokens?: number };
+    review_summary?: { total_tokens?: number };
+    totals?: { total_tokens?: number; total_duration_ms?: number };
+  };
   error?: string;
   createdAt: string;
   completedAt?: string;
@@ -85,9 +98,10 @@ export default async function DiscoveriesPage() {
         <p className="mt-8 text-sm text-zinc-500">No discoveries yet.</p>
       ) : (
         <div className="mt-6 rounded-lg border">
-          <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 border-b bg-zinc-50 p-3 text-sm font-medium text-zinc-700">
+          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 border-b bg-zinc-50 p-3 text-sm font-medium text-zinc-700">
             <div>Property</div>
             <div>Status</div>
+            <div>AI Cost</div>
             <div>Created</div>
             <div>Imported</div>
             <div></div>
@@ -96,19 +110,30 @@ export default async function DiscoveriesPage() {
             {jobs.map((job) => (
               <div
                 key={job.jobId}
-                className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 p-3 text-sm items-center"
+                className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 p-3 text-sm items-center"
               >
                 <div>
                   {job.status === "completed" ? (
-                    <Link
-                      href={`/admin/agency/discoveries/${job.jobId}`}
-                      className="text-blue-600 hover:underline font-medium"
-                    >
-                      {job.importSummary || job.listingUrls?.[0] || job.jobId}
-                    </Link>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={`/admin/agency/discoveries/${job.jobId}`}
+                            className="text-blue-600 hover:underline font-medium"
+                          >
+                            {job.propertyName || job.listingUrls?.[0] || job.jobId}
+                          </Link>
+                        </TooltipTrigger>
+                        {job.importSummary && (
+                          <TooltipContent side="bottom" className="max-w-sm text-xs">
+                            {job.importSummary}
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   ) : (
                     <span className="text-zinc-700">
-                      {job.importSummary || job.listingUrls?.[0] || job.jobId}
+                      {job.propertyName || job.listingUrls?.[0] || job.jobId}
                     </span>
                   )}
                   {job.error && (
@@ -118,6 +143,23 @@ export default async function DiscoveriesPage() {
                   )}
                 </div>
                 <StatusBadge status={job.status} />
+                <div className="text-zinc-500 text-xs whitespace-nowrap">
+                  {job.llmUsage?.totals ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          {job.llmUsage.totals.total_tokens?.toLocaleString()} tokens
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          <div>Model: {job.llmUsage.extraction?.model || "—"}</div>
+                          <div>Duration: {((job.llmUsage.totals.total_duration_ms || 0) / 1000).toFixed(1)}s</div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-zinc-400">—</span>
+                  )}
+                </div>
                 <div className="text-zinc-500 text-xs whitespace-nowrap">
                   {new Date(job.createdAt).toLocaleDateString()}
                 </div>
