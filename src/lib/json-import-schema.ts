@@ -142,6 +142,15 @@ const bookingCtaSchema = z.object({
   display_order: z.number().int().nonnegative("Display order must be non-negative").optional(),
 });
 
+// Crawled Image Schema (from OTA crawl pipeline)
+const crawledImageSchema = z.object({
+  s3Key: z.string(),
+  sourceUrl: z.string(),
+  alt: z.string().optional().default(""),
+  suggestedType: z.enum(["hero", "gallery", "room_image"]),
+  roomName: z.string().optional(),
+});
+
 // Main Property Import Schema
 export const propertyImportSchema = z.object({
   property: z.object({
@@ -201,6 +210,7 @@ export const propertyImportSchema = z.object({
   booking_ctas: z.array(bookingCtaSchema).optional(),
   property_amenities: z.array(z.string()).optional(),
   property_tags: z.array(z.string()).optional(),
+  images: z.array(crawledImageSchema).optional(),
 });
 
 export type PropertyImportData = z.infer<typeof propertyImportSchema>;

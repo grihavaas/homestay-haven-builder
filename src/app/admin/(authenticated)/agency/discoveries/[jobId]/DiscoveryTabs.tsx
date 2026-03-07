@@ -3,6 +3,7 @@
 const tabs = [
   { id: "basic", label: "Basic Info" },
   { id: "rooms", label: "Rooms" },
+  { id: "images", label: "Images" },
   { id: "pricing", label: "Pricing" },
   { id: "booking", label: "Booking Settings" },
   { id: "amenities", label: "Amenities & Tags" },
