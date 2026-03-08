@@ -27,18 +27,17 @@ async function fetchTenants(role: string, userId: string) {
     return data ?? [];
   }
 
-  // agency_rm — tenants from their memberships
+  // agency_rm — tenants from their memberships (exclude the agency tenant itself)
   const { data } = await supabase
     .from("tenant_memberships")
-    .select("tenant_id,tenants(id,name)")
-    .eq("user_id", userId)
-    .neq("role", "agency_rm");
+    .select("tenant_id,tenants(id,name,is_agency_tenant)")
+    .eq("user_id", userId);
 
   if (!data) return [];
   return data
     .map((m) => {
-      const t = m.tenants as unknown as { id: string; name: string } | null;
-      return t ? { id: t.id, name: t.name } : null;
+      const t = m.tenants as unknown as { id: string; name: string; is_agency_tenant: boolean } | null;
+      return t && !t.is_agency_tenant ? { id: t.id, name: t.name } : null;
     })
     .filter((t): t is { id: string; name: string } => t !== null);
 }
