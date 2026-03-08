@@ -97,89 +97,92 @@ export default async function DiscoveriesPage() {
       {jobs.length === 0 ? (
         <p className="mt-8 text-sm text-zinc-500">No discoveries yet.</p>
       ) : (
-        <div className="mt-6 rounded-lg border">
-          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 border-b bg-zinc-50 p-3 text-sm font-medium text-zinc-700">
-            <div>Property</div>
-            <div>Status</div>
-            <div>AI Cost</div>
-            <div>Created</div>
-            <div>Imported</div>
-            <div></div>
-          </div>
-          <div className="divide-y">
-            {jobs.map((job) => (
-              <div
-                key={job.jobId}
-                className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 p-3 text-sm items-center"
-              >
-                <div>
-                  {job.status === "completed" ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Link
-                            href={`/admin/agency/discoveries/${job.jobId}`}
-                            className="text-blue-600 hover:underline font-medium"
-                          >
-                            {job.propertyName || job.listingUrls?.[0] || job.jobId}
-                          </Link>
-                        </TooltipTrigger>
-                        {job.importSummary && (
-                          <TooltipContent side="bottom" className="max-w-sm text-xs">
-                            {job.importSummary}
+        <div className="mt-6 overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-zinc-50 text-left text-zinc-700">
+                <th className="py-3 pl-3 pr-2 font-medium">Property</th>
+                <th className="px-2 py-3 font-medium whitespace-nowrap">Status</th>
+                <th className="px-2 py-3 font-medium whitespace-nowrap">AI Cost</th>
+                <th className="px-2 py-3 font-medium whitespace-nowrap">Created</th>
+                <th className="px-2 py-3 font-medium whitespace-nowrap">Imported</th>
+                <th className="py-3 pl-2 pr-3 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {jobs.map((job) => (
+                <tr key={job.jobId}>
+                  <td className="py-3 pl-3 pr-2">
+                    {job.status === "completed" ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={`/admin/agency/discoveries/${job.jobId}`}
+                              className="text-blue-600 hover:underline font-medium"
+                            >
+                              {job.propertyName || job.listingUrls?.[0] || job.jobId}
+                            </Link>
+                          </TooltipTrigger>
+                          {job.importSummary && (
+                            <TooltipContent side="bottom" className="max-w-sm text-xs">
+                              {job.importSummary}
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <span className="text-zinc-700">
+                        {job.propertyName || job.listingUrls?.[0] || job.jobId}
+                      </span>
+                    )}
+                    {job.error && (
+                      <p className="text-xs text-red-600 mt-0.5 truncate max-w-md">
+                        {job.error}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-2 py-3">
+                    <StatusBadge status={job.status} />
+                  </td>
+                  <td className="px-2 py-3 text-zinc-500 text-xs whitespace-nowrap">
+                    {job.llmUsage?.totals ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            {job.llmUsage.totals.total_tokens?.toLocaleString()} tokens
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="text-xs">
+                            <div>Model: {job.llmUsage.extraction?.model || "—"}</div>
+                            <div>Duration: {((job.llmUsage.totals.total_duration_ms || 0) / 1000).toFixed(1)}s</div>
                           </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <span className="text-zinc-700">
-                      {job.propertyName || job.listingUrls?.[0] || job.jobId}
-                    </span>
-                  )}
-                  {job.error && (
-                    <p className="text-xs text-red-600 mt-0.5 truncate max-w-md">
-                      {job.error}
-                    </p>
-                  )}
-                </div>
-                <StatusBadge status={job.status} />
-                <div className="text-zinc-500 text-xs whitespace-nowrap">
-                  {job.llmUsage?.totals ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          {job.llmUsage.totals.total_tokens?.toLocaleString()} tokens
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-xs">
-                          <div>Model: {job.llmUsage.extraction?.model || "—"}</div>
-                          <div>Duration: {((job.llmUsage.totals.total_duration_ms || 0) / 1000).toFixed(1)}s</div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <span className="text-zinc-400">—</span>
-                  )}
-                </div>
-                <div className="text-zinc-500 text-xs whitespace-nowrap">
-                  {new Date(job.createdAt).toLocaleDateString()}
-                </div>
-                <div>
-                  {job.importedAt ? (
-                    <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 text-xs font-medium">
-                      Imported
-                    </span>
-                  ) : (
-                    <span className="text-zinc-400 text-xs">—</span>
-                  )}
-                </div>
-                <div>
-                  {(job.status === "failed" || membership.role === "agency_admin") && (
-                    <DeleteJobButton jobId={job.jobId} />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <span className="text-zinc-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-2 py-3 text-zinc-500 text-xs whitespace-nowrap">
+                    {new Date(job.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-2 py-3">
+                    {job.importedAt ? (
+                      <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 text-xs font-medium">
+                        Imported
+                      </span>
+                    ) : (
+                      <span className="text-zinc-400 text-xs">—</span>
+                    )}
+                  </td>
+                  <td className="py-3 pl-2 pr-3">
+                    {(job.status === "failed" || membership.role === "agency_admin") && (
+                      <DeleteJobButton jobId={job.jobId} />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getMemberships, requireUser } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { env } from "@/lib/env";
 import type { Role } from "@/lib/authz";
 
 async function getTenantsForIds(tenantIds: string[]) {
@@ -23,6 +24,34 @@ async function getTenantName(tenantId: string) {
     .eq("id", tenantId)
     .single();
   return data;
+}
+
+async function fetchDiscoveryNames(
+  isAdmin: boolean
+): Promise<{ id: string; name: string }[]> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) return [];
+
+    const endpoint = isAdmin ? "/api/crawl-jobs-all" : "/api/crawl-jobs";
+    const res = await fetch(`${env.backendServiceUrl}${endpoint}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const jobs: { jobId: string; propertyName?: string; listingUrls?: string[] }[] =
+      data.jobs ?? [];
+    return jobs.map((j) => ({
+      id: j.jobId,
+      name: j.propertyName || j.listingUrls?.[0] || j.jobId.slice(0, 8),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function AdminAuthenticatedLayout({
@@ -62,6 +91,12 @@ export default async function AdminAuthenticatedLayout({
     if (t) tenants = [t];
   }
 
+  // Fetch discoveries for sidebar (agency roles only)
+  let discoveries: { id: string; name: string }[] = [];
+  if (role === "agency_admin" || role === "agency_rm") {
+    discoveries = await fetchDiscoveryNames(role === "agency_admin");
+  }
+
   const userEmail = user.email || user.phone || "Unknown";
 
   return (
@@ -71,6 +106,7 @@ export default async function AdminAuthenticatedLayout({
         memberships={memberships}
         userEmail={userEmail}
         tenants={tenants}
+        discoveries={discoveries}
       />
       <main className="lg:pl-64">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">

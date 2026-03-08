@@ -41,4 +41,14 @@ export const env = {
   get backendServiceUrl(): string {
     return process.env.BACKEND_SERVICE_URL || "http://localhost:3001";
   },
+  // Vercel API token for domain management (server-only)
+  get vercelApiToken(): string {
+    const v = process.env.VERCEL_API_TOKEN;
+    if (!v) {
+      throw new Error(
+        "Missing env var: VERCEL_API_TOKEN\n\nRequired for domain management. Add it to your .env.local and Vercel project settings."
+      );
+    }
+    return v;
+  },
 };

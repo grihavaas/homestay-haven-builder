@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import type { Role } from "@/lib/authz";
 import {
   LayoutDashboard,
@@ -13,11 +13,14 @@ import {
   Menu,
   X,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 
 type Membership = { tenant_id: string; role: Role };
 
 type Tenant = { id: string; name: string };
+
+type Discovery = { id: string; name: string };
 
 type Props = {
   role: Role;
@@ -25,6 +28,8 @@ type Props = {
   userEmail: string;
   /** For agency_rm: the tenants they manage. For tenant roles: their single tenant. */
   tenants: Tenant[];
+  /** Crawl job discoveries for sidebar listing */
+  discoveries?: Discovery[];
 };
 
 type NavItem = {
@@ -37,7 +42,13 @@ type NavItem = {
 function getNavItems(
   role: Role,
   tenants: Tenant[],
+  discoveries: Discovery[],
 ): NavItem[] {
+  const discoveryChildren = discoveries.map((d) => ({
+    label: d.name,
+    href: `/admin/agency/discoveries/${d.id}`,
+  }));
+
   if (role === "agency_admin") {
     return [
       {
@@ -59,6 +70,7 @@ function getNavItems(
         label: "My Discoveries",
         href: "/admin/agency/discoveries",
         icon: <Compass className="w-4 h-4" />,
+        children: discoveryChildren,
       },
     ];
   }
@@ -78,6 +90,7 @@ function getNavItems(
         label: "My Discoveries",
         href: "/admin/agency/discoveries",
         icon: <Compass className="w-4 h-4" />,
+        children: discoveryChildren,
       },
     ];
   }
@@ -103,11 +116,13 @@ function getNavItems(
 function NavLink({
   item,
   pathname,
-  onClick,
+  onNavigate,
+  navigatingHref,
 }: {
   item: NavItem;
   pathname: string;
-  onClick?: () => void;
+  onNavigate: (href: string) => void;
+  navigatingHref: string | null;
 }) {
   const isActive =
     pathname === item.href || pathname.startsWith(item.href + "/");
@@ -115,40 +130,62 @@ function NavLink({
   const isChildActive = hasChildren && item.children!.some(
     (c) => pathname === c.href || pathname.startsWith(c.href + "/"),
   );
+  const isNavigating = navigatingHref === item.href;
+
+  function handleClick(e: React.MouseEvent, href: string) {
+    if (pathname === href) {
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    onNavigate(href);
+  }
 
   return (
     <div>
       <Link
         href={item.href}
-        onClick={onClick}
+        onClick={(e) => handleClick(e, item.href)}
         className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
           isActive || isChildActive
             ? "bg-zinc-100 text-zinc-900"
             : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
         }`}
       >
-        {item.icon}
+        {isNavigating ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          item.icon
+        )}
         {item.label}
       </Link>
       {hasChildren && (
-        <div className="ml-7 mt-1 space-y-0.5">
+        <div
+          className="ml-7 mt-1 space-y-0.5 overflow-y-auto"
+          style={item.children!.length > 20 ? { maxHeight: "28rem" } : undefined}
+        >
           {item.children!.map((child) => {
             const childActive =
               pathname === child.href ||
               pathname.startsWith(child.href + "/");
+            const isChildNavigating = navigatingHref === child.href;
             return (
               <Link
                 key={child.href}
                 href={child.href}
-                onClick={onClick}
+                onClick={(e) => handleClick(e, child.href)}
                 className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
                   childActive
                     ? "bg-zinc-100 text-zinc-900 font-medium"
                     : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700"
                 }`}
               >
-                <ChevronRight className="w-3 h-3" />
-                {child.label}
+                {isChildNavigating ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <ChevronRight className="w-3 h-3" />
+                )}
+                <span className="truncate">{child.label}</span>
               </Link>
             );
           })}
@@ -158,10 +195,26 @@ function NavLink({
   );
 }
 
-export function AdminSidebar({ role, memberships, userEmail, tenants }: Props) {
+export function AdminSidebar({ role, memberships, userEmail, tenants, discoveries = [] }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const navItems = getNavItems(role, tenants);
+  const [isPending, startTransition] = useTransition();
+  const [navigatingHref, setNavigatingHref] = useState<string | null>(null);
+  const navItems = getNavItems(role, tenants, discoveries);
+
+  // Clear navigating state when transition completes
+  if (!isPending && navigatingHref) {
+    setNavigatingHref(null);
+  }
+
+  function handleNavigate(href: string) {
+    setNavigatingHref(href);
+    setMobileOpen(false);
+    startTransition(() => {
+      router.push(href);
+    });
+  }
 
   const title =
     role === "agency_admin" || role === "agency_rm"
@@ -190,7 +243,8 @@ export function AdminSidebar({ role, memberships, userEmail, tenants }: Props) {
             key={item.href}
             item={item}
             pathname={pathname}
-            onClick={() => setMobileOpen(false)}
+            onNavigate={handleNavigate}
+            navigatingHref={isPending ? navigatingHref : null}
           />
         ))}
       </nav>

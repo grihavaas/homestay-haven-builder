@@ -1,9 +1,15 @@
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
 
 import { requireMembership } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DomainsManager } from "./DomainsManager";
+import {
+  addDomainAction,
+  updateDomainAction,
+  deleteDomainAction,
+  verifyDomainAction,
+  retryVercelAction,
+} from "./actions";
 
 async function getProperty(propertyId: string) {
   const supabase = await createSupabaseServerClient();
@@ -20,7 +26,9 @@ async function listDomains(propertyId: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("domains")
-    .select("id,hostname,is_primary,verified_at,created_at")
+    .select(
+      "id,hostname,is_primary,verified_at,created_at,domain_status,dns_records,vercel_error"
+    )
     .eq("property_id", propertyId)
     .order("is_primary", { ascending: false })
     .order("created_at", { ascending: true });
@@ -36,7 +44,8 @@ export default async function AgencyPropertyDomainsPage({
   const { propertyId } = await params;
   const property = await getProperty(propertyId);
   const membership = await requireMembership(property.tenant_id);
-  const canAccess = membership.role === "agency_admin" || membership.role === "agency_rm";
+  const canAccess =
+    membership.role === "agency_admin" || membership.role === "agency_rm";
   if (!canAccess) {
     return (
       <div>
@@ -47,83 +56,15 @@ export default async function AgencyPropertyDomainsPage({
   }
   const domains = await listDomains(propertyId);
 
-  async function addDomain(formData: FormData) {
-    "use server";
-    const hostname = String(formData.get("hostname") ?? "")
-      .trim()
-      .toLowerCase();
-    const isPrimary = Boolean(formData.get("is_primary"));
-    if (!hostname) return;
-
-    const supabase = await createSupabaseServerClient();
-
-    // If setting primary, unset others for this property.
-    if (isPrimary) {
-      const { error: unsetErr } = await supabase
-        .from("domains")
-        .update({ is_primary: false })
-        .eq("property_id", propertyId);
-      if (unsetErr) throw unsetErr;
-    }
-
-    const { error } = await supabase.from("domains").insert({
-      tenant_id: property.tenant_id,
-      property_id: propertyId,
-      hostname,
-      is_primary: isPrimary,
-      // For now we allow manual verification; automation comes later.
-      verified_at: new Date().toISOString(),
-    });
-    if (error) throw error;
-    revalidatePath(`/admin/agency/properties/${propertyId}/domains`);
-  }
-
-  async function updateDomain(formData: FormData) {
-    "use server";
-    const domainId = String(formData.get("domainId") ?? "");
-    const hostname = String(formData.get("hostname") ?? "")
-      .trim()
-      .toLowerCase();
-    const isPrimary = Boolean(formData.get("is_primary"));
-    
-    if (!domainId || !hostname) return;
-
-    const supabase = await createSupabaseServerClient();
-
-    // If setting primary, unset others for this property.
-    if (isPrimary) {
-      const { error: unsetErr } = await supabase
-        .from("domains")
-        .update({ is_primary: false })
-        .eq("property_id", propertyId)
-        .neq("id", domainId);
-      if (unsetErr) throw unsetErr;
-    }
-
-    const { error } = await supabase
-      .from("domains")
-      .update({
-        hostname,
-        is_primary: isPrimary,
-      })
-      .eq("id", domainId);
-    if (error) throw error;
-    revalidatePath(`/admin/agency/properties/${propertyId}/domains`);
-  }
-
-  async function deleteDomain(formData: FormData) {
-    "use server";
-    const domainId = String(formData.get("domainId") ?? "");
-    if (!domainId) return;
-
-    const supabase = await createSupabaseServerClient();
-    const { error } = await supabase
-      .from("domains")
-      .delete()
-      .eq("id", domainId);
-    if (error) throw error;
-    revalidatePath(`/admin/agency/properties/${propertyId}/domains`);
-  }
+  const boundAddDomain = addDomainAction.bind(
+    null,
+    propertyId,
+    property.tenant_id
+  );
+  const boundUpdateDomain = updateDomainAction.bind(null, propertyId);
+  const boundDeleteDomain = deleteDomainAction.bind(null, propertyId);
+  const boundVerifyDomain = verifyDomainAction.bind(null, propertyId);
+  const boundRetryVercel = retryVercelAction.bind(null, propertyId);
 
   return (
     <div className="mx-auto max-w-3xl p-8">
@@ -142,7 +83,10 @@ export default async function AgencyPropertyDomainsPage({
         </Link>
       </div>
 
-      <form action={addDomain} className="mt-6 flex flex-col gap-2 sm:flex-row">
+      <form
+        action={boundAddDomain}
+        className="mt-6 flex flex-col gap-2 sm:flex-row"
+      >
         <input
           name="hostname"
           placeholder="example.com or www.example.com"
@@ -160,8 +104,10 @@ export default async function AgencyPropertyDomainsPage({
 
       <DomainsManager
         domains={domains}
-        updateDomain={updateDomain}
-        deleteDomain={deleteDomain}
+        updateDomain={boundUpdateDomain}
+        deleteDomain={boundDeleteDomain}
+        verifyDomain={boundVerifyDomain}
+        retryVercel={boundRetryVercel}
       />
     </div>
   );
