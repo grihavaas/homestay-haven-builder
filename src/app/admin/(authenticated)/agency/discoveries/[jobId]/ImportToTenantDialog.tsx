@@ -84,8 +84,17 @@ export function ImportToTenantDialog({
 
     setImporting(true);
     try {
-      // Step 1: Claim import
-      setStatus("Claiming import...");
+      // Step 1: Import to Supabase (don't claim until successful)
+      const jsonData = JSON.stringify(propertyData);
+      setStatus("Creating property...");
+      const result = await importPropertyFromJSON(tenantId, jsonData);
+
+      if (!result.success) {
+        throw new Error(result.message || result.error || "Import failed");
+      }
+
+      // Step 2: Claim import in backend (only after successful import)
+      setStatus("Finalizing...");
       const claimRes = await fetch(`/api/discoveries/${jobId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,19 +102,7 @@ export function ImportToTenantDialog({
       });
 
       if (!claimRes.ok) {
-        const err = await claimRes.json();
-        throw new Error(err.error || "Failed to claim import");
-      }
-
-      // Use the current UI data (includes any edits the user made)
-      const jsonData = JSON.stringify(propertyData);
-
-      // Step 3: Import to Supabase
-      setStatus("Creating property...");
-      const result = await importPropertyFromJSON(tenantId, jsonData);
-
-      if (!result.success) {
-        throw new Error(result.error || result.message || "Import failed");
+        console.error("Failed to claim import in backend");
       }
 
       // Step 4: Kick off async image transfer
