@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { PropertyImportData } from "@/lib/json-import-schema";
+import { validateImportData, type ValidationError } from "@/lib/json-import-schema";
 import { toast } from "@/hooks/use-toast";
 import { DiscoveryTabs } from "./DiscoveryTabs";
 import { DiscoveryBasicInfo } from "./DiscoveryBasicInfo";
@@ -52,10 +53,56 @@ export function DiscoveryEditor({
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [validated, setValidated] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    valid: boolean;
+    errors: ValidationError[];
+    errorsByTab: Record<string, ValidationError[]>;
+  } | null>(null);
 
   const isImported = !!jobMeta.importedAt;
 
-  const markDirty = useCallback(() => setDirty(true), []);
+  // Build a set of error paths for field-level highlighting
+  const errorPaths = useMemo(() => {
+    if (!validationResult) return new Set<string>();
+    return new Set(validationResult.errors.map((e) => e.path));
+  }, [validationResult]);
+
+  function handleValidate() {
+    const result = validateImportData(data);
+    setValidationResult(result);
+    setValidated(true);
+    if (result.valid) {
+      toast({ title: "Valid", description: "All fields pass validation." });
+    } else {
+      toast({
+        title: "Validation Errors",
+        description: `${result.errors.length} error(s) found. Check highlighted tabs and fields.`,
+        variant: "destructive",
+      });
+      // Navigate to first tab with errors
+      const firstTabWithError = Object.keys(result.errorsByTab)[0];
+      if (firstTabWithError) setActiveTab(firstTabWithError);
+    }
+  }
+
+  const markDirty = useCallback(() => {
+    setDirty(true);
+    // Re-run validation live if already validated
+    setValidated((prev) => {
+      if (prev) {
+        // Schedule re-validation on next tick (after state update)
+        setTimeout(() => {
+          setData((currentData) => {
+            const result = validateImportData(currentData);
+            setValidationResult(result);
+            return currentData;
+          });
+        }, 0);
+      }
+      return prev;
+    });
+  }, []);
 
   // --- Save to backend ---
   async function handleSave() {
@@ -633,6 +680,7 @@ export function DiscoveryEditor({
               markDirty();
             }}
             disabled={isImported}
+            errorPaths={errorPaths}
           />
         );
       case "rooms":
@@ -814,17 +862,53 @@ export function DiscoveryEditor({
                 {saving ? "Saving..." : dirty ? "Save" : "Saved"}
               </button>
               <button
-                onClick={() => setImportDialogOpen(true)}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+                onClick={handleValidate}
+                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
               >
-                Import to Tenant
+                Validate
               </button>
+              {validated && validationResult?.valid ? (
+                <button
+                  onClick={() => setImportDialogOpen(true)}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+                >
+                  Import to Tenant
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white opacity-50 cursor-not-allowed"
+                  title={validated ? "Fix validation errors first" : "Click Validate first"}
+                >
+                  Import to Tenant
+                </button>
+              )}
             </>
           )}
         </div>
       </div>
 
-      <DiscoveryTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <DiscoveryTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        errorsByTab={validationResult?.errorsByTab}
+        validated={validated}
+      />
+
+      {validated && validationResult?.errorsByTab[activeTab] && (
+        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3">
+          <p className="text-sm font-medium text-red-800 mb-1">
+            {validationResult.errorsByTab[activeTab].length} validation error(s):
+          </p>
+          <ul className="list-disc pl-5 text-sm text-red-700 space-y-0.5">
+            {validationResult.errorsByTab[activeTab].map((err, i) => (
+              <li key={i}>
+                <span className="font-mono text-xs">{err.path}</span>: {err.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-6">{renderTab()}</div>
 

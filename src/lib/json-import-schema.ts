@@ -214,3 +214,59 @@ export const propertyImportSchema = z.object({
 });
 
 export type PropertyImportData = z.infer<typeof propertyImportSchema>;
+
+// Map Zod error paths to discovery editor tab IDs
+const PATH_TO_TAB: Record<string, string> = {
+  property: "basic",
+  rooms: "rooms",
+  images: "images",
+  pricing: "pricing",
+  booking_settings: "booking",
+  property_amenities: "amenities",
+  property_tags: "amenities",
+  hosts: "hosts",
+  review_sources: "reviews",
+  rules_and_policies: "rules",
+  nearby_attractions: "attractions",
+  proximity_info: "attractions",
+  special_offers: "promotions",
+  property_features: "additional",
+  social_media_links: "additional",
+  payment_methods: "additional",
+  booking_ctas: "additional",
+};
+
+export interface ValidationError {
+  path: string;
+  message: string;
+  tab: string;
+}
+
+/**
+ * Validate data against the import schema and return errors grouped by tab.
+ */
+export function validateImportData(data: unknown): {
+  valid: boolean;
+  errors: ValidationError[];
+  errorsByTab: Record<string, ValidationError[]>;
+} {
+  const result = propertyImportSchema.safeParse(data);
+  if (result.success) {
+    return { valid: true, errors: [], errorsByTab: {} };
+  }
+
+  const errors: ValidationError[] = result.error.errors.map((err) => {
+    const pathStr = err.path.join(".");
+    const topLevel = String(err.path[0] || "property");
+    const tab = PATH_TO_TAB[topLevel] || "basic";
+    return { path: pathStr, message: err.message, tab };
+  });
+
+  const errorsByTab: Record<string, ValidationError[]> = {};
+  for (const err of errors) {
+    if (!errorsByTab[err.tab]) errorsByTab[err.tab] = [];
+    errorsByTab[err.tab].push(err);
+  }
+
+  return { valid: false, errors, errorsByTab };
+}

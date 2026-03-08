@@ -8,10 +8,12 @@ export function DiscoveryBasicInfo({
   property,
   onChange,
   disabled,
+  errorPaths,
 }: {
   property: Property;
   onChange: (property: Property) => void;
   disabled?: boolean;
+  errorPaths?: Set<string>;
 }) {
   function update(field: keyof Property, value: unknown) {
     onChange({ ...property, [field]: value || undefined });
@@ -25,7 +27,7 @@ export function DiscoveryBasicInfo({
           <input
             value={property.name}
             onChange={(e) => update("name", e.target.value)}
-            className="mt-1 w-full rounded-md border px-3 py-2"
+            className={`mt-1 w-full rounded-md border px-3 py-2 ${errorPaths?.has("property.name") ? "border-red-500 bg-red-50" : ""}`}
             disabled={disabled}
             required
           />
@@ -83,7 +85,7 @@ export function DiscoveryBasicInfo({
           <input
             value={property.slug}
             onChange={(e) => update("slug", e.target.value)}
-            className="mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm"
+            className={`mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm ${errorPaths?.has("property.slug") ? "border-red-500 bg-red-50" : ""}`}
             disabled={disabled}
           />
         </label>
@@ -176,22 +178,38 @@ export function DiscoveryBasicInfo({
         <label className="block">
           <div className="text-sm font-medium">Latitude</div>
           <input
-            type="number"
-            step="any"
+            type="text"
+            inputMode="decimal"
             value={property.latitude ?? ""}
-            onChange={(e) => update("latitude", e.target.value ? Number(e.target.value) : undefined)}
-            className="mt-1 w-full rounded-md border px-3 py-2"
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "" || v === "-" || v === ".") {
+                onChange({ ...property, latitude: undefined });
+              } else {
+                const n = Number(v);
+                if (!isNaN(n)) update("latitude", n);
+              }
+            }}
+            className={`mt-1 w-full rounded-md border px-3 py-2 ${errorPaths?.has("property.latitude") ? "border-red-500 bg-red-50" : ""}`}
             disabled={disabled}
           />
         </label>
         <label className="block">
           <div className="text-sm font-medium">Longitude</div>
           <input
-            type="number"
-            step="any"
+            type="text"
+            inputMode="decimal"
             value={property.longitude ?? ""}
-            onChange={(e) => update("longitude", e.target.value ? Number(e.target.value) : undefined)}
-            className="mt-1 w-full rounded-md border px-3 py-2"
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "" || v === "-" || v === ".") {
+                onChange({ ...property, longitude: undefined });
+              } else {
+                const n = Number(v);
+                if (!isNaN(n)) update("longitude", n);
+              }
+            }}
+            className={`mt-1 w-full rounded-md border px-3 py-2 ${errorPaths?.has("property.longitude") ? "border-red-500 bg-red-50" : ""}`}
             disabled={disabled}
           />
         </label>
