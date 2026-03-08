@@ -19,12 +19,14 @@ export function ImportToTenantDialog({
   jobId,
   tenants,
   images,
+  propertyData,
   onClose,
   onImported,
 }: {
   jobId: string;
   tenants: Tenant[];
   images: ImageEntry[];
+  propertyData: PropertyImportData;
   onClose: () => void;
   onImported: () => void;
 }) {
@@ -90,32 +92,13 @@ export function ImportToTenantDialog({
         body: JSON.stringify({ tenantId }),
       });
 
-      let claimData = await claimRes.json();
-
-      // If 409, the claim already succeeded on a prior attempt — fetch the JSON via GET instead
-      if (claimRes.status === 409) {
-        setStatus("Resuming previous import...");
-        const getRes = await fetch(`/api/discoveries/${jobId}`);
-        if (!getRes.ok) throw new Error("Failed to fetch discovery data");
-        const jobData = await getRes.json();
-        if (jobData.extractedJsonUrl) {
-          // Fetch JSON server-side via a dedicated proxy
-          const jsonProxyRes = await fetch(`/api/discoveries/${jobId}/extracted-json`);
-          if (!jsonProxyRes.ok) throw new Error("Failed to fetch extracted JSON");
-          claimData = { extractedJson: await jsonProxyRes.json() };
-        } else {
-          throw new Error("Discovery has already been imported and no data is available");
-        }
-      } else if (!claimRes.ok) {
-        throw new Error(claimData.error || "Failed to claim import");
+      if (!claimRes.ok) {
+        const err = await claimRes.json();
+        throw new Error(err.error || "Failed to claim import");
       }
 
-      // Step 2: Get extracted JSON (returned inline by the proxy to avoid S3 CORS issues)
-      if (!claimData.extractedJson) {
-        throw new Error("No extracted JSON available for this discovery");
-      }
-
-      const jsonData = JSON.stringify(claimData.extractedJson);
+      // Use the current UI data (includes any edits the user made)
+      const jsonData = JSON.stringify(propertyData);
 
       // Step 3: Import to Supabase
       setStatus("Creating property...");

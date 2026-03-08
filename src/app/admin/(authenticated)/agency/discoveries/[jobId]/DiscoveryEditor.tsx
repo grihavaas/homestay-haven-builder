@@ -833,6 +833,7 @@ export function DiscoveryEditor({
           jobId={jobId}
           tenants={tenants}
           images={data.images || []}
+          propertyData={data}
           onClose={() => setImportDialogOpen(false)}
           onImported={() => router.refresh()}
         />
