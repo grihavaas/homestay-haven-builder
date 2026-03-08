@@ -14,7 +14,7 @@ import { DeleteJobButton } from "./DeleteJobButton";
 type CrawlJob = {
   jobId: string;
   userId?: string;
-  status: "pending" | "running" | "completed" | "failed";
+  status: "pending" | "crawling" | "crawled" | "extracting" | "running" | "completed" | "failed";
   listingUrls: string[];
   propertyName?: string;
   importSummary?: string;
@@ -24,8 +24,14 @@ type CrawlJob = {
     review_summary?: { total_tokens?: number };
     totals?: { total_tokens?: number; total_duration_ms?: number };
   };
+  crawlLlmUsage?: {
+    vision_gallery?: { total_tokens?: number };
+    image_filter?: { total_tokens?: number };
+    totals?: { total_tokens?: number };
+  };
   error?: string;
   createdAt: string;
+  startedAt?: string;
   completedAt?: string;
   importedAt?: string;
   importedToTenantId?: string;
@@ -52,6 +58,9 @@ async function fetchJobs(isAdmin: boolean): Promise<CrawlJob[]> {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
+    crawling: "bg-blue-100 text-blue-800",
+    crawled: "bg-cyan-100 text-cyan-800",
+    extracting: "bg-indigo-100 text-indigo-800",
     running: "bg-blue-100 text-blue-800",
     completed: "bg-green-100 text-green-800",
     failed: "bg-red-100 text-red-800",
@@ -101,11 +110,11 @@ export default async function DiscoveriesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-zinc-50 text-left text-zinc-700">
-                <th className="py-3 pl-3 pr-2 font-medium">Property</th>
+                <th className="py-3 pl-3 pr-2 font-medium">Name</th>
                 <th className="px-2 py-3 font-medium whitespace-nowrap">Status</th>
-                <th className="px-2 py-3 font-medium whitespace-nowrap">AI Cost</th>
-                <th className="px-2 py-3 font-medium whitespace-nowrap">Created</th>
-                <th className="px-2 py-3 font-medium whitespace-nowrap">Imported</th>
+                <th className="px-2 py-3 font-medium whitespace-nowrap">Token Cost</th>
+                <th className="px-2 py-3 font-medium whitespace-nowrap">Start</th>
+                <th className="px-2 py-3 font-medium whitespace-nowrap">End</th>
                 <th className="py-3 pl-2 pr-3 font-medium"></th>
               </tr>
             </thead>
@@ -113,7 +122,7 @@ export default async function DiscoveriesPage() {
               {jobs.map((job) => (
                 <tr key={job.jobId}>
                   <td className="py-3 pl-3 pr-2">
-                    {job.status === "completed" ? (
+                    {(job.status === "completed" || job.status === "crawled") ? (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -146,33 +155,39 @@ export default async function DiscoveriesPage() {
                     <StatusBadge status={job.status} />
                   </td>
                   <td className="px-2 py-3 text-zinc-500 text-xs whitespace-nowrap">
-                    {job.llmUsage?.totals ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            {job.llmUsage.totals.total_tokens?.toLocaleString()} tokens
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="text-xs">
-                            <div>Model: {job.llmUsage.extraction?.model || "—"}</div>
-                            <div>Duration: {((job.llmUsage.totals.total_duration_ms || 0) / 1000).toFixed(1)}s</div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <span className="text-zinc-400">—</span>
-                    )}
+                    {(() => {
+                      const crawlTokens = job.crawlLlmUsage?.totals?.total_tokens || 0;
+                      const extractTokens = job.llmUsage?.totals?.total_tokens || 0;
+                      const totalTokens = crawlTokens + extractTokens;
+                      if (totalTokens === 0) return <span className="text-zinc-400">—</span>;
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {totalTokens.toLocaleString()} tokens
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">
+                              {crawlTokens > 0 && <div>Crawl: {crawlTokens.toLocaleString()}</div>}
+                              {extractTokens > 0 && <div>Extract: {extractTokens.toLocaleString()}</div>}
+                              {job.llmUsage?.extraction?.model && <div>Model: {job.llmUsage.extraction.model}</div>}
+                              {job.llmUsage?.totals?.total_duration_ms && (
+                                <div>Duration: {((job.llmUsage.totals.total_duration_ms || 0) / 1000).toFixed(1)}s</div>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    })()}
                   </td>
                   <td className="px-2 py-3 text-zinc-500 text-xs whitespace-nowrap">
-                    {new Date(job.createdAt).toLocaleDateString()}
+                    {job.startedAt
+                      ? new Date(job.startedAt).toLocaleDateString()
+                      : new Date(job.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-2 py-3">
-                    {job.importedAt ? (
-                      <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 text-xs font-medium">
-                        Imported
-                      </span>
-                    ) : (
-                      <span className="text-zinc-400 text-xs">—</span>
-                    )}
+                  <td className="px-2 py-3 text-zinc-500 text-xs whitespace-nowrap">
+                    {job.completedAt
+                      ? new Date(job.completedAt).toLocaleDateString()
+                      : <span className="text-zinc-400">—</span>}
                   </td>
                   <td className="py-3 pl-2 pr-3">
                     {(job.status === "failed" || membership.role === "agency_admin") && (

@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
   Loader2,
 } from "lucide-react";
 
@@ -22,32 +23,54 @@ type Tenant = { id: string; name: string };
 
 type Discovery = { id: string; name: string };
 
+export type CrawlJobNav = {
+  id: string;
+  name: string;
+  status: string;
+  extractions: { id: string; label: string }[];
+};
+
 type Props = {
   role: Role;
   memberships: Membership[];
   userEmail: string;
   /** For agency_rm: the tenants they manage. For tenant roles: their single tenant. */
   tenants: Tenant[];
-  /** Crawl job discoveries for sidebar listing */
+  /** Crawl job discoveries for sidebar listing (legacy flat list) */
   discoveries?: Discovery[];
+  /** Crawl jobs with nested extractions for sidebar */
+  crawlJobs?: CrawlJobNav[];
 };
+
+type NavChild = { label: string; href: string; children?: { label: string; href: string }[] };
 
 type NavItem = {
   label: string;
   href: string;
   icon: React.ReactNode;
-  children?: { label: string; href: string }[];
+  children?: NavChild[];
 };
 
 function getNavItems(
   role: Role,
   tenants: Tenant[],
   discoveries: Discovery[],
+  crawlJobs?: CrawlJobNav[],
 ): NavItem[] {
-  const discoveryChildren = discoveries.map((d) => ({
-    label: d.name,
-    href: `/admin/agency/discoveries/${d.id}`,
-  }));
+  // Build 3-level nav: crawl jobs → extractions
+  const discoveryChildren: NavChild[] = crawlJobs
+    ? crawlJobs.map((cj) => ({
+        label: cj.name,
+        href: `#crawl-${cj.id}`, // non-navigating — expand/collapse only
+        children: cj.extractions.map((ext) => ({
+          label: ext.label,
+          href: `/admin/agency/discoveries/${ext.id}`,
+        })),
+      }))
+    : discoveries.map((d) => ({
+        label: d.name,
+        href: `/admin/agency/discoveries/${d.id}`,
+      }));
 
   if (role === "agency_admin") {
     return [
@@ -124,11 +147,14 @@ function NavLink({
   onNavigate: (href: string) => void;
   navigatingHref: string | null;
 }) {
+  const [expandedCrawls, setExpandedCrawls] = useState<Set<string>>(new Set());
   const isActive =
     pathname === item.href || pathname.startsWith(item.href + "/");
   const hasChildren = item.children && item.children.length > 0;
   const isChildActive = hasChildren && item.children!.some(
-    (c) => pathname === c.href || pathname.startsWith(c.href + "/"),
+    (c) =>
+      pathname === c.href || pathname.startsWith(c.href + "/") ||
+      c.children?.some((gc) => pathname === gc.href || pathname.startsWith(gc.href + "/")),
   );
   const isNavigating = navigatingHref === item.href;
 
@@ -139,6 +165,18 @@ function NavLink({
     }
     e.preventDefault();
     onNavigate(href);
+  }
+
+  function toggleCrawl(id: string) {
+    setExpandedCrawls((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   }
 
   return (
@@ -165,10 +203,68 @@ function NavLink({
           style={item.children!.length > 20 ? { maxHeight: "28rem" } : undefined}
         >
           {item.children!.map((child) => {
+            const isCrawlItem = child.href.startsWith("#crawl-");
+            const hasGrandchildren = child.children && child.children.length > 0;
+            const crawlId = isCrawlItem ? child.href.replace("#crawl-", "") : "";
+            const isExpanded = expandedCrawls.has(crawlId);
+            const isGrandchildActive = hasGrandchildren && child.children!.some(
+              (gc) => pathname === gc.href || pathname.startsWith(gc.href + "/"),
+            );
             const childActive =
-              pathname === child.href ||
-              pathname.startsWith(child.href + "/");
+              !isCrawlItem && (pathname === child.href || pathname.startsWith(child.href + "/"));
             const isChildNavigating = navigatingHref === child.href;
+
+            if (isCrawlItem && hasGrandchildren) {
+              // Crawl item: click toggles expand/collapse, does NOT navigate
+              return (
+                <div key={child.href}>
+                  <button
+                    onClick={() => toggleCrawl(crawlId)}
+                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors w-full text-left ${
+                      isGrandchildActive
+                        ? "bg-zinc-100 text-zinc-900 font-medium"
+                        : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700"
+                    }`}
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="w-3 h-3 shrink-0" />
+                    ) : (
+                      <ChevronRight className="w-3 h-3 shrink-0" />
+                    )}
+                    <span className="truncate">{child.label}</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="ml-5 mt-0.5 space-y-0.5">
+                      {child.children!.map((gc) => {
+                        const gcActive = pathname === gc.href || pathname.startsWith(gc.href + "/");
+                        const gcNavigating = navigatingHref === gc.href;
+                        return (
+                          <Link
+                            key={gc.href}
+                            href={gc.href}
+                            onClick={(e) => handleClick(e, gc.href)}
+                            className={`flex items-center gap-2 rounded-md px-3 py-1 text-xs transition-colors ${
+                              gcActive
+                                ? "bg-zinc-100 text-zinc-900 font-medium"
+                                : "text-zinc-400 hover:bg-zinc-50 hover:text-zinc-600"
+                            }`}
+                          >
+                            {gcNavigating ? (
+                              <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                            ) : (
+                              <ChevronRight className="w-2.5 h-2.5" />
+                            )}
+                            <span className="truncate">{gc.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Regular child (flat discovery or tenant)
             return (
               <Link
                 key={child.href}
@@ -195,13 +291,13 @@ function NavLink({
   );
 }
 
-export function AdminSidebar({ role, memberships, userEmail, tenants, discoveries = [] }: Props) {
+export function AdminSidebar({ role, memberships, userEmail, tenants, discoveries = [], crawlJobs }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [navigatingHref, setNavigatingHref] = useState<string | null>(null);
-  const navItems = getNavItems(role, tenants, discoveries);
+  const navItems = getNavItems(role, tenants, discoveries, crawlJobs);
 
   // Clear navigating state when transition completes
   if (!isPending && navigatingHref) {

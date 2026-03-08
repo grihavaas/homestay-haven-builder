@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getMemberships, requireUser } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { AdminSidebar } from "@/components/AdminSidebar";
+import { AdminSidebar, type CrawlJobNav } from "@/components/AdminSidebar";
 import { env } from "@/lib/env";
 import type { Role } from "@/lib/authz";
 
@@ -26,31 +26,45 @@ async function getTenantName(tenantId: string) {
   return data;
 }
 
-async function fetchDiscoveryNames(
+async function fetchCrawlJobs(
   isAdmin: boolean
-): Promise<{ id: string; name: string }[]> {
+): Promise<{ discoveries: { id: string; name: string }[]; crawlJobs: CrawlJobNav[] }> {
   try {
     const supabase = await createSupabaseServerClient();
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session?.access_token) return [];
+    if (!session?.access_token) return { discoveries: [], crawlJobs: [] };
 
     const endpoint = isAdmin ? "/api/crawl-jobs-all" : "/api/crawl-jobs";
     const res = await fetch(`${env.backendServiceUrl}${endpoint}`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
       cache: "no-store",
     });
-    if (!res.ok) return [];
+    if (!res.ok) return { discoveries: [], crawlJobs: [] };
     const data = await res.json();
-    const jobs: { jobId: string; propertyName?: string; listingUrls?: string[] }[] =
+    const jobs: { jobId: string; propertyName?: string; listingUrls?: string[]; status?: string }[] =
       data.jobs ?? [];
-    return jobs.map((j) => ({
+
+    const discoveries = jobs.map((j) => ({
       id: j.jobId,
       name: j.propertyName || j.listingUrls?.[0] || j.jobId.slice(0, 8),
     }));
+
+    // Build 3-level nav data: each crawl job currently has one extraction (the job itself)
+    const crawlJobs: CrawlJobNav[] = jobs.map((j) => {
+      const name = j.propertyName || j.listingUrls?.[0] || j.jobId.slice(0, 8);
+      const status = j.status || "pending";
+      // Only show extraction link for completed jobs
+      const extractions = status === "completed"
+        ? [{ id: j.jobId, label: "Extraction 1" }]
+        : [];
+      return { id: j.jobId, name, status, extractions };
+    });
+
+    return { discoveries, crawlJobs };
   } catch {
-    return [];
+    return { discoveries: [], crawlJobs: [] };
   }
 }
 
@@ -93,8 +107,11 @@ export default async function AdminAuthenticatedLayout({
 
   // Fetch discoveries for sidebar (agency roles only)
   let discoveries: { id: string; name: string }[] = [];
+  let crawlJobs: CrawlJobNav[] | undefined;
   if (role === "agency_admin" || role === "agency_rm") {
-    discoveries = await fetchDiscoveryNames(role === "agency_admin");
+    const result = await fetchCrawlJobs(role === "agency_admin");
+    discoveries = result.discoveries;
+    crawlJobs = result.crawlJobs;
   }
 
   const userEmail = user.email || user.phone || "Unknown";
@@ -107,6 +124,7 @@ export default async function AdminAuthenticatedLayout({
         userEmail={userEmail}
         tenants={tenants}
         discoveries={discoveries}
+        crawlJobs={crawlJobs}
       />
       <main className="lg:pl-64">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">

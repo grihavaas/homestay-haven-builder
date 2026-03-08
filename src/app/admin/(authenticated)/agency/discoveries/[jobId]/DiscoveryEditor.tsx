@@ -20,12 +20,21 @@ import { AdditionalManager } from "@/components/property-forms/AdditionalManager
 import { DiscoveryImages } from "./DiscoveryImages";
 import { DiscoveryVisionDebug } from "./DiscoveryVisionDebug";
 import { ImportToTenantDialog } from "./ImportToTenantDialog";
+import { reExtractJob } from "../actions";
 
 type Tenant = { id: string; name: string };
 
 type JobMeta = {
   importedAt?: string;
   importedToTenantId?: string;
+  status?: string;
+  llmUsage?: {
+    extraction?: { model?: string; total_tokens?: number; duration_ms?: number };
+    totals?: { total_tokens?: number; total_duration_ms?: number };
+  };
+  crawlLlmUsage?: {
+    totals?: { total_tokens?: number };
+  };
 };
 
 // Add stable IDs to array items (preserves existing IDs)
@@ -82,6 +91,7 @@ export function DiscoveryEditor({
   } | null>(null);
 
   const isImported = !!jobMeta.importedAt;
+  const [reExtracting, setReExtracting] = useState(false);
 
   // Build a set of error paths for field-level highlighting
   const errorPaths = useMemo(() => {
@@ -863,13 +873,33 @@ export function DiscoveryEditor({
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl font-semibold">
           {data.property.name || "Untitled Discovery"}
         </h1>
         <div className="flex items-center gap-3">
           {!isImported && (
             <>
+              <button
+                onClick={async () => {
+                  setReExtracting(true);
+                  const result = await reExtractJob(jobId);
+                  if (result.success) {
+                    router.refresh();
+                  } else {
+                    toast({
+                      title: "Error",
+                      description: result.error || "Re-extraction failed",
+                      variant: "destructive",
+                    });
+                    setReExtracting(false);
+                  }
+                }}
+                disabled={reExtracting}
+                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+              >
+                {reExtracting ? "Re-extracting..." : "Re-extract"}
+              </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !dirty}
@@ -902,6 +932,32 @@ export function DiscoveryEditor({
             </>
           )}
         </div>
+      </div>
+
+      {/* AI Token Cost & Import Status */}
+      <div className="flex items-center gap-4 mb-6 text-xs text-zinc-500">
+        {(() => {
+          const crawlTokens = jobMeta.crawlLlmUsage?.totals?.total_tokens || 0;
+          const extractTokens = jobMeta.llmUsage?.totals?.total_tokens || 0;
+          const totalTokens = crawlTokens + extractTokens;
+          const model = jobMeta.llmUsage?.extraction?.model;
+          const durationMs = jobMeta.llmUsage?.totals?.total_duration_ms || 0;
+          if (totalTokens === 0 && !model) return null;
+          return (
+            <span>
+              AI: {totalTokens.toLocaleString()} tokens
+              {model && <> ({model})</>}
+              {durationMs > 0 && <> in {(durationMs / 1000).toFixed(1)}s</>}
+            </span>
+          );
+        })()}
+        {isImported ? (
+          <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 font-medium">
+            Imported on {new Date(jobMeta.importedAt!).toLocaleDateString()}
+          </span>
+        ) : (
+          <span className="text-zinc-400">Not imported</span>
+        )}
       </div>
 
       <DiscoveryTabs

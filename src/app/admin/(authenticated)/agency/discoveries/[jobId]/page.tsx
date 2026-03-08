@@ -3,6 +3,7 @@ import { requireUser, requireMembership, getMemberships } from "@/lib/authz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { DiscoveryEditor } from "./DiscoveryEditor";
+import { CrawledJobView } from "./CrawledJobView";
 
 async function fetchJob(jobId: string, token: string) {
   const res = await fetch(
@@ -89,6 +90,70 @@ export default async function DiscoveryEditorPage({
     );
   }
 
+  // Handle crawled state — show "Run Extraction" button
+  if (job.status === "crawled") {
+    return (
+      <div>
+        <nav className="text-sm text-zinc-500 mb-4">
+          <Link href="/admin/agency/discoveries" className="hover:text-zinc-700">
+            Discoveries
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-zinc-900">{job.propertyName || jobId}</span>
+        </nav>
+        <CrawledJobView jobId={jobId} propertyName={job.propertyName} crawlLlmUsage={job.crawlLlmUsage} />
+      </div>
+    );
+  }
+
+  // Handle extracting state — show spinner with auto-refresh
+  if (job.status === "extracting") {
+    return (
+      <div>
+        <nav className="text-sm text-zinc-500 mb-4">
+          <Link href="/admin/agency/discoveries" className="hover:text-zinc-700">
+            Discoveries
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-zinc-900">{job.propertyName || jobId}</span>
+        </nav>
+        <div className="mx-auto max-w-3xl p-8 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900 mb-4" />
+          <h1 className="text-xl font-semibold">Extracting Data...</h1>
+          <p className="mt-2 text-sm text-zinc-600">
+            AI is analyzing the crawled pages. This page will refresh automatically.
+          </p>
+          <meta httpEquiv="refresh" content="5" />
+        </div>
+      </div>
+    );
+  }
+
+  // Handle pending/crawling states
+  if (job.status === "pending" || job.status === "crawling" || job.status === "running") {
+    return (
+      <div>
+        <nav className="text-sm text-zinc-500 mb-4">
+          <Link href="/admin/agency/discoveries" className="hover:text-zinc-700">
+            Discoveries
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-zinc-900">{job.propertyName || jobId}</span>
+        </nav>
+        <div className="mx-auto max-w-3xl p-8 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900 mb-4" />
+          <h1 className="text-xl font-semibold">
+            {job.status === "crawling" ? "Crawling Pages..." : "Processing..."}
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600">
+            This page will refresh automatically when ready.
+          </p>
+          <meta httpEquiv="refresh" content="5" />
+        </div>
+      </div>
+    );
+  }
+
   // Fetch the extracted JSON from S3
   let initialData = null;
   if (job.extractedJsonUrl) {
@@ -137,6 +202,9 @@ export default async function DiscoveryEditorPage({
         jobMeta={{
           importedAt: job.importedAt,
           importedToTenantId: job.importedToTenantId,
+          status: job.status,
+          llmUsage: job.llmUsage,
+          crawlLlmUsage: job.crawlLlmUsage,
         }}
       />
     </div>
