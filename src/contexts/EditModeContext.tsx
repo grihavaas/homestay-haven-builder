@@ -31,21 +31,24 @@ const EditModeContext = createContext<EditModeContextType>({
 export function EditModeProvider({ children }: { children: ReactNode }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeEditor, setActiveEditor] = useState<string | null>(null);
-  const { user, membership } = useAuth();
+  const { user, memberships } = useAuth();
   const { property } = useProperty();
 
-  // User can edit if they're authenticated and have appropriate role.
-  // agency_rm can edit when current membership tenant matches property's tenant.
+  // User can edit if they're authenticated and have an appropriate role for this property's tenant.
+  // agency_admin can edit any property. Others need a membership matching the property's tenant.
+  const matchingMembership = property
+    ? memberships.find(
+        (m) =>
+          m.role === "agency_admin" ||
+          m.tenant_id === property.tenant_id
+      )
+    : undefined;
   const canEdit =
-    !!user &&
-    !!membership &&
-    !!property &&
-    (membership.role === "agency_admin" ||
-      membership.role === "tenant_admin" ||
-      membership.role === "tenant_editor" ||
-      membership.role === "agency_rm") &&
-    (membership.role === "agency_admin" ||
-      membership.tenant_id === property.tenant_id);
+    !!user && !!matchingMembership && !!property &&
+    (matchingMembership.role === "agency_admin" ||
+      matchingMembership.role === "tenant_admin" ||
+      matchingMembership.role === "tenant_editor" ||
+      matchingMembership.role === "agency_rm");
 
   const toggleEditMode = useCallback(() => {
     if (canEdit) {

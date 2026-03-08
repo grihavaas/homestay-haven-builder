@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { getCurrentUser, getMembership, type Membership } from "@/lib/authz-client";
+import { getCurrentUser, getMemberships, type Membership } from "@/lib/authz-client";
 import type { User } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
   membership: Membership | null;
+  memberships: Membership[];
   loading: boolean;
   refresh: () => Promise<void>;
 }
@@ -17,18 +18,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
+  const [allMemberships, setAllMemberships] = useState<Membership[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
-      
+
       if (currentUser) {
-        const userMembership = await getMembership(currentUser.id);
-        setMembership(userMembership);
+        const userMemberships = await getMemberships(currentUser.id);
+        setAllMemberships(userMemberships);
+        setMembership(userMemberships[0] ?? null);
       } else {
         setMembership(null);
+        setAllMemberships([]);
       }
     } catch (error) {
       // Ignore abort errors - they're usually from React Strict Mode or navigation
@@ -76,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (isMounted) {
                 setUser(null);
                 setMembership(null);
+                setAllMemberships([]);
                 setLoading(false);
               }
             }
@@ -114,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, membership, loading, refresh }}>
+    <AuthContext.Provider value={{ user, membership, memberships: allMemberships, loading, refresh }}>
       {children}
     </AuthContext.Provider>
   );
