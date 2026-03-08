@@ -762,6 +762,7 @@ export function DiscoveryEditor({
             createReview={createReview}
             updateReview={updateReview}
             deleteReview={deleteReview}
+            errorPaths={errorPaths}
           />
         );
       case "rules":

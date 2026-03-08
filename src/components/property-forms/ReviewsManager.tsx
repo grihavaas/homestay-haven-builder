@@ -18,9 +18,10 @@ interface ReviewsManagerProps {
   createReview: (formData: FormData) => Promise<void>;
   updateReview: (formData: FormData) => Promise<void>;
   deleteReview: (formData: FormData) => Promise<void>;
+  errorPaths?: Set<string>;
 }
 
-export function ReviewsManager({ reviews, createReview, updateReview, deleteReview }: ReviewsManagerProps) {
+export function ReviewsManager({ reviews, createReview, updateReview, deleteReview, errorPaths }: ReviewsManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [editReviewId, setEditReviewId] = useState<string | null>(null);
 
@@ -41,6 +42,7 @@ export function ReviewsManager({ reviews, createReview, updateReview, deleteRevi
           onEdit={setEditReviewId}
           updateReview={updateReview}
           deleteReview={deleteReview}
+          errorPaths={errorPaths}
         />
       )}
     </>

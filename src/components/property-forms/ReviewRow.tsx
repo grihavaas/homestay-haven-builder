@@ -7,20 +7,26 @@ import { SubmitButton } from "@/components/SubmitButton";
 
 interface ReviewRowProps {
   review: Review;
+  index: number;
   isEditing: boolean;
   onEdit: (reviewId: string | null) => void;
   updateReview: (formData: FormData) => Promise<void>;
   deleteReview: (formData: FormData) => Promise<void>;
+  errorPaths?: Set<string>;
 }
 
 export function ReviewRow({
   review,
+  index,
   isEditing,
   onEdit,
   updateReview,
   deleteReview,
+  errorPaths,
 }: ReviewRowProps) {
   const router = useRouter();
+  const hasError = (field: string) => errorPaths?.has(`review_sources.${index}.${field}`);
+  const rowHasError = hasError("stars") || hasError("site_name") || hasError("total_reviews") || hasError("review_url");
 
   if (isEditing) {
     return (
@@ -55,7 +61,7 @@ export function ReviewRow({
               <select
                 name="site_name"
                 defaultValue={review.site_name}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                className={`mt-1 w-full rounded-md border px-3 py-2 text-sm ${hasError("site_name") ? "border-red-500 bg-red-50" : ""}`}
                 required
               >
                 <option value="">Select site</option>
@@ -75,7 +81,7 @@ export function ReviewRow({
                 max="5"
                 step="0.1"
                 defaultValue={review.stars || ""}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                className={`mt-1 w-full rounded-md border px-3 py-2 text-sm ${hasError("stars") ? "border-red-500 bg-red-50" : ""}`}
               />
             </label>
           </div>
@@ -87,7 +93,7 @@ export function ReviewRow({
                 type="number"
                 min="0"
                 defaultValue={review.total_reviews || 0}
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                className={`mt-1 w-full rounded-md border px-3 py-2 text-sm ${hasError("total_reviews") ? "border-red-500 bg-red-50" : ""}`}
               />
             </label>
             <label className="block">
@@ -108,7 +114,7 @@ export function ReviewRow({
               type="url"
               defaultValue={review.review_url || ""}
               placeholder="https://..."
-              className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+              className={`mt-1 w-full rounded-md border px-3 py-2 text-sm ${hasError("review_url") ? "border-red-500 bg-red-50" : ""}`}
             />
           </label>
           <div className="flex gap-2">
@@ -127,7 +133,7 @@ export function ReviewRow({
   }
 
   return (
-    <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 p-3 text-sm">
+    <div className={`grid grid-cols-[2fr_1fr_1fr_auto] gap-2 p-3 text-sm ${rowHasError ? "bg-red-50" : ""}`}>
       <div>
         <div className="font-medium">{review.site_name}</div>
         {review.review_url && (
@@ -141,7 +147,7 @@ export function ReviewRow({
           </a>
         )}
       </div>
-      <div>{review.stars ? `${review.stars} ⭐` : "—"}</div>
+      <div className={hasError("stars") ? "text-red-600 font-medium" : ""}>{review.stars ? `${review.stars} ⭐` : "—"}</div>
       <div>{review.total_reviews || 0}</div>
       <div className="flex gap-2">
         <button

@@ -13,11 +13,12 @@ interface ReviewsListProps {
   onEdit: (reviewId: string | null) => void;
   updateReview: (formData: FormData) => Promise<void>;
   deleteReview: (formData: FormData) => Promise<void>;
+  errorPaths?: Set<string>;
 }
 
 import { ReviewRow } from "./ReviewRow";
 
-export function ReviewsList({ reviews, editReviewId, onEdit, updateReview, deleteReview }: ReviewsListProps) {
+export function ReviewsList({ reviews, editReviewId, onEdit, updateReview, deleteReview, errorPaths }: ReviewsListProps) {
   return (
     <div className="mt-8 rounded-lg border">
       <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 border-b bg-zinc-50 p-3 text-sm font-medium">
@@ -27,14 +28,16 @@ export function ReviewsList({ reviews, editReviewId, onEdit, updateReview, delet
         <div>Actions</div>
       </div>
       <div className="divide-y">
-        {reviews.map((review) => (
+        {reviews.map((review, index) => (
           <ReviewRow
             key={review.id}
             review={review}
+            index={index}
             isEditing={editReviewId === review.id}
             onEdit={onEdit}
             updateReview={updateReview}
             deleteReview={deleteReview}
+            errorPaths={errorPaths}
           />
         ))}
         {reviews.length === 0 ? (
