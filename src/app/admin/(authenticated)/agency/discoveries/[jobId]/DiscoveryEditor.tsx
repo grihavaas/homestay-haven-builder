@@ -28,12 +28,34 @@ type JobMeta = {
   importedToTenantId?: string;
 };
 
-// Add temporary IDs to array items
+// Add stable IDs to array items (preserves existing IDs)
 function withIds<T extends Record<string, unknown>>(items: T[]): (T & { id: string })[] {
   return items.map((item) => ({
     ...item,
     id: (item.id as string) || crypto.randomUUID(),
   }));
+}
+
+// Pre-assign IDs to all array items so they persist in state across renders
+function initDataWithIds(data: PropertyImportData): PropertyImportData {
+  return {
+    ...data,
+    rooms: withIds(data.rooms || []),
+    hosts: withIds(data.hosts || []),
+    review_sources: withIds(data.review_sources || []),
+    pricing: withIds(data.pricing || []),
+    nearby_attractions: withIds(data.nearby_attractions || []),
+    proximity_info: withIds(data.proximity_info || []),
+    rules_and_policies: withIds(data.rules_and_policies || []),
+    special_offers: withIds(data.special_offers || []),
+    property_features: withIds(data.property_features || []),
+    booking_ctas: withIds(data.booking_ctas || []),
+    payment_methods: withIds(data.payment_methods || []),
+    amenities: withIds(data.amenities || []),
+    gallery_images: withIds(data.gallery_images || []),
+    listing_site_links: withIds(data.listing_site_links || []),
+    social_media_links: withIds(data.social_media_links || []),
+  };
 }
 
 export function DiscoveryEditor({
@@ -48,7 +70,7 @@ export function DiscoveryEditor({
   jobMeta: JobMeta;
 }) {
   const router = useRouter();
-  const [data, setData] = useState<PropertyImportData>(initialData);
+  const [data, setData] = useState<PropertyImportData>(() => initDataWithIds(initialData));
   const [activeTab, setActiveTab] = useState("basic");
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
