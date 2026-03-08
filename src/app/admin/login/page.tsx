@@ -10,6 +10,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { Loader2 } from "lucide-react";
 
 type AuthMethod = "email" | "phone";
 
@@ -286,8 +287,9 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={submitting || !phone.trim()}
-                className="w-full rounded-md bg-black px-3 py-2 text-white disabled:opacity-50"
+                className="w-full rounded-md bg-black px-3 py-2 text-white disabled:opacity-50 flex items-center justify-center gap-2"
               >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 {submitting ? "Sending OTP…" : "Send OTP"}
               </button>
             </form>
@@ -320,8 +322,9 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={submitting || otp.length !== 6}
-                className="w-full rounded-md bg-black px-3 py-2 text-white disabled:opacity-50"
+                className="w-full rounded-md bg-black px-3 py-2 text-white disabled:opacity-50 flex items-center justify-center gap-2"
               >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 {submitting ? "Verifying…" : "Verify & Sign In"}
               </button>
 
@@ -382,8 +385,9 @@ function LoginForm() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-md bg-black px-3 py-2 text-white disabled:opacity-50"
+              className="w-full rounded-md bg-black px-3 py-2 text-white disabled:opacity-50 flex items-center justify-center gap-2"
             >
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {submitting ? "Signing in…" : "Sign in"}
             </button>
           </form>
