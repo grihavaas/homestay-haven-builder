@@ -36,7 +36,9 @@ function withIds<T extends Record<string, unknown>>(items: T[]): (T & { id: stri
   }));
 }
 
-// Pre-assign IDs to all array items so they persist in state across renders
+// Pre-assign IDs to all object-array items so they persist in state across renders.
+// Without this, withIds() at render time generates new UUIDs every render,
+// and CRUD handlers can never match items by ID.
 function initDataWithIds(data: PropertyImportData): PropertyImportData {
   return {
     ...data,
@@ -51,9 +53,6 @@ function initDataWithIds(data: PropertyImportData): PropertyImportData {
     property_features: withIds(data.property_features || []),
     booking_ctas: withIds(data.booking_ctas || []),
     payment_methods: withIds(data.payment_methods || []),
-    amenities: withIds(data.amenities || []),
-    gallery_images: withIds(data.gallery_images || []),
-    listing_site_links: withIds(data.listing_site_links || []),
     social_media_links: withIds(data.social_media_links || []),
   };
 }
