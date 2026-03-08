@@ -81,5 +81,21 @@ export async function POST(
   );
 
   const data = await res.json();
+  if (!res.ok) {
+    return NextResponse.json(data, { status: res.status });
+  }
+
+  // Fetch the extracted JSON server-side (S3 presigned URLs don't have CORS)
+  if (data.extractedJsonUrl) {
+    try {
+      const jsonRes = await fetch(data.extractedJsonUrl);
+      if (jsonRes.ok) {
+        data.extractedJson = await jsonRes.json();
+      }
+    } catch {
+      // Fall through — client will see extractedJsonUrl but no extractedJson
+    }
+  }
+
   return NextResponse.json(data, { status: res.status });
 }
