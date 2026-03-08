@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,7 +48,8 @@ export function DeleteJobButton({ jobId }: { jobId: string }) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700 flex items-center gap-2">
+            {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
             {deleting ? "Deleting…" : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
