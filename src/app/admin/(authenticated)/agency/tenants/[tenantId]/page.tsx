@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { SubmitButton } from "@/components/SubmitButton";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { DeleteTenantButton } from "../DeleteTenantButton";
+import { EditContactInfo } from "./EditContactInfo";
 
 async function getTenant(tenantId: string) {
   const supabase = await createSupabaseServerClient();
@@ -118,6 +119,33 @@ export default async function AgencyTenantDetailPage({
     revalidatePath(`/admin/agency/tenants/${tenantId}`);
   }
 
+  async function updateTenant(formData: FormData): Promise<{ success: boolean; error?: string }> {
+    "use server";
+    const id = String(formData.get("tenantId"));
+    const name = String(formData.get("name") ?? "").trim();
+    if (!id || !name) return { success: false, error: "Name is required" };
+
+    const contactName = String(formData.get("primary_contact_name") ?? "").trim() || null;
+    const contactEmail = String(formData.get("primary_contact_email") ?? "").trim() || null;
+    const contactPhone = String(formData.get("primary_contact_phone") ?? "").trim() || null;
+
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase
+      .from("tenants")
+      .update({
+        name,
+        primary_contact_name: contactName,
+        primary_contact_email: contactEmail,
+        primary_contact_phone: contactPhone,
+      })
+      .eq("id", id);
+    if (error) return { success: false, error: error.message };
+    revalidatePath(`/admin/agency/tenants/${id}`);
+    revalidatePath("/admin/agency/tenants");
+    revalidatePath("/admin/rm");
+    return { success: true };
+  }
+
   const backHref =
     membership.role === "agency_rm" ? "/admin/rm" : "/admin/agency/tenants";
 
@@ -157,30 +185,15 @@ export default async function AgencyTenantDetailPage({
         )}
       </div>
 
-      {/* Contact info */}
-      <div className="mt-6 rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-medium text-zinc-700">Contact Information</h2>
-        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
-          <div>
-            <span className="text-zinc-500">Name:</span>{" "}
-            <span className="text-zinc-900">
-              {(tenant as any).primary_contact_name ?? "---"}
-            </span>
-          </div>
-          <div>
-            <span className="text-zinc-500">Email:</span>{" "}
-            <span className="text-zinc-900">
-              {tenant.primary_contact_email ?? "---"}
-            </span>
-          </div>
-          <div>
-            <span className="text-zinc-500">Phone:</span>{" "}
-            <span className="text-zinc-900">
-              {(tenant as any).primary_contact_phone ?? "---"}
-            </span>
-          </div>
-        </div>
-      </div>
+      {/* Contact info — editable by agency_admin and agency_rm */}
+      <EditContactInfo
+        tenantId={tenant.id}
+        tenantName={tenant.name}
+        contactName={(tenant as any).primary_contact_name ?? null}
+        contactEmail={tenant.primary_contact_email ?? null}
+        contactPhone={(tenant as any).primary_contact_phone ?? null}
+        updateAction={updateTenant}
+      />
 
       {/* Properties section */}
       <div className="mt-8">
@@ -215,57 +228,62 @@ export default async function AgencyTenantDetailPage({
           <SubmitButton pendingText="Creating..." className="mt-3">Create property</SubmitButton>
         </form>
 
-        <div className="mt-4 rounded-lg border bg-white">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 border-b bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-600">
-            <div>Name</div>
-            <div>Slug</div>
-            <div>Status</div>
-            <div></div>
-          </div>
-          <div className="divide-y">
-            {properties.map((p) => (
-              <div
-                key={p.id}
-                className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-4 py-3 text-sm items-center"
-              >
-                <div>
-                  <Link
-                    href={`/admin/properties/${p.id}`}
-                    className="font-medium text-zinc-900 hover:text-blue-600"
-                  >
-                    {p.name}
-                  </Link>
-                </div>
-                <div className="font-mono text-zinc-500 text-xs">{p.slug}</div>
-                <div>
-                  {p.is_published ? (
-                    <span className="text-green-600 text-xs">Published</span>
-                  ) : (
-                    <span className="text-zinc-400 text-xs">Draft</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/admin/properties/${p.id}`}
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </Link>
-                  <Link
-                    href={`/admin/agency/properties/${p.id}/domains`}
-                    className="text-xs text-zinc-600 hover:underline"
-                  >
-                    Domains
-                  </Link>
-                </div>
-              </div>
-            ))}
-            {properties.length === 0 && (
-              <div className="px-4 py-6 text-center text-sm text-zinc-500">
-                No properties yet. Create one above.
-              </div>
-            )}
-          </div>
+        <div className="mt-4 rounded-lg border bg-white overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-zinc-50">
+                <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Name</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Slug</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Status</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-zinc-600"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {properties.map((p) => (
+                <tr key={p.id}>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/admin/properties/${p.id}`}
+                      className="font-medium text-zinc-900 hover:text-blue-600"
+                    >
+                      {p.name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-zinc-500 text-xs">{p.slug}</td>
+                  <td className="px-4 py-3">
+                    {p.is_published ? (
+                      <span className="text-green-600 text-xs">Published</span>
+                    ) : (
+                      <span className="text-zinc-400 text-xs">Draft</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/admin/properties/${p.id}`}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </Link>
+                      <Link
+                        href={`/admin/agency/properties/${p.id}/domains`}
+                        className="text-xs text-zinc-600 hover:underline"
+                      >
+                        Domains
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {properties.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-6 text-center text-sm text-zinc-500">
+                    No properties yet. Create one above.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -275,39 +293,42 @@ export default async function AgencyTenantDetailPage({
         <p className="mt-1 text-sm text-zinc-500">
           Users who have access to this customer.
         </p>
-        <div className="mt-4 rounded-lg border bg-white">
-          <div className="grid grid-cols-[1fr_auto] gap-4 border-b bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-600">
-            <div>User</div>
-            <div>Role</div>
-          </div>
-          <div className="divide-y">
-            {members.map((m) => (
-              <div
-                key={m.id}
-                className="grid grid-cols-[1fr_auto] gap-4 px-4 py-3 text-sm items-center"
-              >
-                <div className="text-zinc-900">{m.displayName}</div>
-                <div>
-                  <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700">
-                    {m.role}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {members.length === 0 && (
-              <div className="px-4 py-6 text-center text-sm text-zinc-500">
-                No members assigned.{" "}
-                {membership.role === "agency_admin" && (
-                  <Link
-                    href="/admin/agency/users"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Go to User Management
-                  </Link>
-                )}
-              </div>
-            )}
-          </div>
+        <div className="mt-4 rounded-lg border bg-white overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-zinc-50">
+                <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">User</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Role</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {members.map((m) => (
+                <tr key={m.id}>
+                  <td className="px-4 py-3 text-zinc-900">{m.displayName}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700">
+                      {m.role}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {members.length === 0 && (
+                <tr>
+                  <td colSpan={2} className="px-4 py-6 text-center text-sm text-zinc-500">
+                    No members assigned.{" "}
+                    {membership.role === "agency_admin" && (
+                      <Link
+                        href="/admin/agency/users"
+                        className="text-blue-600 hover:underline"
+                      >
+                        Go to User Management
+                      </Link>
+                    )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

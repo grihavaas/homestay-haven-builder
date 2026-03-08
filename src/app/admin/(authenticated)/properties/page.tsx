@@ -93,55 +93,58 @@ export default async function TenantPropertiesPage() {
         </form>
       )}
 
-      <div className="mt-6 rounded-lg border bg-white">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-4 border-b bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-600">
-          <div>Property</div>
-          <div>Location</div>
-          <div>Status</div>
-        </div>
-        <div className="divide-y">
-          {properties.map((p) => (
-            <div
-              key={p.id}
-              className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-3 text-sm items-center"
-            >
-              <div>
-                <Link
-                  href={`/admin/properties/${p.id}`}
-                  className="font-medium text-zinc-900 hover:text-blue-600"
-                >
-                  {p.name}
-                </Link>
-                <p className="mt-0.5 text-xs text-zinc-500 font-mono">{p.slug}</p>
-                {p.import_summary && (
-                  <div className="mt-2 rounded-md bg-blue-50 border border-blue-200 p-2 text-xs text-blue-900">
-                    <div className="font-medium mb-0.5">Import Summary:</div>
-                    <div className="text-blue-800">{p.import_summary}</div>
-                  </div>
-                )}
-              </div>
-              <div className="text-xs text-zinc-500">
-                {[p.city, p.country].filter(Boolean).join(", ") || "---"}
-              </div>
-              <div>
-                {p.is_published ? (
-                  <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                    Published
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                    Draft
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-          {properties.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-zinc-500">
-              No properties yet.{canCreate ? " Create one above." : ""}
-            </div>
-          )}
-        </div>
+      <div className="mt-6 rounded-lg border bg-white overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-zinc-50">
+              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Property</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Location</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {properties.map((p) => (
+              <tr key={p.id}>
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/admin/properties/${p.id}`}
+                    className="font-medium text-zinc-900 hover:text-blue-600"
+                  >
+                    {p.name}
+                  </Link>
+                  <p className="mt-0.5 text-xs text-zinc-500 font-mono">{p.slug}</p>
+                  {p.import_summary && (
+                    <div className="mt-2 rounded-md bg-blue-50 border border-blue-200 p-2 text-xs text-blue-900">
+                      <div className="font-medium mb-0.5">Import Summary:</div>
+                      <div className="text-blue-800">{p.import_summary}</div>
+                    </div>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-xs text-zinc-500">
+                  {[p.city, p.country].filter(Boolean).join(", ") || "---"}
+                </td>
+                <td className="px-4 py-3">
+                  {p.is_published ? (
+                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                      Published
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                      Draft
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {properties.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-6 text-center text-sm text-zinc-500">
+                  No properties yet.{canCreate ? " Create one above." : ""}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

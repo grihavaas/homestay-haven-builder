@@ -121,67 +121,72 @@ export default async function RMDashboardPage() {
       </form>
 
       {/* Customer list */}
-      <div className="mt-6 rounded-lg border bg-white">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 border-b bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-600">
-          <div>Customer</div>
-          <div>Properties</div>
-          <div>Status</div>
-          <div></div>
-        </div>
-        <div className="divide-y">
-          {tenants.map((tenant) => (
-            <div
-              key={tenant.id}
-              className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-4 py-3 text-sm items-center"
-            >
-              <div>
-                <Link
-                  href={`/admin/agency/tenants/${tenant.id}`}
-                  className="font-medium text-zinc-900 hover:text-blue-600"
-                >
-                  {tenant.name}
-                </Link>
-                {tenant.primary_contact_email && (
-                  <p className="mt-0.5 text-xs text-zinc-500">
-                    {tenant.primary_contact_email}
-                  </p>
-                )}
-              </div>
-              <div className="text-zinc-600 tabular-nums">
-                {propertyCounts[tenant.id] ?? 0}
-              </div>
-              <div>
-                {tenant.is_active ? (
-                  <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                    Active
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                    Inactive
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/admin/agency/tenants/${tenant.id}`}
-                  className="text-xs text-blue-600 hover:underline"
-                >
-                  Manage
-                </Link>
-                <DeleteTenantButton
-                  tenantId={tenant.id}
-                  tenantName={tenant.name}
-                  deleteAction={deleteTenant}
-                />
-              </div>
-            </div>
-          ))}
-          {tenants.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-zinc-500">
-              No customers yet. Create one above.
-            </div>
-          )}
-        </div>
+      <div className="mt-6 rounded-lg border bg-white overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-zinc-50">
+              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Customer</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Properties</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Status</th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-zinc-600"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {tenants.map((tenant) => (
+              <tr key={tenant.id}>
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/admin/agency/tenants/${tenant.id}`}
+                    className="font-medium text-zinc-900 hover:text-blue-600"
+                  >
+                    {tenant.name}
+                  </Link>
+                  {tenant.primary_contact_email && (
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      {tenant.primary_contact_email}
+                    </p>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-zinc-600 tabular-nums">
+                  {propertyCounts[tenant.id] ?? 0}
+                </td>
+                <td className="px-4 py-3">
+                  {tenant.is_active ? (
+                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                      Inactive
+                    </span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link
+                      href={`/admin/agency/tenants/${tenant.id}`}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Manage
+                    </Link>
+                    <DeleteTenantButton
+                      tenantId={tenant.id}
+                      tenantName={tenant.name}
+                      deleteAction={deleteTenant}
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {tenants.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-sm text-zinc-500">
+                  No customers yet. Create one above.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

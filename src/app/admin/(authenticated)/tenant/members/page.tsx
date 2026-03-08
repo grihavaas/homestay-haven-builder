@@ -80,40 +80,43 @@ export default async function TenantMembersPage() {
         Users who have access to {tenantName}.
       </p>
 
-      <div className="mt-6 rounded-lg border bg-white">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-4 border-b bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-600">
-          <div>User</div>
-          <div>Role</div>
-          <div></div>
-        </div>
-        <div className="divide-y">
-          {members.map((m) => (
-            <div
-              key={m.id}
-              className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-3 text-sm items-center"
-            >
-              <div className="text-zinc-900">{m.displayName}</div>
-              <div>
-                <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700">
-                  {m.role}
-                </span>
-              </div>
-              <div>
-                {m.role !== "tenant_admin" && (
-                  <form action={removeMember} className="inline">
-                    <input type="hidden" name="membershipId" value={m.id} />
-                    <SubmitButton variant="ghost" pendingText="...">Remove</SubmitButton>
-                  </form>
-                )}
-              </div>
-            </div>
-          ))}
-          {members.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-zinc-500">
-              No members found.
-            </div>
-          )}
-        </div>
+      <div className="mt-6 rounded-lg border bg-white overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-zinc-50">
+              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">User</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-zinc-600">Role</th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-zinc-600"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {members.map((m) => (
+              <tr key={m.id}>
+                <td className="px-4 py-3 text-zinc-900">{m.displayName}</td>
+                <td className="px-4 py-3">
+                  <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700">
+                    {m.role}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {m.role !== "tenant_admin" && (
+                    <form action={removeMember} className="inline">
+                      <input type="hidden" name="membershipId" value={m.id} />
+                      <SubmitButton variant="ghost" pendingText="...">Remove</SubmitButton>
+                    </form>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {members.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-4 py-6 text-center text-sm text-zinc-500">
+                  No members found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

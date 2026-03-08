@@ -297,31 +297,40 @@ export default async function AgencyUsersPage() {
           RMs assigned to customers. Remove to unassign from that customer. Same user can be
           assigned to multiple customers.
         </p>
-        <div className="mt-3 rounded-lg border">
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-2 border-b bg-zinc-50 p-3 text-sm font-medium">
-            <div>RM</div>
-            <div>Customer</div>
-            <div>Action</div>
-          </div>
-          <div className="divide-y">
-            {rmMemberships.length === 0 ? (
-              <div className="p-3 text-sm text-zinc-600">No relationship managers assigned.</div>
-            ) : (
-              rmMemberships.map((m) => (
-                <div
-                  key={m.id}
-                  className="grid grid-cols-[1fr_1fr_auto] gap-2 p-3 text-sm items-center"
-                >
-                  <div>{userDisplayMap[m.user_id] ?? m.user_id.slice(0, 8) + "..."}</div>
-                  <div>{m.tenant_name}</div>
-                  <form action={deleteMembershipForm} className="inline">
-                    <input type="hidden" name="membershipId" value={m.id} />
-                    <SubmitButton variant="ghost" pendingText="...">Remove</SubmitButton>
-                  </form>
-                </div>
-              ))
-            )}
-          </div>
+        <div className="mt-3 rounded-lg border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-zinc-50">
+                <th className="px-4 py-3 text-left text-sm font-medium">RM</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">Customer</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rmMemberships.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-4 py-3 text-sm text-zinc-600">
+                    No relationship managers assigned.
+                  </td>
+                </tr>
+              ) : (
+                rmMemberships.map((m) => (
+                  <tr key={m.id}>
+                    <td className="px-4 py-3">
+                      {userDisplayMap[m.user_id] ?? m.user_id.slice(0, 8) + "..."}
+                    </td>
+                    <td className="px-4 py-3">{m.tenant_name}</td>
+                    <td className="px-4 py-3 text-right">
+                      <form action={deleteMembershipForm} className="inline">
+                        <input type="hidden" name="membershipId" value={m.id} />
+                        <SubmitButton variant="ghost" pendingText="...">Remove</SubmitButton>
+                      </form>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
