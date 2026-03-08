@@ -1,8 +1,58 @@
 "use client";
 
+import { useState } from "react";
 import type { PropertyImportData } from "@/lib/json-import-schema";
 
 type Property = PropertyImportData["property"];
+
+/** Input that allows typing decimal numbers incrementally (e.g. "12." or "-0.") */
+function DecimalInput({
+  value,
+  onCommit,
+  className,
+  disabled,
+}: {
+  value: number | undefined;
+  onCommit: (n: number | undefined) => void;
+  className?: string;
+  disabled?: boolean;
+}) {
+  const [text, setText] = useState<string | null>(null);
+  const display = text ?? (value != null ? String(value) : "");
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={display}
+      onChange={(e) => {
+        const v = e.target.value;
+        // Allow intermediate states: empty, minus, dot, trailing dot, etc.
+        if (v === "" || v === "-" || v === "." || v === "-.") {
+          setText(v);
+          if (v === "") onCommit(undefined);
+          return;
+        }
+        // Allow valid partial decimals like "12." or "-0."
+        if (/^-?\d*\.?\d*$/.test(v)) {
+          setText(v);
+          const n = Number(v);
+          if (!isNaN(n) && !v.endsWith(".")) onCommit(n);
+        }
+      }}
+      onBlur={() => {
+        // Commit final value and clear local text
+        if (text != null) {
+          const n = Number(text);
+          onCommit(text === "" || isNaN(n) ? undefined : n);
+          setText(null);
+        }
+      }}
+      className={className}
+      disabled={disabled}
+    />
+  );
+}
 
 export function DiscoveryBasicInfo({
   property,
@@ -177,38 +227,18 @@ export function DiscoveryBasicInfo({
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block">
           <div className="text-sm font-medium">Latitude</div>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={property.latitude ?? ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === "" || v === "-" || v === ".") {
-                onChange({ ...property, latitude: undefined });
-              } else {
-                const n = Number(v);
-                if (!isNaN(n)) update("latitude", n);
-              }
-            }}
+          <DecimalInput
+            value={property.latitude}
+            onCommit={(n) => update("latitude", n)}
             className={`mt-1 w-full rounded-md border px-3 py-2 ${errorPaths?.has("property.latitude") ? "border-red-500 bg-red-50" : ""}`}
             disabled={disabled}
           />
         </label>
         <label className="block">
           <div className="text-sm font-medium">Longitude</div>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={property.longitude ?? ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === "" || v === "-" || v === ".") {
-                onChange({ ...property, longitude: undefined });
-              } else {
-                const n = Number(v);
-                if (!isNaN(n)) update("longitude", n);
-              }
-            }}
+          <DecimalInput
+            value={property.longitude}
+            onCommit={(n) => update("longitude", n)}
             className={`mt-1 w-full rounded-md border px-3 py-2 ${errorPaths?.has("property.longitude") ? "border-red-500 bg-red-50" : ""}`}
             disabled={disabled}
           />

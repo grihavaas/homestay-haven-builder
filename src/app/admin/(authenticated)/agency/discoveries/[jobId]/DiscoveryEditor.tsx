@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { PropertyImportData } from "@/lib/json-import-schema";
 import { validateImportData, type ValidationError } from "@/lib/json-import-schema";
@@ -86,22 +86,16 @@ export function DiscoveryEditor({
     }
   }
 
+  // Re-run validation automatically when data changes (if already validated)
+  useEffect(() => {
+    if (validated) {
+      const result = validateImportData(data);
+      setValidationResult(result);
+    }
+  }, [data, validated]);
+
   const markDirty = useCallback(() => {
     setDirty(true);
-    // Re-run validation live if already validated
-    setValidated((prev) => {
-      if (prev) {
-        // Schedule re-validation on next tick (after state update)
-        setTimeout(() => {
-          setData((currentData) => {
-            const result = validateImportData(currentData);
-            setValidationResult(result);
-            return currentData;
-          });
-        }, 0);
-      }
-      return prev;
-    });
   }, []);
 
   // --- Save to backend ---
