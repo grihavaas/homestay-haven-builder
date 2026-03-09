@@ -38,7 +38,7 @@ export async function fetchPublishedProperty(propertyId: string) {
   if (propError) throw propError;
   if (!property) return null;
 
-  const [rooms, media, reviewSources, hosts, attractions, proximity, features, booking, propertyTags, pricing, propertyAmenities, paymentMethods, bookingCTAs, rules, socialMedia] = await Promise.all([
+  const [rooms, media, reviewSources, hosts, attractions, proximity, features, booking, propertyTags, pricing, propertyAmenities, paymentMethods, bookingCTAs, rules, socialMedia, specialOffers] = await Promise.all([
     supabase.from("rooms").select("*").eq("property_id", propertyId).eq("is_active", true).order("created_at"),
     supabase.from("media").select("*,host_id").eq("property_id", propertyId).eq("is_active", true).order("display_order"),
     supabase.from("review_sources").select("*").eq("property_id", propertyId).order("display_order"),
@@ -54,6 +54,7 @@ export async function fetchPublishedProperty(propertyId: string) {
     supabase.from("booking_ctas").select("*").eq("property_id", propertyId).eq("is_active", true).order("display_order"),
     supabase.from("rules_and_policies").select("*").eq("property_id", propertyId).order("display_order"),
     supabase.from("social_media_links").select("*").eq("property_id", propertyId),
+    supabase.from("special_offers").select("*").eq("property_id", propertyId).eq("is_active", true).order("discount_percentage", { ascending: false, nullsFirst: false }),
   ]);
   
   // Get room IDs and host IDs for related data
@@ -76,7 +77,7 @@ export async function fetchPublishedProperty(propertyId: string) {
       : { data: [], error: null },
   ]);
 
-  if (rooms.error || media.error || reviewSources.error || hosts.error || attractions.error || proximity.error || features.error || booking.error || propertyTags.error || propertyAmenities.error || paymentMethods.error || bookingCTAs.error || rules.error || socialMedia.error) {
+  if (rooms.error || media.error || reviewSources.error || hosts.error || attractions.error || proximity.error || features.error || booking.error || propertyTags.error || propertyAmenities.error || paymentMethods.error || bookingCTAs.error || rules.error || socialMedia.error || specialOffers.error) {
     throw new Error("Failed to fetch related data");
   }
 
@@ -130,5 +131,6 @@ export async function fetchPublishedProperty(propertyId: string) {
     booking_ctas: bookingCTAs.data ?? [],
     rules_and_policies: rules.data ?? [],
     social_media_links: socialMedia.data ?? [],
+    special_offers: specialOffers.data ?? [],
   };
 }

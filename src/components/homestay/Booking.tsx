@@ -1,5 +1,5 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Calendar,
   Users,
@@ -37,6 +37,21 @@ export function Booking() {
   const [guestPhone, setGuestPhone] = useState("");
   const [showEditor, setShowEditor] = useState(false);
   const [showBookingSettingsEditor, setShowBookingSettingsEditor] = useState(false);
+  const [appliedOffer, setAppliedOffer] = useState<string | null>(null);
+
+  // Check URL hash for offer param from PromotionBanner CTA
+  useEffect(() => {
+    const checkHash = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith("#booking?offer=")) {
+        const offerText = decodeURIComponent(hash.replace("#booking?offer=", ""));
+        if (offerText) setAppliedOffer(offerText);
+      }
+    };
+    checkHash();
+    window.addEventListener("hashchange", checkHash);
+    return () => window.removeEventListener("hashchange", checkHash);
+  }, []);
 
   if (loading || !property) {
     return null;
@@ -87,7 +102,7 @@ export function Booking() {
 📞 *Phone:* ${phone}
 ✉️ *Email:* ${email}
 ${requests ? `\n💬 *Special Requests:*\n${requests}` : ""}
-
+${appliedOffer ? `\n🎁 *Offer Applied:* ${appliedOffer}` : ""}
 _Sent via ${property.name} website_`;
 
     // Clean phone number (remove non-digits except leading +)
@@ -120,6 +135,23 @@ _Sent via ${property.name} website_`;
             <h2 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mt-3 mb-6">
               Reserve Your Escape
             </h2>
+
+            {appliedOffer && (
+              <div className="mb-4 flex items-center gap-2 bg-primary/10 text-primary rounded-lg px-4 py-2 text-sm font-medium">
+                <span>🎁</span>
+                <span>Offer: {appliedOffer}</span>
+                <button
+                  onClick={() => {
+                    setAppliedOffer(null);
+                    window.history.replaceState(null, "", "#booking");
+                  }}
+                  className="ml-auto text-primary/60 hover:text-primary"
+                  aria-label="Remove offer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-4">

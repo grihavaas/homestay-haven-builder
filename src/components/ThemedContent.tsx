@@ -35,6 +35,7 @@ import { Location } from "./homestay/Location";
 import { Booking } from "./homestay/Booking";
 import { HouseRules } from "./homestay/HouseRules";
 import { Footer } from "./homestay/Footer";
+import { PromotionBanner } from "./homestay/PromotionBanner";
 import { useProperty } from "@/contexts/PropertyContext";
 import { DocumentHead } from "./DocumentHead";
 import { EditModeToggle } from "./edit-mode/EditModeToggle";
@@ -150,6 +151,7 @@ export function ThemedContent() {
     <>
       <DocumentHead />
       <Header />
+      <PromotionBanner />
       {renderHero()}
       <About />
       {renderRooms()}
