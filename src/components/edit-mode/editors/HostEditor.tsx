@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ensureSession } from "@/lib/supabase/ensure-session";
 import { useProperty } from "@/contexts/PropertyContext";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -84,7 +84,7 @@ export function HostEditor({ isOpen, onClose, host }: HostEditorProps) {
 
     setSaving(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
 
       // Parse languages from comma-separated string
       const languagesArray = formData.languages

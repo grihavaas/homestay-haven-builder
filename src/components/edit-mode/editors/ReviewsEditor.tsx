@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ensureSession } from "@/lib/supabase/ensure-session";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2, Star } from "lucide-react";
 
@@ -88,7 +88,7 @@ export function ReviewsEditor({ isOpen, onClose }: ReviewsEditorProps) {
 
     setSaving(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
 
       // Delete marked sources
       const toDelete = sources.filter((s) => s.isDeleted && s.id);

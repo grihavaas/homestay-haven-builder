@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ensureSession } from "@/lib/supabase/ensure-session";
 import { useProperty } from "@/contexts/PropertyContext";
 import { Button } from "@/components/ui/button";
 import { X, Loader2 } from "lucide-react";
@@ -90,6 +91,7 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
     roomId: string | null,
     hostId: string | null
   ): Promise<number> {
+    const supabase = await ensureSession();
     let query = supabase
       .from("media")
       .select("display_order")
@@ -121,6 +123,7 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
   ) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    const supabase = await ensureSession();
     if (dest.replaceId) {
       await supabase.from("media").delete().eq("id", dest.replaceId);
     }
@@ -168,6 +171,7 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
   }
 
   async function handleDelete(mediaId: string) {
+    const supabase = await ensureSession();
     const { error } = await supabase.from("media").delete().eq("id", mediaId);
     if (error) throw error;
     toast({ title: "Deleted", description: "Photo removed." });
@@ -175,6 +179,7 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
   }
 
   async function handleMoveTo(mediaId: string, dest: MoveDestination) {
+    const supabase = await ensureSession();
     const nextOrder = await getNextDisplayOrder(
       dest.mediaType,
       dest.roomId ?? null,
@@ -195,6 +200,7 @@ export function MediaManager({ isOpen, onClose }: MediaManagerProps) {
   }
 
   async function handleUpdateOrder(mediaId: string, newOrder: number) {
+    const supabase = await ensureSession();
     const { error } = await supabase.from("media").update({ display_order: newOrder }).eq("id", mediaId);
     if (error) throw error;
   }

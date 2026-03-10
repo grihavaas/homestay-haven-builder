@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ensureSession } from "@/lib/supabase/ensure-session";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2, GripVertical } from "lucide-react";
 
@@ -72,7 +72,7 @@ export function HouseRulesEditor({ isOpen, onClose }: HouseRulesEditorProps) {
 
     setSaving(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
 
       // Delete marked rules
       const toDelete = rules.filter((r) => r.isDeleted && r.id);

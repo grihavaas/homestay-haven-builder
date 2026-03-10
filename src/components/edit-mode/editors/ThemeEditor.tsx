@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ensureSession } from "@/lib/supabase/ensure-session";
 import { toast } from "@/hooks/use-toast";
 import { themeList, paletteList, ThemeId, PaletteId, defaultPaletteForTheme } from "@/lib/themes";
 
@@ -47,7 +47,7 @@ export function ThemeEditor({ isOpen, onClose, mode = "layout" }: ThemeEditorPro
 
     setSaving(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
       const { error } = await supabase
         .from("properties")
         .update({ theme: selectedTheme, palette: selectedPalette })

@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ensureSession } from "@/lib/supabase/ensure-session";
 import { useProperty } from "@/contexts/PropertyContext";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, ChevronDown, ChevronUp, Check } from "lucide-react";
@@ -81,7 +81,7 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
   const fetchRoomAmenities = async () => {
     setLoadingAmenities(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
       const { data, error } = await supabase
         .from("standard_amenities")
         .select("id, name, category, icon")
@@ -145,7 +145,7 @@ export function RoomEditor({ isOpen, onClose, room }: RoomEditorProps) {
 
     setSaving(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
 
       // Update room details
       const { error: roomError } = await supabase

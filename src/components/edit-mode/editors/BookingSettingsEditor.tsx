@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useProperty } from "@/contexts/PropertyContext";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ensureSession } from "@/lib/supabase/ensure-session";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -63,7 +63,7 @@ export function BookingSettingsEditor({ isOpen, onClose }: BookingSettingsEditor
 
     setSaving(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
 
       const updateData = {
         check_in_time: formData.check_in_time.trim() || null,

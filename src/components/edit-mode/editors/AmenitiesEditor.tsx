@@ -6,7 +6,7 @@ import {
   BottomSheetActions,
 } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { ensureSession } from "@/lib/supabase/ensure-session";
 import { useProperty } from "@/contexts/PropertyContext";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Check, Search } from "lucide-react";
@@ -59,7 +59,7 @@ export function AmenitiesEditor({ isOpen, onClose }: AmenitiesEditorProps) {
     setLoading(true);
     setLoadError(null);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
       console.log("Querying standard_amenities...");
       const { data, error } = await supabase
         .from("standard_amenities")
@@ -109,7 +109,7 @@ export function AmenitiesEditor({ isOpen, onClose }: AmenitiesEditorProps) {
 
     setSaving(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = await ensureSession();
 
       // Delete all existing property amenities
       const { error: deleteError } = await supabase
