@@ -17,6 +17,7 @@ const tabs = [
   { id: "attractions", label: "Nearby Attractions" },
   { id: "promotions", label: "Promotions" },
   { id: "additional", label: "Additional Info" },
+  { id: "seo", label: "SEO" },
 ];
 
 export function PropertyTabs({ propertyId }: { propertyId: string }) {

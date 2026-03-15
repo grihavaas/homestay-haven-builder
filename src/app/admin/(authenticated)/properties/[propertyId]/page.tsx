@@ -17,13 +17,14 @@ import { BookingTab } from "./BookingTab";
 import { PricingTab } from "./PricingTab";
 import { PromotionsTab } from "./PromotionsTab";
 import { AdditionalTab } from "./AdditionalTab";
+import { SeoTab } from "./SeoTab";
 
 async function getProperty(propertyId: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("properties")
     .select(
-      "id,tenant_id,name,type,tagline,description,classification,slug,city,state,country,postal_code,street_address,location_description,latitude,longitude,is_published,is_active,updated_at,feature_seo_elements,review_summary,room_section_header,room_section_tagline",
+      "id,tenant_id,name,type,tagline,description,classification,slug,city,state,country,postal_code,street_address,location_description,latitude,longitude,is_published,is_active,updated_at,feature_seo_elements,review_summary,room_section_header,room_section_tagline,meta_title,meta_description,meta_keywords,og_title,og_description,og_image_url",
     )
     .eq("id", propertyId)
     .single();
@@ -84,6 +85,8 @@ export default async function TenantPropertyEditPage({
         return <PromotionsTab propertyId={propertyId} tenantId={property.tenant_id} />;
       case "additional":
         return <AdditionalTab propertyId={propertyId} tenantId={property.tenant_id} />;
+      case "seo":
+        return <SeoTab property={property} />;
       default:
         return <BasicInfoTab property={property} />;
     }
