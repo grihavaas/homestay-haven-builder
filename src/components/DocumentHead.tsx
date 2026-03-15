@@ -17,7 +17,9 @@ export function DocumentHead() {
       // Update meta description
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription && property.description) {
-        metaDescription.setAttribute('content', property.description.substring(0, 160));
+        const desc = property.description;
+        const truncated = desc.length <= 160 ? desc : desc.substring(0, desc.lastIndexOf(' ', 160)) + '…';
+        metaDescription.setAttribute('content', truncated);
       }
 
       // Update OG tags if present
@@ -26,49 +28,9 @@ export function DocumentHead() {
 
       const ogDescription = document.querySelector('meta[property="og:description"]');
       if (ogDescription && property.description) {
-        ogDescription.setAttribute('content', property.description.substring(0, 160));
-      }
-
-      // Handle robots meta tag for non-production environments
-      const isProduction = process.env.NEXT_PUBLIC_VERCEL_ENV === "production";
-      let robotsMeta = document.querySelector('meta[name="robots"]');
-
-      if (!isProduction) {
-        // Add noindex for preview/development
-        if (!robotsMeta) {
-          robotsMeta = document.createElement('meta');
-          robotsMeta.setAttribute('name', 'robots');
-          document.head.appendChild(robotsMeta);
-        }
-        robotsMeta.setAttribute('content', 'noindex, nofollow');
-      } else if (robotsMeta) {
-        // Remove noindex restriction in production
-        robotsMeta.setAttribute('content', 'index, follow');
-      }
-
-      // Add/update canonical URL
-      // In production, use current URL; in preview, use NEXT_PUBLIC_PRODUCTION_URL if set
-      let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-      const productionUrl = process.env.NEXT_PUBLIC_PRODUCTION_URL;
-
-      if (isProduction) {
-        // In production, canonical is the current URL (without query params)
-        const canonicalUrl = `${window.location.origin}${window.location.pathname}`;
-        if (!canonicalLink) {
-          canonicalLink = document.createElement('link');
-          canonicalLink.rel = 'canonical';
-          document.head.appendChild(canonicalLink);
-        }
-        canonicalLink.href = canonicalUrl;
-      } else if (productionUrl) {
-        // In preview, point to production URL if configured
-        const canonicalUrl = `${productionUrl}${window.location.pathname}`;
-        if (!canonicalLink) {
-          canonicalLink = document.createElement('link');
-          canonicalLink.rel = 'canonical';
-          document.head.appendChild(canonicalLink);
-        }
-        canonicalLink.href = canonicalUrl;
+        const desc = property.description;
+        const truncated = desc.length <= 160 ? desc : desc.substring(0, desc.lastIndexOf(' ', 160)) + '…';
+        ogDescription.setAttribute('content', truncated);
       }
     } else if (!loading && !property) {
       document.title = "Homestay";

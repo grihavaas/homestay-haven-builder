@@ -1,16 +1,29 @@
 import { supabase } from "./supabase";
 
-/** Lightweight fetch for SEO metadata only (name, description, tagline). Use from generateMetadata. */
+/** Lightweight fetch for SEO metadata. Use from generateMetadata and layout JSON-LD. */
 export async function fetchPropertyMetadataByHostname(hostname: string): Promise<{
   name: string;
   description: string | null;
   tagline: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image_url: string | null;
+  city: string | null;
+  state: string | null;
+  country: string;
+  street_address: string | null;
+  postal_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  classification: string | null;
 } | null> {
   const id = await resolvePropertyIdByHostname(hostname);
   if (!id) return null;
   const { data, error } = await supabase
     .from("properties")
-    .select("name, description, tagline")
+    .select("name, description, tagline, meta_title, meta_description, og_title, og_description, og_image_url, city, state, country, street_address, postal_code, latitude, longitude, classification")
     .eq("id", id)
     .eq("is_published", true)
     .maybeSingle();
