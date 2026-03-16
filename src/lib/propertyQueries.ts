@@ -10,6 +10,8 @@ export async function fetchPropertyMetadataByHostname(hostname: string): Promise
   og_title: string | null;
   og_description: string | null;
   og_image_url: string | null;
+  phone: string | null;
+  email: string | null;
   city: string | null;
   state: string | null;
   country: string;
@@ -23,7 +25,7 @@ export async function fetchPropertyMetadataByHostname(hostname: string): Promise
   if (!id) return null;
   const { data, error } = await supabase
     .from("properties")
-    .select("name, description, tagline, meta_title, meta_description, og_title, og_description, og_image_url, city, state, country, street_address, postal_code, latitude, longitude, classification")
+    .select("name, description, tagline, meta_title, meta_description, og_title, og_description, og_image_url, phone, email, city, state, country, street_address, postal_code, latitude, longitude, classification")
     .eq("id", id)
     .eq("is_published", true)
     .maybeSingle();

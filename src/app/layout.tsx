@@ -107,7 +107,9 @@ function buildJsonLd(
           longitude: meta.longitude,
         },
       }),
-    ...(meta.classification && { starRating: { "@type": "Rating", ratingValue: meta.classification } }),
+    ...(meta.phone && { telephone: meta.phone }),
+    ...(meta.email && { email: meta.email }),
+    ...(meta.classification && { priceRange: meta.classification }),
   };
   return JSON.stringify(schema);
 }
